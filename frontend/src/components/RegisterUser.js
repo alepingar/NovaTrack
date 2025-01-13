@@ -1,17 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css"; 
+import "bootstrap/dist/css/bootstrap.min.css";
 
-function Register() {
+function RegisterUser() {
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         password: "",
-        industry: "",
+        company_id: "",
+        role: "staff", // Por defecto, rol de personal
     });
-
+    const [companies, setCompanies] = useState([]);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Obtener la lista de empresas para el desplegable
+        const fetchCompanies = async () => {
+            try {
+                const response = await axios.get("http://127.0.0.1:8000/users/companies");
+                setCompanies(response.data);
+            } catch (error) {
+                console.error("Error al cargar las empresas:", error);
+            }
+        };
+        fetchCompanies();
+    }, []);
 
     const handleChange = (e) => {
         setFormData({
@@ -23,11 +37,11 @@ function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post("http://127.0.0.1:8000/users/register", formData);
+            await axios.post("http://127.0.0.1:8000/users/register/user", formData);
             alert("Registro exitoso");
-            navigate("/login");
+            navigate("/login"); // Redirige al login tras registro exitoso
         } catch (error) {
-            alert("Error al registrar la empresa");
+            alert("Error al registrar el usuario");
             console.error(error);
         }
     };
@@ -38,18 +52,18 @@ function Register() {
                 <div className="col-md-6">
                     <div className="card shadow">
                         <div className="card-header text-center">
-                            <h2>Registro de Empresa</h2>
+                            <h2>Registro de Personal</h2>
                         </div>
                         <div className="card-body">
                             <form onSubmit={handleSubmit}>
                                 <div className="mb-3">
-                                    <label htmlFor="name" className="form-label">Nombre de la Empresa</label>
+                                    <label htmlFor="name" className="form-label">Nombre</label>
                                     <input
                                         type="text"
                                         className="form-control"
                                         id="name"
                                         name="name"
-                                        placeholder="Nombre de la Empresa"
+                                        placeholder="Nombre"
                                         onChange={handleChange}
                                         required
                                     />
@@ -79,15 +93,21 @@ function Register() {
                                     />
                                 </div>
                                 <div className="mb-3">
-                                    <label htmlFor="industry" className="form-label">Industria</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        id="industry"
-                                        name="industry"
-                                        placeholder="Industria"
+                                    <label htmlFor="company_id" className="form-label">Empresa</label>
+                                    <select
+                                        className="form-select"
+                                        id="company_id"
+                                        name="company_id"
                                         onChange={handleChange}
-                                    />
+                                        required
+                                    >
+                                        <option value="">Selecciona una Empresa</option>
+                                        {companies.map((company) => (
+                                            <option key={company.id} value={company.id}>
+                                                {company.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <button type="submit" className="btn btn-primary w-100">Registrar</button>
                             </form>
@@ -99,4 +119,4 @@ function Register() {
     );
 }
 
-export default Register;
+export default RegisterUser;

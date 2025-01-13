@@ -1,15 +1,21 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/css/bootstrap.min.css"; 
 
-function Login() {
-    const [credentials, setCredentials] = useState({ email: "", password: "" });
+function RegisterCompany() {
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        industry: "",
+    });
+
     const navigate = useNavigate();
 
     const handleChange = (e) => {
-        setCredentials({
-            ...credentials,
+        setFormData({
+            ...formData,
             [e.target.name]: e.target.value,
         });
     };
@@ -17,11 +23,11 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post("http://127.0.0.1:8000/users/login", credentials);
-            alert("Inicio de sesión exitoso");
-            console.log("Token recibido:", response.data.access_token);
+            const response = await axios.post("http://127.0.0.1:8000/users/register/company", formData);
+            alert("Registro exitoso");
+            navigate("/login");
         } catch (error) {
-            alert("Error al iniciar sesión");
+            alert("Error al registrar la empresa");
             console.error(error);
         }
     };
@@ -32,10 +38,22 @@ function Login() {
                 <div className="col-md-6">
                     <div className="card shadow">
                         <div className="card-header text-center">
-                            <h2>Iniciar Sesión</h2>
+                            <h2>Registro de Empresa</h2>
                         </div>
                         <div className="card-body">
                             <form onSubmit={handleSubmit}>
+                                <div className="mb-3">
+                                    <label htmlFor="name" className="form-label">Nombre de la Empresa</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        id="name"
+                                        name="name"
+                                        placeholder="Nombre de la Empresa"
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
                                 <div className="mb-3">
                                     <label htmlFor="email" className="form-label">Correo Electrónico</label>
                                     <input
@@ -60,23 +78,19 @@ function Login() {
                                         required
                                     />
                                 </div>
-                                <button type="submit" className="btn btn-primary w-100 mb-3">Iniciar Sesión</button>
+                                <div className="mb-3">
+                                    <label htmlFor="industry" className="form-label">Industria</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        id="industry"
+                                        name="industry"
+                                        placeholder="Industria"
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <button type="submit" className="btn btn-primary w-100">Registrar</button>
                             </form>
-                            <div className="text-center">
-                                <p>¿No tienes cuenta?</p>
-                                <button
-                                    className="btn btn-link"
-                                    onClick={() => navigate("/register/company")}
-                                >
-                                    Registrarse como Empresa
-                                </button>
-                                <button
-                                    className="btn btn-link"
-                                    onClick={() => navigate("/register/user")}
-                                >
-                                    Registrarse como Personal de Empresa
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -85,4 +99,4 @@ function Login() {
     );
 }
 
-export default Login;
+export default RegisterCompany;
