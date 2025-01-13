@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
-import "bootstrap/dist/css/bootstrap.min.css"; // Asegúrate de que Bootstrap esté importado
+import { useNavigate } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css"; 
 
 function Register() {
     const [formData, setFormData] = useState({
@@ -9,6 +10,8 @@ function Register() {
         password: "",
         industry: "",
     });
+
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({
@@ -22,6 +25,7 @@ function Register() {
         try {
             const response = await axios.post("http://127.0.0.1:8000/users/register", formData);
             alert("Registro exitoso");
+            navigate("/login");
         } catch (error) {
             alert("Error al registrar la empresa");
             console.error(error);
