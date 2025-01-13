@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException , status
 from app.utils.security import hash_password , verify_password , create_access_token
 from app.database import db
-from app.schemas import CompanyCreate, CompanyResponse, CompanyLogin, Token, CompanyResponse, UserCreate, UserResponse , LoginRequest
+from app.schemas import CompanyCreate, CompanyResponse, Token, CompanyResponse, UserCreate, UserResponse , LoginRequest
 from bson import ObjectId
 
 router = APIRouter()
@@ -69,13 +69,13 @@ async def login(login_data: LoginRequest):
     user = await db.users.find_one({"email": email})
     if user and verify_password(password, user["password"]):
         token = create_access_token(data={"sub": user["email"], "role": user["role"]})
-        return {"access_token": token, "token_type": "bearer", "entity": "user"}
+        return {"access_token": token, "token_type": "bearer", "role": user["role"], "entity": "user"}
 
     # Buscar en empresas
     company = await db.companies.find_one({"email": email})
     if company and verify_password(password, company["password"]):
         token = create_access_token(data={"sub": company["email"], "role": "admin"})
-        return {"access_token": token, "token_type": "bearer", "entity": "company"}
+        return {"access_token": token, "token_type": "bearer", "role": "admin", "entity": "company"}
 
     raise HTTPException(status_code=401, detail="Credenciales inválidas")
 

@@ -11,13 +11,7 @@ class CompanyCreate(BaseModel):
     email: EmailStr
     password: str
     industry: Optional[str] = None
-
-
-class CompanyLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-
+    role: str = "admin"
 class CompanyResponse(BaseModel):
     id: str
     name: str

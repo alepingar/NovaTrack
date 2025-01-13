@@ -19,7 +19,13 @@ function Login() {
         try {
             const response = await axios.post("http://127.0.0.1:8000/users/login", credentials);
             alert("Inicio de sesión exitoso");
+            const { role } = response.data;
             console.log("Token recibido:", response.data.access_token);
+            if (role === "admin") {
+                navigate("/home");
+            } else {
+                navigate("/home");
+            }
         } catch (error) {
             alert("Error al iniciar sesión");
             console.error(error);
