@@ -51,6 +51,11 @@ function Home() {
                         <li className="nav-item">
                             <a className="nav-link text-white fw-bold" href="/anomalies">Anomalías</a>
                         </li>
+                        {company && company.role === "admin" && (
+                        <li className="nav-item">
+                            <a className="nav-link text-white fw-bold" href="/manage-users">Gestión de Usuarios</a>
+                        </li>
+                        )}
                     </ul>
 
                     {/* Nombre de la Empresa */}

@@ -4,20 +4,21 @@ import RegisterCompany from "./components/RegisterCompany";
 import Login from "./components/Login";
 import Home from "./components/Home";
 import Profile from "./components/Profile";
-import "./App.css";
 import EditProfile from "./components/EditProfile";
-
+import ManageUsers from "./components/ManageUsers";
+import "./App.css";
 
 function App() {
     return (
         <Router>
             <Routes>
                 <Route path="/home" element={<Home role="admin" />} />
-                <Route path="/register/company" element={<RegisterCompany />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/edit-profile" element={<EditProfile />} />
+                <Route path="/register/company" element={<RegisterCompany />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={<Navigate to="/login"/>} />
+                <Route path="/manage-users" element={<ManageUsers/>} />
             </Routes>
         </Router>
     );
