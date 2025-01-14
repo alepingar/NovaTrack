@@ -23,15 +23,25 @@ function Profile() {
     }, []);
 
     if (!company) {
-        return <p>Cargando información...</p>;
+        return (
+            <div className="container mt-4">
+                <p className="text-center text-secondary">Cargando información...</p>
+            </div>
+        );
     }
 
     return (
-        <div className="container mt-4">
-            <h2>Perfil de la Empresa</h2>
-            <p><strong>Nombre:</strong> {company.name}</p>
-            <p><strong>Email:</strong> {company.email}</p>
-            <p><strong>Industria:</strong> {company.industry || "No especificada"}</p>
+        <div className="container mt-5">
+            <div className="card shadow">
+                <div className="card-header bg-primary text-white">
+                    <h3>Perfil de la Empresa</h3>
+                </div>
+                <div className="card-body">
+                    <p className="text-dark"><strong>Nombre:</strong> {company.name}</p>
+                    <p className="text-dark"><strong>Email:</strong> {company.email}</p>
+                    <p className="text-dark"><strong>Industria:</strong> {company.industry || "No especificada"}</p>
+                </div>
+            </div>
         </div>
     );
 }
