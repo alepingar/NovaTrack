@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -6,6 +6,14 @@ import "bootstrap/dist/css/bootstrap.min.css";
 function Login() {
     const [credentials, setCredentials] = useState({ email: "", password: "" });
     const navigate = useNavigate();
+
+    // Si el usuario ya está autenticado, redirigir al Home
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            navigate("/home");
+        }
+    }, [navigate]);
 
     const handleChange = (e) => {
         setCredentials({
