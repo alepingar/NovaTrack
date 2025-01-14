@@ -17,18 +17,18 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post("http://127.0.0.1:8000/users/login", credentials);
+            const response = await axios.post("http://127.0.0.1:8000/companies/login", credentials);
             alert("Inicio de sesión exitoso");
-            const { role } = response.data;
-            console.log("Token recibido:", response.data.access_token);
-            if (role === "admin") {
-                navigate("/home");
-            } else {
-                navigate("/home");
-            }
+
+            // Guardar el token en localStorage
+            const { access_token } = response.data;
+            localStorage.setItem("token", access_token);
+
+            // Redirigir a la página principal
+            navigate("/home");
         } catch (error) {
             alert("Error al iniciar sesión");
-            console.error(error);
+            console.error("Error:", error.response?.data || error.message);
         }
     };
 
@@ -75,12 +75,6 @@ function Login() {
                                     onClick={() => navigate("/register/company")}
                                 >
                                     Registrarse como Empresa
-                                </button>
-                                <button
-                                    className="btn btn-link"
-                                    onClick={() => navigate("/register/user")}
-                                >
-                                    Registrarse como Personal de Empresa
                                 </button>
                             </div>
                         </div>

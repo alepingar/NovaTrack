@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css"; 
+import "bootstrap/dist/css/bootstrap.min.css";
 
 function RegisterCompany() {
     const [formData, setFormData] = useState({
@@ -11,6 +11,7 @@ function RegisterCompany() {
         industry: "",
     });
 
+    const [errorMessage, setErrorMessage] = useState(null);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -23,12 +24,16 @@ function RegisterCompany() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post("http://127.0.0.1:8000/users/register/company", formData);
+            setErrorMessage(null); // Reinicia el mensaje de error
+            const response = await axios.post("http://127.0.0.1:8000/companies/register", formData);
             alert("Registro exitoso");
             navigate("/login");
         } catch (error) {
-            alert("Error al registrar la empresa");
-            console.error(error);
+            if (error.response && error.response.data) {
+                setErrorMessage(error.response.data.detail || "Error al registrar la empresa");
+            } else {
+                setErrorMessage("No se pudo conectar con el servidor.");
+            }
         }
     };
 
@@ -41,6 +46,11 @@ function RegisterCompany() {
                             <h2>Registro de Empresa</h2>
                         </div>
                         <div className="card-body">
+                            {errorMessage && (
+                                <div className="alert alert-danger text-center">
+                                    {errorMessage}
+                                </div>
+                            )}
                             <form onSubmit={handleSubmit}>
                                 <div className="mb-3">
                                     <label htmlFor="name" className="form-label">Nombre de la Empresa</label>

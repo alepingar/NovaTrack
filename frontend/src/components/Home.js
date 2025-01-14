@@ -1,58 +1,46 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./../App.css";
 
-function Home({ role }) {
-    // El role puede ser "admin" para empresas o "staff" para personal
+function Home() {
     return (
-        <div className="d-flex">
-            {/* Panel de navegación lateral */}
-            <nav className="bg-light p-3" style={{ width: "250px", height: "100vh" }}>
-                <h4>Menú</h4>
-                <ul className="nav flex-column">
-                    <li className="nav-item">
-                        <a href="#summary" className="nav-link">Resumen</a>
-                    </li>
-                    {role === "admin" && (
+        <div>
+            {/* Navbar Superior */}
+            <nav className="navbar navbar-expand-lg navbar-light bg-light px-4 shadow">
+                <a className="navbar-brand fw-bold" href="/">
+                    NovaTrack
+                </a>
+                <button
+                    className="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span className="navbar-toggler-icon"></span>
+                </button>
+                <div className="collapse navbar-collapse justify-content-between" id="navbarNav">
+                    {/* Links de navegación */}
+                    <ul className="navbar-nav">
                         <li className="nav-item">
-                            <a href="#users" className="nav-link">Gestión de Usuarios</a>
+                            <a className="nav-link" href="/profile">Perfil</a>
                         </li>
-                    )}
-                    <li className="nav-item">
-                        <a href="#transactions" className="nav-link">Transacciones</a>
-                    </li>
-                    <li className="nav-item">
-                        <a href="#anomalies" className="nav-link">Anomalías</a>
-                    </li>
-                    <li className="nav-item">
-                        <a href="#settings" className="nav-link">Configuración</a>
-                    </li>
-                </ul>
+                        <li className="nav-item">
+                            <a className="nav-link" href="/transactions">Transacciones</a>
+                        </li>
+                        <li className="nav-item">
+                            <a className="nav-link" href="/anomalies">Anomalías</a>
+                        </li>
+                    </ul>
+                </div>
             </nav>
 
-            {/* Contenido principal */}
-            <main className="p-4" style={{ flex: 1 }}>
-                <div id="summary">
-                    <h2>Resumen General</h2>
-                    <p>Gráficos y estadísticas de actividad reciente.</p>
-                </div>
-                {role === "admin" && (
-                    <div id="users">
-                        <h2>Gestión de Usuarios</h2>
-                        <p>Añadir, eliminar y gestionar empleados.</p>
-                    </div>
-                )}
-                <div id="transactions">
-                    <h2>Historial de Transacciones</h2>
-                    <p>Tabla de transacciones recientes.</p>
-                </div>
-                <div id="anomalies">
-                    <h2>Análisis de Anomalías</h2>
-                    <p>Lista y estadísticas de anomalías detectadas.</p>
-                </div>
-                <div id="settings">
-                    <h2>Configuraciones</h2>
-                    <p>Opciones de personalización de cuenta y criterios de detección.</p>
-                </div>
+            {/* Contenido Principal */}
+            <main className="container mt-4">
+                <h1 className="text-center">Bienvenido a NovaTrack</h1>
+                <p className="text-center">Selecciona una sección del menú para continuar.</p>
             </main>
         </div>
     );
