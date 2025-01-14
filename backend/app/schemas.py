@@ -19,6 +19,11 @@ class CompanyResponse(BaseModel):
     industry: Optional[str] = None
     role: str = "admin"
 
+class UpdateCompanyProfile(BaseModel):
+    name: Optional[str]
+    email: Optional[EmailStr]
+    industry: Optional[str]
+
 class Token(BaseModel):
     access_token: str
     token_type: str

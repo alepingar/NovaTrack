@@ -5,6 +5,8 @@ import Login from "./components/Login";
 import Home from "./components/Home";
 import Profile from "./components/Profile";
 import "./App.css";
+import EditProfile from "./components/EditProfile";
+
 
 function App() {
     return (
@@ -13,6 +15,7 @@ function App() {
                 <Route path="/home" element={<Home role="admin" />} />
                 <Route path="/register/company" element={<RegisterCompany />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/edit-profile" element={<EditProfile />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={<Navigate to="/login"/>} />
             </Routes>

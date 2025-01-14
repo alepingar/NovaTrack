@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.utils.security import hash_password, verify_password, create_access_token, get_current_user
 from app.database import db
-from app.schemas import CompanyCreate, CompanyResponse, Token, LoginRequest
+from app.schemas import CompanyCreate, CompanyResponse, Token, LoginRequest , UpdateCompanyProfile
 from bson import ObjectId
 
 router = APIRouter()
@@ -69,4 +69,37 @@ async def get_company_profile(current_user: dict = Depends(get_current_user)):
         email=company["email"],
         industry=company.get("industry"),
         role="admin",
+    )
+
+
+@router.put("/profile", response_model=CompanyResponse)
+async def update_company_profile(
+    company_data: UpdateCompanyProfile,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Permite a una empresa actualizar su perfil.
+    """
+    company_id = ObjectId(current_user["company_id"])
+    existing_company = await db.companies.find_one({"_id": company_id})
+
+    if not existing_company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+
+    # Actualizar datos
+    updated_data = {
+        "name": company_data.name,
+        "email": company_data.email,
+        "industry": company_data.industry
+    }
+    await db.companies.update_one({"_id": company_id}, {"$set": updated_data})
+
+    # Retornar los datos actualizados
+    updated_company = await db.companies.find_one({"_id": company_id})
+    return CompanyResponse(
+        id=str(updated_company["_id"]),
+        name=updated_company["name"],
+        email=updated_company["email"],
+        industry=updated_company.get("industry"),
+        role="admin"
     )

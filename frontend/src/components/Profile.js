@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Profile() {
     const [company, setCompany] = useState(null);
 
+    const navigate = useNavigate();
+    
     useEffect(() => {
         const fetchCompanyData = async () => {
             try {
@@ -41,6 +44,12 @@ function Profile() {
                     <p className="text-dark"><strong>Email:</strong> {company.email}</p>
                     <p className="text-dark"><strong>Industria:</strong> {company.industry || "No especificada"}</p>
                 </div>
+                <button
+                    className="dropdown-item"
+                    onClick={() => navigate("/edit-profile")}
+                >
+                Editar Perfil
+                </button>
             </div>
         </div>
     );
