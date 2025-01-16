@@ -8,6 +8,7 @@ import EditProfile from "./components/EditProfile";
 import ManageUsers from "./components/ManageUsers";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
+import Transfers from "./components/Transfers";
 import "./App.css";
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
                         <Route path="/edit-profile" element={<EditProfile />} />
                         <Route path="/register/company" element={<RegisterCompany />} />
                         <Route path="/manage-users" element={<ManageUsers />} />
+                        <Route path="/transfers" element={<Transfers />} /> 
                     </Route>
                 </Route>
             </Routes>

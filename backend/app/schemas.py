@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-
+from datetime import datetime
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
@@ -38,3 +38,31 @@ class UserCreate(BaseModel):
     name: str
     email: EmailStr
     role: str
+
+
+class Transfer(BaseModel):
+    id: int
+    amount: float
+    currency: str
+    from_account: str
+    to_account: str
+    timestamp: datetime
+    description: Optional[str] = None
+    category: Optional[str] = None
+    origin_location: Optional[str] = None
+    destination_location: Optional[str] = None
+    payment_method: Optional[str] = None
+    status: str
+    user_id: Optional[str] = None
+    recurring: Optional[bool] = False
+    client_ip: Optional[str] = None
+    company_id: str
+    is_anomalous: Optional[bool] = False
+
+class TransferResponse(BaseModel):
+    id: int
+    amount: float
+    from_account: str
+    to_account: str
+    timestamp: datetime
+    is_anomalous: Optional[bool] = False
