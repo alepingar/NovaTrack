@@ -4,11 +4,14 @@ import json
 from datetime import datetime
 from confluent_kafka import Producer
 from pymongo import MongoClient
-from backend.app.database import db
 
 # Configuración del productor
 producer_config = {'bootstrap.servers': 'localhost:9092'}
 producer = Producer(producer_config)
+
+# Conexión a MongoDB
+client = MongoClient("mongodb://localhost:27017/")
+db = client["nova_track"]  
 
 def get_companies():
     """
@@ -60,7 +63,7 @@ def produce_continuous_transfers():
             )
             producer.flush()
             print(f"Transferencia enviada para {company['name']}: {transfer}")
-            time.sleep(random.uniform(40, 50))  
+            time.sleep(random.uniform(40, 120))  
     except KeyboardInterrupt:
         print("\nGeneración de transferencias interrumpida.")
     finally:
