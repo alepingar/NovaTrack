@@ -8,8 +8,10 @@ function ManageUsers() {
     const [editingUser, setEditingUser] = useState(null); // Usuario en edición
     const [newUser, setNewUser] = useState({
         name: "",
+        surname: "",
         email: "",
         role: "staff",
+        password: "",
     });
 
     const fetchUsers = async () => {
@@ -79,22 +81,37 @@ function ManageUsers() {
     const handleSaveEdit = async () => {
         try {
             const token = localStorage.getItem("token");
+    
+            // Crear una copia limpia del objeto, excluyendo campos con valores undefined
+            const updatedUser = Object.keys(editingUser).reduce((acc, key) => {
+                if (editingUser[key] !== undefined && editingUser[key] !== "") {
+                    acc[key] = editingUser[key];
+                }
+                return acc;
+            }, {});
+    
+            console.log("Datos enviados al backend:", updatedUser);
+    
             await axios.put(
                 `http://127.0.0.1:8000/companies/users/${editingUser.id}`,
-                editingUser,
+                updatedUser,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 }
             );
+    
             alert("Usuario actualizado correctamente");
             setEditingUser(null);
             fetchUsers(); // Recarga la lista de usuarios
         } catch (error) {
-            console.error("Error al actualizar usuario:", error);
+            console.error("Error al actualizar usuario:", error.response?.data || error.message);
+            alert("Error al actualizar el usuario");
         }
     };
+
+    
 
     if (loading) {
         return <p>Cargando usuarios...</p>;
@@ -117,6 +134,7 @@ function ManageUsers() {
                         <thead>
                             <tr>
                                 <th>Nombre</th>
+                                <th>Apellidos</th>
                                 <th>Correo Electrónico</th>
                                 <th>Rol</th>
                                 <th>Opciones</th>
@@ -136,6 +154,19 @@ function ManageUsers() {
                                             />
                                         ) : (
                                             user.name
+                                        )}
+                                    </td>
+                                    <td>
+                                        {editingUser?.id === user.id ? (
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                name="surname"
+                                                value={editingUser.surname}
+                                                onChange={handleEditInputChange}
+                                            />
+                                        ) : (
+                                            user.surname
                                         )}
                                     </td>
                                     <td>
@@ -211,6 +242,18 @@ function ManageUsers() {
                                         />
                                     </div>
                                     <div className="mb-3">
+                                        <label htmlFor="surname" className="form-label">Apellidos</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            id="surname"
+                                            name="surname"
+                                            value={newUser.surname}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-3">
                                         <label htmlFor="email" className="form-label">Correo Electrónico</label>
                                         <input
                                             type="email"
@@ -235,6 +278,18 @@ function ManageUsers() {
                                             <option value="staff">Staff</option>
                                             <option value="manager">Manager</option>
                                         </select>
+                                    </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="password" className="form-label">Contraseña</label>
+                                        <input
+                                            type="password"
+                                            className="form-control"
+                                            id="password"
+                                            name="password"
+                                            value={newUser.password}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
                                     </div>
                                     <button type="submit" className="btn btn-primary w-100">Guardar</button>
                                 </form>

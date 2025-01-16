@@ -57,13 +57,23 @@ class Token(BaseModel):
 class UserResponse(BaseModel):
     id: str
     name: str
+    surname: str
     email: EmailStr
     role: str
 
 class UserCreate(BaseModel):
     name: str
+    surname: str
     email: EmailStr
+    password: str
     role: str
+
+class UserUpdate(BaseModel):
+    name: Optional[str]
+    surname: Optional[str]
+    email: Optional[EmailStr]
+    role: Optional[str]
+
 
 
 class Transfer(BaseModel):
