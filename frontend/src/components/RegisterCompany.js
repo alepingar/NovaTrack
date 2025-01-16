@@ -8,7 +8,15 @@ function RegisterCompany() {
         name: "",
         email: "",
         password: "",
+        country: "",
         industry: "",
+        address: "",
+        phone_number: "",
+        website: "",
+        tax_id: "",
+        description: "",
+        founded_date: "",
+        logo_url: "",
     });
 
     const [errorMessage, setErrorMessage] = useState(null);
@@ -25,12 +33,29 @@ function RegisterCompany() {
         e.preventDefault();
         try {
             setErrorMessage(null); // Reinicia el mensaje de error
-            const response = await axios.post("http://127.0.0.1:8000/companies/register", formData);
+    
+            // Filtra campos vacíos
+            const payload = Object.fromEntries(
+                Object.entries(formData).filter(([_, value]) => value.trim() !== "")
+            );
+    
+            // Convierte la fecha si está definida
+            if (payload.founded_date) {
+                payload.founded_date = new Date(payload.founded_date).toISOString();
+            }
+    
+            await axios.post("http://127.0.0.1:8000/companies/register", payload);
             alert("Registro exitoso");
             navigate("/login");
         } catch (error) {
+            console.error("Error del servidor:", error.response?.data || error.message);
             if (error.response && error.response.data) {
-                setErrorMessage(error.response.data.detail || "Error al registrar la empresa");
+                const details = error.response.data.detail;
+                if (Array.isArray(details)) {
+                    setErrorMessage(details.map(d => `${d.loc?.join(".")}: ${d.msg}`).join(", "));
+                } else {
+                    setErrorMessage(details || "Error al registrar la empresa");
+                }
             } else {
                 setErrorMessage("No se pudo conectar con el servidor.");
             }
@@ -40,7 +65,7 @@ function RegisterCompany() {
     return (
         <div className="container mt-5">
             <div className="row justify-content-center">
-                <div className="col-md-6">
+                <div className="col-md-8">
                     <div className="card shadow">
                         <div className="card-header text-center">
                             <h2>Registro de Empresa</h2>
@@ -53,7 +78,9 @@ function RegisterCompany() {
                             )}
                             <form onSubmit={handleSubmit}>
                                 <div className="mb-3">
-                                    <label htmlFor="name" className="form-label">Nombre de la Empresa</label>
+                                    <label htmlFor="name" className="form-label">
+                                        Nombre de la Empresa <span className="text-danger">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         className="form-control"
@@ -65,7 +92,9 @@ function RegisterCompany() {
                                     />
                                 </div>
                                 <div className="mb-3">
-                                    <label htmlFor="email" className="form-label">Correo Electrónico</label>
+                                    <label htmlFor="email" className="form-label">
+                                        Correo Electrónico <span className="text-danger">*</span>
+                                    </label>
                                     <input
                                         type="email"
                                         className="form-control"
@@ -77,13 +106,29 @@ function RegisterCompany() {
                                     />
                                 </div>
                                 <div className="mb-3">
-                                    <label htmlFor="password" className="form-label">Contraseña</label>
+                                    <label htmlFor="password" className="form-label">
+                                        Contraseña <span className="text-danger">*</span>
+                                    </label>
                                     <input
                                         type="password"
                                         className="form-control"
                                         id="password"
                                         name="password"
                                         placeholder="Contraseña"
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="country" className="form-label">
+                                        País <span className="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        id="country"
+                                        name="country"
+                                        placeholder="País de la Empresa"
                                         onChange={handleChange}
                                         required
                                     />
@@ -96,6 +141,82 @@ function RegisterCompany() {
                                         id="industry"
                                         name="industry"
                                         placeholder="Industria"
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="address" className="form-label">Dirección</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        id="address"
+                                        name="address"
+                                        placeholder="Dirección de la Empresa"
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="phone_number" className="form-label">Teléfono</label>
+                                    <input
+                                        type="tel"
+                                        className="form-control"
+                                        id="phone_number"
+                                        name="phone_number"
+                                        placeholder="Teléfono de la Empresa"
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="website" className="form-label">Sitio Web</label>
+                                    <input
+                                        type="url"
+                                        className="form-control"
+                                        id="website"
+                                        name="website"
+                                        placeholder="URL del Sitio Web"
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="tax_id" className="form-label">ID Fiscal</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        id="tax_id"
+                                        name="tax_id"
+                                        placeholder="ID Fiscal de la Empresa"
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="description" className="form-label">Descripción</label>
+                                    <textarea
+                                        className="form-control"
+                                        id="description"
+                                        name="description"
+                                        placeholder="Breve descripción de la empresa"
+                                        onChange={handleChange}
+                                        rows="4"
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="founded_date" className="form-label">Fecha de Fundación</label>
+                                    <input
+                                        type="date"
+                                        className="form-control"
+                                        id="founded_date"
+                                        name="founded_date"
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="logo_url" className="form-label">URL del Logo</label>
+                                    <input
+                                        type="url"
+                                        className="form-control"
+                                        id="logo_url"
+                                        name="logo_url"
+                                        placeholder="URL del Logo"
                                         onChange={handleChange}
                                     />
                                 </div>

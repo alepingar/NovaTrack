@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+
 import { Outlet, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -11,6 +13,25 @@ function Layout() {
         const fetchCompanyData = async () => {
             try {
                 const token = localStorage.getItem("token");
+
+                if (!token) {
+                    // Redirigir al login si no hay token
+                    navigate("/login");
+                    return;
+                }
+
+                // Decodificar el token para verificar su validez
+                const decoded = jwtDecode(token);
+                const currentTime = Date.now() / 1000;
+
+                if (decoded.exp < currentTime) {
+                    // Si el token ha expirado, redirigir al login
+                    localStorage.removeItem("token");
+                    navigate("/login");
+                    return;
+                }
+
+                // Obtener los datos de la empresa desde el backend
                 const response = await axios.get("http://127.0.0.1:8000/companies/profile", {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -19,17 +40,27 @@ function Layout() {
                 setCompany(response.data);
             } catch (error) {
                 console.error("Error al obtener los datos de la empresa:", error);
+                localStorage.removeItem("token");
+                navigate("/login");
             }
         };
 
         fetchCompanyData();
-    }, []);
+    }, [navigate]);
+
+    if (!company) {
+        return (
+            <div className="container mt-4 text-center">
+                <p>Cargando...</p>
+            </div>
+        );
+    }
 
     return (
         <div>
             {/* Navbar Superior */}
             <nav className="navbar navbar-expand-lg navbar-dark bg-primary px-4 shadow">
-                <a className="navbar-brand fw-bold text-white" href="/">
+                <a className="navbar-brand fw-bold text-white" href="/home">
                     NovaTrack
                 </a>
                 <button

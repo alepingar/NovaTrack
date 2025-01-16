@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr , HttpUrl
 from typing import Optional
 from datetime import datetime
 class LoginRequest(BaseModel):
@@ -6,11 +6,19 @@ class LoginRequest(BaseModel):
     password: str
     
 class CompanyCreate(BaseModel):
-    name: str
-    email: EmailStr
-    password: str
-    industry: Optional[str] = None
-    role: str = "admin"
+    name: str  # Nombre de la empresa
+    email: EmailStr  # Correo principal de contacto
+    password: str  # Contraseña de la cuenta
+    industry: Optional[str] = None  # Sector industrial (opcional)
+    role: str = "admin"  # Rol predeterminado (admin)
+    country: str  # País de la empresa
+    phone_number: Optional[str] = None  # Teléfono de contacto
+    tax_id: Optional[str] = None  # Número de identificación fiscal (CIF, NIF, etc.)
+    website: Optional[HttpUrl] = None  # Página web de la empresa
+    description: Optional[str] = None  # Descripción breve de la empresa
+    address: Optional[str] = None  # Dirección física de la empresa
+    founded_date: Optional[datetime] = None  # Fecha de fundación de la empresa
+    logo_url: Optional[HttpUrl] = None  # URL del logo de la empresa
 
 class CompanyResponse(BaseModel):
     id: str
@@ -18,11 +26,29 @@ class CompanyResponse(BaseModel):
     email: EmailStr
     industry: Optional[str] = None
     role: str = "admin"
+    country: str
+    phone_number: Optional[str] = None
+    tax_id: Optional[str] = None
+    website: Optional[HttpUrl] = None
+    description: Optional[str] = None
+    address: Optional[str] = None
+    founded_date: Optional[datetime] = None
+    logo_url: Optional[HttpUrl] = None
+    created_at: datetime  # Fecha de creación del registro
+    updated_at: datetime  # Última fecha de actualización del perfil
 
 class UpdateCompanyProfile(BaseModel):
     name: Optional[str]
     email: Optional[EmailStr]
     industry: Optional[str]
+    country: Optional[str]
+    phone_number: Optional[str]
+    tax_id: Optional[str]
+    website: Optional[HttpUrl]
+    description: Optional[str]
+    address: Optional[str]
+    founded_date: Optional[datetime]
+    logo_url: Optional[HttpUrl]
 
 class Token(BaseModel):
     access_token: str

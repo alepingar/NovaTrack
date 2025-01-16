@@ -15,20 +15,29 @@ function App() {
     return (
         <Router>
             <Routes>
-                {/* Redirigir automáticamente al login si está en "/" */}
+                {/* Redirige a /login por defecto */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
-                
+
+                {/* Ruta pública: Login */}
                 <Route path="/login" element={<Login />} />
 
-                <Route path="/" element={<PrivateRoute />}>
-                    <Route element={<Layout />}>
-                        <Route path="/home" element={<Home role="admin" />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/edit-profile" element={<EditProfile />} />
-                        <Route path="/register/company" element={<RegisterCompany />} />
-                        <Route path="/manage-users" element={<ManageUsers />} />
-                        <Route path="/transfers" element={<Transfers />} /> 
-                    </Route>
+                {/* Ruta pública: Registro */}
+                <Route path="/register/company" element={<RegisterCompany />} />
+
+                {/* Rutas protegidas */}
+                <Route
+                    path="/"
+                    element={
+                        <PrivateRoute>
+                            <Layout />
+                        </PrivateRoute>
+                    }
+                >
+                    <Route path="/home" element={<Home />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/edit-profile" element={<EditProfile />} />
+                    <Route path="/manage-users" element={<ManageUsers />} />
+                    <Route path="/transfers" element={<Transfers />} />
                 </Route>
             </Routes>
         </Router>
