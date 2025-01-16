@@ -17,7 +17,21 @@ async def login(login_data: LoginRequest):
     # Buscar en empresas
     company = await db.companies.find_one({"email": email})
     if company and verify_password(password, company["password"]):
-        token = create_access_token(data={"sub": company["email"], "role": "admin", "company_id": str(company["_id"])})
+        token = create_access_token(data={
+    "sub": company["email"],
+    "role": "admin",
+    "company_id": str(company["_id"])
+})
+        return {"access_token": token, "token_type": "bearer"}
+
+    # Buscar en usuarios
+    user = await db.users.find_one({"email": email})
+    if user and verify_password(password, user["password"]):
+        token = create_access_token(data={
+    "sub": user["email"],
+    "role": user["role"],
+    "user_id": str(user["_id"])
+})
         return {"access_token": token, "token_type": "bearer"}
 
     raise HTTPException(status_code=401, detail="Credenciales inválidas")
@@ -251,4 +265,22 @@ async def update_user(
         surname=updated_user.get("surname"),
         email=updated_user["email"],
         role=updated_user["role"]
+    )
+
+
+
+@router.get("/users/profile", response_model=UserResponse)
+async def get_user_profile(current_user: dict = Depends(get_current_user)):
+    """
+    Devuelve los datos del usuario logueado.
+    """
+    user = await db.users.find_one({"_id": ObjectId(current_user["user_id"])})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return UserResponse(
+        id=str(user["_id"]),
+        name=user["name"],
+        surname=user["surname"],
+        email=user["email"],
+        role=user["role"],
     )

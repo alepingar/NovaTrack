@@ -1,59 +1,56 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-
 import { Outlet, useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 function Layout() {
-    const [company, setCompany] = useState(null);
+    const [userData, setUserData] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchCompanyData = async () => {
+        const fetchData = async () => {
             try {
                 const token = localStorage.getItem("token");
 
                 if (!token) {
-                    // Redirigir al login si no hay token
                     navigate("/login");
                     return;
                 }
 
-                // Decodificar el token para verificar su validez
                 const decoded = jwtDecode(token);
                 const currentTime = Date.now() / 1000;
 
                 if (decoded.exp < currentTime) {
-                    // Si el token ha expirado, redirigir al login
                     localStorage.removeItem("token");
                     navigate("/login");
                     return;
                 }
 
-                // Obtener los datos de la empresa desde el backend
-                const response = await axios.get("http://127.0.0.1:8000/companies/profile", {
+                const endpoint =
+                    decoded.role === "admin"
+                        ? "http://127.0.0.1:8000/companies/profile"
+                        : "http://127.0.0.1:8000/companies/users/profile";
+
+                const response = await axios.get(endpoint, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                setCompany(response.data);
+
+                setUserData({ ...response.data, role: decoded.role });
             } catch (error) {
-                console.error("Error al obtener los datos de la empresa:", error);
+                console.error("Error al obtener los datos:", error);
                 localStorage.removeItem("token");
                 navigate("/login");
             }
         };
 
-        fetchCompanyData();
+        fetchData();
     }, [navigate]);
 
-    if (!company) {
-        return (
-            <div className="container mt-4 text-center">
-                <p>Cargando...</p>
-            </div>
-        );
+    if (!userData) {
+        return <div className="text-center mt-5">Cargando...</div>;
     }
 
     return (
@@ -82,16 +79,17 @@ function Layout() {
                         <li className="nav-item">
                             <a className="nav-link text-white fw-bold" href="/anomalies">Anomalías</a>
                         </li>
-                        {company && company.role === "admin" && (
+                        {/* Mostrar solo para empresas */}
+                        { userData.role === "admin" && (
                             <li className="nav-item">
                                 <a className="nav-link text-white fw-bold" href="/manage-users">Gestión de Usuarios</a>
                             </li>
                         )}
                     </ul>
 
-                    {/* Nombre de la Empresa */}
+                    {/* Nombre del usuario o empresa */}
                     <div className="d-flex align-items-center">
-                        {company && (
+                        {userData && (
                             <div className="dropdown">
                                 <button
                                     className="btn btn-light dropdown-toggle"
@@ -100,7 +98,7 @@ function Layout() {
                                     data-bs-toggle="dropdown"
                                     aria-expanded="false"
                                 >
-                                    {company.name}
+                                    {userData.name}
                                 </button>
                                 <ul
                                     className="dropdown-menu dropdown-menu-end"
