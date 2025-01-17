@@ -9,6 +9,9 @@ import ManageUsers from "./components/ManageUsers";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import Transfers from "./components/Transfers";
+import Help from "./components/Help";
+import PrivacyPolicy from "./components/PrivacyPolicy";
+import TermsOfService from "./components/TermsOfService";
 import "./App.css";
 
 function App() {
@@ -23,6 +26,11 @@ function App() {
 
                 {/* Ruta pública: Registro */}
                 <Route path="/register/company" element={<RegisterCompany />} />
+
+                {/* Rutas pública: Footer */}
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/help" element={<Help />} />
 
                 {/* Rutas protegidas */}
                 <Route
