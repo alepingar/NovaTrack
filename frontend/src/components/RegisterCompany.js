@@ -62,6 +62,27 @@ function RegisterCompany() {
         }
     };
 
+    const handleImageUpload = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+    
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.post("http://127.0.0.1:8000/upload/logo", formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            alert("Imagen subida correctamente");
+            // Actualiza el estado o recarga los datos
+        } catch (error) {
+            console.error("Error al subir la imagen:", error);
+            alert("Error al subir la imagen");
+        }
+    };
+    
+
     return (
         <div className="container mt-5">
             <div className="row justify-content-center">
@@ -210,14 +231,12 @@ function RegisterCompany() {
                                     />
                                 </div>
                                 <div className="mb-3">
-                                    <label htmlFor="logo_url" className="form-label">URL del Logo</label>
+                                    <label htmlFor="profileImage" className="form-label">Imagen de Perfil</label>
                                     <input
-                                        type="url"
+                                        type="file"
                                         className="form-control"
-                                        id="logo_url"
-                                        name="logo_url"
-                                        placeholder="URL del Logo"
-                                        onChange={handleChange}
+                                        id="profileImage"
+                                        onChange={(e) => handleImageUpload(e.target.files[0])}
                                     />
                                 </div>
                                 <button type="submit" className="btn btn-primary w-100">Registrar</button>

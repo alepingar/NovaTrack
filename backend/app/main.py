@@ -1,17 +1,26 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import timedelta
-from app.routes import company_routes, transfer_routes
-from app.utils.security import create_access_token, verify_password
+from app.routes import company_routes, transfer_routes , upload_routes
 from app.database import db
-from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
+
+import os
+
+UPLOAD_DIR = "./uploads"
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
 
 app = FastAPI()
 
 # Rutas
+
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 app.include_router(company_routes.router, prefix="/companies", tags=["Companies"])
 app.include_router(transfer_routes.router, prefix="/companies", tags=["Transfers"])
+app.include_router(upload_routes.router, prefix="/upload", tags=["Uploads"])
+
 # Middleware CORS
 app.add_middleware(
     CORSMiddleware,

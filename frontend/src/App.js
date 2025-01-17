@@ -9,9 +9,9 @@ import ManageUsers from "./components/ManageUsers";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import Transfers from "./components/Transfers";
-import Help from "./components/Help";
-import PrivacyPolicy from "./components/PrivacyPolicy";
-import TermsOfService from "./components/TermsOfService";
+import Help from "./components/footer/Help";
+import PrivacyPolicy from "./components/footer/PrivacyPolicy";
+import TermsOfService from "./components/footer/TermsOfService";
 import "./App.css";
 
 function App() {

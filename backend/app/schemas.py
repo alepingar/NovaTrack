@@ -18,7 +18,7 @@ class CompanyCreate(BaseModel):
     description: Optional[str] = None  # Descripción breve de la empresa
     address: Optional[str] = None  # Dirección física de la empresa
     founded_date: Optional[datetime] = None  # Fecha de fundación de la empresa
-    logo_url: Optional[HttpUrl] = None  # URL del logo de la empresa
+    profileImage: Optional[str] = None  # URL del logo de la empresa
 
 class CompanyResponse(BaseModel):
     id: str
@@ -33,7 +33,7 @@ class CompanyResponse(BaseModel):
     description: Optional[str] = None
     address: Optional[str] = None
     founded_date: Optional[datetime] = None
-    logo_url: Optional[HttpUrl] = None
+    profileImage: Optional[str] = None
     created_at: datetime  # Fecha de creación del registro
     updated_at: datetime  # Última fecha de actualización del perfil
 
@@ -48,7 +48,7 @@ class UpdateCompanyProfile(BaseModel):
     description: Optional[str]
     address: Optional[str]
     founded_date: Optional[datetime]
-    logo_url: Optional[HttpUrl]
+    profileImage: Optional[str]
 
 class Token(BaseModel):
     access_token: str

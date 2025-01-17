@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 function ManageUsers() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false); // Modal para añadir usuario
-    const [editingUser, setEditingUser] = useState(null); // Usuario en edición
+    const [showModal, setShowModal] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
     const [newUser, setNewUser] = useState({
         name: "",
         surname: "",
@@ -47,8 +49,8 @@ function ManageUsers() {
                 },
             });
             alert("Usuario añadido correctamente");
-            setShowModal(false); // Cierra el modal
-            fetchUsers(); // Recarga la lista de usuarios
+            setShowModal(false);
+            fetchUsers();
         } catch (error) {
             alert("Error al añadir el usuario");
             console.error("Error:", error.response?.data || error.message);
@@ -81,17 +83,14 @@ function ManageUsers() {
     const handleSaveEdit = async () => {
         try {
             const token = localStorage.getItem("token");
-    
-            // Crear una copia limpia del objeto, excluyendo campos con valores undefined
+
             const updatedUser = Object.keys(editingUser).reduce((acc, key) => {
                 if (editingUser[key] !== undefined && editingUser[key] !== "") {
                     acc[key] = editingUser[key];
                 }
                 return acc;
             }, {});
-    
-            console.log("Datos enviados al backend:", updatedUser);
-    
+
             await axios.put(
                 `http://127.0.0.1:8000/companies/users/${editingUser.id}`,
                 updatedUser,
@@ -101,43 +100,41 @@ function ManageUsers() {
                     },
                 }
             );
-    
+
             alert("Usuario actualizado correctamente");
             setEditingUser(null);
-            fetchUsers(); // Recarga la lista de usuarios
+            fetchUsers();
         } catch (error) {
-            console.error("Error al actualizar usuario:", error.response?.data || error.message);
             alert("Error al actualizar el usuario");
+            console.error("Error al actualizar usuario:", error.response?.data || error.message);
         }
     };
 
-    
-
     if (loading) {
-        return <p>Cargando usuarios...</p>;
+        return <div className="text-center mt-5">Cargando usuarios...</div>;
     }
 
     return (
         <div className="container mt-5">
-            <div className="card shadow">
-                <div className="card-header bg-primary text-white">
-                    <h3>Gestión de Usuarios</h3>
+            <div className="card shadow border-0">
+                <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h3 className="mb-0">Gestión de Usuarios</h3>
+                    <button
+                        className="btn btn-success"
+                        onClick={() => setShowModal(true)}
+                    >
+                        <i className="bi bi-plus-circle"></i> Añadir Usuario
+                    </button>
                 </div>
                 <div className="card-body">
-                    <button
-                        className="btn btn-success mb-3"
-                        onClick={() => setShowModal(true)} // Abre el modal
-                    >
-                        Añadir Usuario
-                    </button>
-                    <table className="table table-striped">
-                        <thead>
+                    <table className="table table-hover align-middle">
+                        <thead className="table-dark">
                             <tr>
                                 <th>Nombre</th>
                                 <th>Apellidos</th>
                                 <th>Correo Electrónico</th>
                                 <th>Rol</th>
-                                <th>Opciones</th>
+                                <th className="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -183,27 +180,27 @@ function ManageUsers() {
                                         )}
                                     </td>
                                     <td>{user.role}</td>
-                                    <td>
+                                    <td className="text-center">
                                         {editingUser?.id === user.id ? (
                                             <button
                                                 className="btn btn-success btn-sm me-2"
                                                 onClick={handleSaveEdit}
                                             >
-                                                Guardar
+                                                <i className="bi bi-check-circle"></i> Guardar
                                             </button>
                                         ) : (
                                             <button
                                                 className="btn btn-warning btn-sm me-2"
                                                 onClick={() => handleEditUser(user)}
                                             >
-                                                Editar
+                                                <i className="bi bi-pencil-square"></i> Editar
                                             </button>
                                         )}
                                         <button
                                             className="btn btn-danger btn-sm"
                                             onClick={() => handleDeleteUser(user.id)}
                                         >
-                                            Eliminar
+                                            <i className="bi bi-trash"></i> Eliminar
                                         </button>
                                     </td>
                                 </tr>
@@ -213,10 +210,9 @@ function ManageUsers() {
                 </div>
             </div>
 
-            {/* Modal para añadir usuario */}
             {showModal && (
                 <div className="modal show d-block" tabIndex="-1" role="dialog">
-                    <div className="modal-dialog" role="document">
+                    <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">Añadir Usuario</h5>
@@ -224,7 +220,7 @@ function ManageUsers() {
                                     type="button"
                                     className="btn-close"
                                     aria-label="Close"
-                                    onClick={() => setShowModal(false)} // Cierra el modal
+                                    onClick={() => setShowModal(false)}
                                 ></button>
                             </div>
                             <div className="modal-body">

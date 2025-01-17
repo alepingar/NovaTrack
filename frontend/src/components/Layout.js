@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { Outlet, useNavigate } from "react-router-dom";
-import Footer from "./Footer";
+import Footer from "./footer/Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
+import '../App.css'; // Importa los estilos
 
 function Layout() {
     const [userData, setUserData] = useState(null);
@@ -55,84 +56,102 @@ function Layout() {
     }
 
     return (
-        <div className="d-flex flex-column min-vh-100">
+        <div className="d-flex flex-column" style={{ minHeight: "100vh" }}>
             {/* Navbar Superior */}
-            <nav className="navbar navbar-expand-lg navbar-dark bg-primary px-4 shadow">
-                <a className="navbar-brand fw-bold text-white" href="/home">
-                    NovaTrack
-                </a>
-                <button
-                    className="navbar-toggler"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#navbarNav"
-                    aria-controls="navbarNav"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation"
-                >
-                    <span className="navbar-toggler-icon"></span>
-                </button>
-                <div className="collapse navbar-collapse justify-content-between" id="navbarNav">
-                    <ul className="navbar-nav">
-                        <li className="nav-item">
-                            <a className="nav-link text-white fw-bold" href="/transfers">Transacciones</a>
-                        </li>
-                        <li className="nav-item">
-                            <a className="nav-link text-white fw-bold" href="/anomalies">Anomalías</a>
-                        </li>
-                        {/* Mostrar solo para empresas */}
-                        {userData?.role === "admin" && (
+            <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+                <div className="container-fluid">
+                    <a className="navbar-brand fw-bold text-white" href="/home">
+                        NovaTrack
+                    </a>
+                    <button
+                        className="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarNav"
+                        aria-controls="navbarNav"
+                        aria-expanded="false"
+                        aria-label="Toggle navigation"
+                    >
+                        <span className="navbar-toggler-icon"></span>
+                    </button>
+                    <div className="collapse navbar-collapse justify-content-between" id="navbarNav">
+                        <ul className="navbar-nav">
                             <li className="nav-item">
-                                <a className="nav-link text-white fw-bold" href="/manage-users">Gestión de Usuarios</a>
+                                <a className="nav-link text-white" href="/transfers">
+                                    <i className="bi bi-currency-exchange me-1"></i>Transacciones
+                                </a>
                             </li>
-                        )}
-                    </ul>
+                            <li className="nav-item">
+                                <a className="nav-link text-white" href="/anomalies">
+                                    <i className="bi bi-exclamation-circle me-1"></i>Anomalías
+                                </a>
+                            </li>
+                            {userData?.role === "admin" && (
+                                <li className="nav-item">
+                                    <a className="nav-link text-white" href="/manage-users">
+                                        <i className="bi bi-people me-1"></i>Gestión de Usuarios
+                                    </a>
+                                </li>
+                            )}
+                        </ul>
 
-                    {/* Nombre del usuario o empresa */}
-                    <div className="d-flex align-items-center">
-                        {userData && (
-                            <div className="dropdown">
-                                <button
-                                    className="btn btn-light dropdown-toggle"
-                                    type="button"
-                                    id="profileDropdown"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                >
-                                    {userData.name}
-                                </button>
-                                <ul
-                                    className="dropdown-menu dropdown-menu-end"
-                                    aria-labelledby="profileDropdown"
-                                >
-                                    <li>
-                                        <button
-                                            className="dropdown-item"
-                                            onClick={() => navigate("/profile")}
-                                        >
-                                            Ver Perfil
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button
-                                            className="dropdown-item text-danger"
-                                            onClick={() => {
-                                                localStorage.removeItem("token");
-                                                navigate("/login");
-                                            }}
-                                        >
-                                            Cerrar Sesión
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                        )}
+                        {/* Perfil del usuario o empresa */}
+                        <div className="d-flex align-items-center">
+                            {userData && (
+                                <div className="dropdown d-flex align-items-center">
+                                    <img
+                                        src={userData.profileImage || "default-avatar.png"}
+                                        alt="Foto de perfil"
+                                        className="rounded-circle"
+                                        style={{
+                                            width: "40px",
+                                            height: "40px",
+                                            objectFit: "cover",
+                                            marginRight: "10px",
+                                        }}
+                                    />
+                                    <button
+                                        className="btn btn-light dropdown-toggle"
+                                        type="button"
+                                        id="profileDropdown"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                    >
+                                        {userData.name}
+                                    </button>
+                                    <ul
+                                        className="dropdown-menu dropdown-menu-end"
+                                        aria-labelledby="profileDropdown"
+                                    >
+                                        <li>
+                                            <button
+                                                className="dropdown-item"
+                                                onClick={() => navigate("/profile")}
+                                            >
+                                                Ver Perfil
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button
+                                                className="dropdown-item text-danger"
+                                                onClick={() => {
+                                                    localStorage.removeItem("token");
+                                                    navigate("/login");
+                                                }}
+                                            >
+                                                Cerrar Sesión
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </nav>
 
             {/* Contenido Principal */}
-            <main className="flex-grow-1 container mt-4">
+            <main className="flex-grow-1 container mt-5 pt-4">
                 <Outlet />
             </main>
 

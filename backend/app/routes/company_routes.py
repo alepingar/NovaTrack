@@ -87,7 +87,7 @@ async def register_company(company: CompanyCreate):
             description=company.description,
             address=company.address,
             founded_date=company.founded_date,
-            logo_url=company.logo_url,
+            profileImage=company.profileImage,
             created_at=company_data["created_at"],
             updated_at=company_data["updated_at"]
         )
@@ -116,7 +116,7 @@ async def get_company_profile(current_user: dict = Depends(get_current_user)):
         description=company.get("description"),
         address=company.get("address"),
         founded_date=company.get("founded_date"),
-        logo_url=company.get("logo_url"),
+        profileImage=company.get("profileImage"),
         created_at=company.get("created_at"),
         updated_at=company.get("updated_at")
     )
@@ -159,7 +159,7 @@ async def update_company_profile(
         description=updated_company.get("description"),
         address=updated_company.get("address"),
         founded_date=updated_company.get("founded_date"),
-        logo_url=updated_company.get("logo_url"),
+        profileImage=updated_company.get("profileImage"),
         created_at=updated_company.get("created_at"),
         updated_at=updated_company.get("updated_at")
     )

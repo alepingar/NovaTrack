@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 function Transfers() {
     const [transfers, setTransfers] = useState([]);
@@ -28,36 +29,52 @@ function Transfers() {
     }, []);
 
     if (loading) {
-        return <p>Cargando transferencias...</p>;
+        return <div className="text-center mt-5">Cargando transferencias...</div>;
     }
 
     return (
         <div className="container mt-4">
-            <h2>Transferencias Recibidas</h2>
-            <table className="table table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Monto</th>
-                        <th>De</th>
-                        <th>Para</th>
-                        <th>Fecha</th>
-                        <th>Anómala</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {transfers.map((transfer) => (
-                        <tr key={transfer.id} className={transfer.is_anomalous ? "table-danger" : ""}>
-                            <td>{transfer.id}</td>
-                            <td>{transfer.amount}</td>
-                            <td>{transfer.from_account}</td>
-                            <td>{transfer.to_account}</td>
-                            <td>{new Date(transfer.timestamp).toLocaleString()}</td>
-                            <td>{transfer.is_anomalous ? "Sí" : "No"}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <div className="card shadow">
+                <div className="card-header bg-primary text-white">
+                    <h3 className="mb-0">Transferencias Recibidas</h3>
+                </div>
+                <div className="card-body">
+                    {transfers.length === 0 ? (
+                        <div className="text-center text-muted">No se encontraron transferencias.</div>
+                    ) : (
+                        <table className="table table-hover">
+                            <thead className="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Monto</th>
+                                    <th>De</th>
+                                    <th>Para</th>
+                                    <th>Fecha</th>
+                                    <th>Anómala</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {transfers.map((transfer) => (
+                                    <tr key={transfer.id} className={transfer.is_anomalous ? "table-danger" : "table-default"}>
+                                        <td>{transfer.id}</td>
+                                        <td>{transfer.amount.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}</td>
+                                        <td>{transfer.from_account}</td>
+                                        <td>{transfer.to_account}</td>
+                                        <td>{new Date(transfer.timestamp).toLocaleString()}</td>
+                                        <td>
+                                            {transfer.is_anomalous ? (
+                                                <span className="badge bg-danger">Sí</span>
+                                            ) : (
+                                                <span className="badge bg-success">No</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

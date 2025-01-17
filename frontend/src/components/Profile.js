@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 
 function Profile() {
     const [company, setCompany] = useState(null);
-
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -27,34 +26,93 @@ function Profile() {
 
     if (!company) {
         return (
-            <div className="container mt-4">
-                <p className="text-center text-secondary">Cargando información...</p>
+            <div className="container mt-5 text-center">
+                <p className="text-secondary">Cargando información...</p>
             </div>
         );
     }
 
     return (
         <div className="container mt-5">
-            <div className="card shadow">
-                <div className="card-header bg-primary text-white">
-                    <h3>Perfil de la Empresa</h3>
+            <div className="card shadow-lg border-0">
+                <div className="card-header bg-dark text-white">
+                    <h3 className="mb-0">Perfil de la Empresa</h3>
                 </div>
                 <div className="card-body">
-                    <p className="text-dark"><strong>Nombre:</strong> {company.name}</p>
-                    <p className="text-dark"><strong>Email:</strong> {company.email}</p>
-                    <p className="text-dark"><strong>Industria:</strong> {company.industry || "No especificada"}</p>
-                    <p className="text-dark"><strong>Dirección:</strong> {company.address || "No especificada"}</p>
-                    <p className="text-dark"><strong>Teléfono:</strong> {company.phone_number || "No especificado"}</p>
-                    <p className="text-dark"><strong>Sitio Web:</strong> {company.website || "No especificado"}</p>
-                    <p className="text-dark"><strong>ID Fiscal:</strong> {company.tax_id || "No especificado"}</p>
-                    <p className="text-dark"><strong>Descripción:</strong> {company.description || "No especificada"}</p>
-                    <p className="text-dark"><strong>País:</strong> {company.country || "No especificado"}</p>
-                    <p className="text-dark"><strong>Fecha de Fundación:</strong> {company.founded_date ? new Date(company.founded_date).toLocaleDateString() : "No especificada"}</p>
-                    <p className="text-dark"><strong>Logo:</strong> {company.logo_url ? <a href={company.logo_url} target="_blank" rel="noopener noreferrer">Ver Logo</a> : "No especificado"}</p>
-                    <p className="text-dark"><strong>Fecha de Creación:</strong> {new Date(company.created_at).toLocaleDateString()}</p>
-                    <p className="text-dark"><strong>Última Actualización:</strong> {new Date(company.updated_at).toLocaleDateString()}</p>
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Nombre</p>
+                            <h5>{company.name}</h5>
+                        </div>
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Email</p>
+                            <h5>{company.email}</h5>
+                        </div>
+                    </div>
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Industria</p>
+                            <h5>{company.industry || "No especificada"}</h5>
+                        </div>
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Dirección</p>
+                            <h5>{company.address || "No especificada"}</h5>
+                        </div>
+                    </div>
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Teléfono</p>
+                            <h5>{company.phone_number || "No especificado"}</h5>
+                        </div>
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Sitio Web</p>
+                            <h5>
+                                {company.website ? (
+                                    <a href={company.website} target="_blank" rel="noopener noreferrer">
+                                        {company.website}
+                                    </a>
+                                ) : (
+                                    "No especificado"
+                                )}
+                            </h5>
+                        </div>
+                    </div>
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">ID Fiscal</p>
+                            <h5>{company.tax_id || "No especificado"}</h5>
+                        </div>
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Descripción</p>
+                            <h5>{company.description || "No especificada"}</h5>
+                        </div>
+                    </div>
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">País</p>
+                            <h5>{company.country || "No especificado"}</h5>
+                        </div>
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Fecha de Fundación</p>
+                            <h5>
+                                {company.founded_date
+                                    ? new Date(company.founded_date).toLocaleDateString()
+                                    : "No especificada"}
+                            </h5>
+                        </div>
+                    </div>
+                    <div className="row mb-3">
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Fecha de Creación</p>
+                            <h5>{new Date(company.created_at).toLocaleDateString()}</h5>
+                        </div>
+                        <div className="col-md-6">
+                            <p className="mb-1 text-muted">Última Actualización</p>
+                            <h5>{new Date(company.updated_at).toLocaleDateString()}</h5>
+                        </div>
+                    </div>
                 </div>
-                <div className="card-footer text-end">
+                <div className="card-footer bg-light text-end">
                     <button
                         className="btn btn-primary"
                         onClick={() => navigate("/edit-profile")}
