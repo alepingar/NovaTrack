@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { Outlet, useNavigate } from "react-router-dom";
+import Footer from "./Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 function Layout() {
@@ -54,7 +55,7 @@ function Layout() {
     }
 
     return (
-        <div>
+        <div className="d-flex flex-column min-vh-100">
             {/* Navbar Superior */}
             <nav className="navbar navbar-expand-lg navbar-dark bg-primary px-4 shadow">
                 <a className="navbar-brand fw-bold text-white" href="/home">
@@ -80,7 +81,7 @@ function Layout() {
                             <a className="nav-link text-white fw-bold" href="/anomalies">Anomalías</a>
                         </li>
                         {/* Mostrar solo para empresas */}
-                        { userData.role === "admin" && (
+                        {userData?.role === "admin" && (
                             <li className="nav-item">
                                 <a className="nav-link text-white fw-bold" href="/manage-users">Gestión de Usuarios</a>
                             </li>
@@ -131,9 +132,12 @@ function Layout() {
             </nav>
 
             {/* Contenido Principal */}
-            <main className="container mt-4">
+            <main className="flex-grow-1 container mt-4">
                 <Outlet />
             </main>
+
+            {/* Footer */}
+            <Footer />
         </div>
     );
 }
