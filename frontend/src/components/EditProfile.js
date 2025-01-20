@@ -14,7 +14,6 @@ function EditProfile() {
         tax_id: "",
         description: "",
         founded_date: "",
-        logo_url: "",
     });
     const navigate = useNavigate();
 
@@ -39,7 +38,7 @@ function EditProfile() {
                     tax_id: data.tax_id || "",
                     description: data.description || "",
                     founded_date: data.founded_date ? new Date(data.founded_date).toISOString().slice(0, 10) : "",
-                    logo_url: data.logo_url || "",
+                    profileImage: data.profileImage || "",
                 });
             } catch (error) {
                 console.error("Error al obtener los datos de la empresa:", error);
@@ -78,6 +77,7 @@ function EditProfile() {
             console.error("Error:", error.response?.data || error.message);
         }
     };
+
 
     return (
         <div className="container mt-5">
@@ -196,17 +196,6 @@ function EditProfile() {
                                 id="founded_date"
                                 name="founded_date"
                                 value={formData.founded_date}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="logo_url" className="form-label">URL del Logo</label>
-                            <input
-                                type="url"
-                                className="form-control"
-                                id="logo_url"
-                                name="logo_url"
-                                value={formData.logo_url}
                                 onChange={handleChange}
                             />
                         </div>

@@ -99,17 +99,6 @@ function Layout() {
                         <div className="d-flex align-items-center">
                             {userData && (
                                 <div className="dropdown d-flex align-items-center">
-                                    <img
-                                        src={userData.profileImage || "default-avatar.png"}
-                                        alt="Foto de perfil"
-                                        className="rounded-circle"
-                                        style={{
-                                            width: "40px",
-                                            height: "40px",
-                                            objectFit: "cover",
-                                            marginRight: "10px",
-                                        }}
-                                    />
                                     <button
                                         className="btn btn-light dropdown-toggle"
                                         type="button"

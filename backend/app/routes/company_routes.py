@@ -75,8 +75,8 @@ async def register_company(company: CompanyCreate):
         company_data.pop("confirm_password")
         company_data.update({
             "password": hashed_password,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
         })
 
         # Insertar en la base de datos
@@ -94,7 +94,6 @@ async def register_company(company: CompanyCreate):
             description=company.description,
             address=company.address,
             founded_date=company.founded_date,
-            profileImage=company.profileImage,
             created_at=company_data["created_at"],
             updated_at=company_data["updated_at"]
         )
@@ -123,7 +122,6 @@ async def get_company_profile(current_user: dict = Depends(get_current_user)):
         description=company.get("description"),
         address=company.get("address"),
         founded_date=company.get("founded_date"),
-        profileImage=company.get("profileImage"),
         created_at=company.get("created_at"),
         updated_at=company.get("updated_at")
     )
@@ -147,7 +145,7 @@ async def update_company_profile(
 
     # Actualizar datos
     updated_data = company_data.dict(exclude_unset=True)
-    updated_data["updated_at"] = datetime.utcnow()
+    updated_data["updated_at"] = datetime.utcnow().isoformat()
 
     await db.companies.update_one({"_id": company_id}, {"$set": updated_data})
 
@@ -166,7 +164,6 @@ async def update_company_profile(
         description=updated_company.get("description"),
         address=updated_company.get("address"),
         founded_date=updated_company.get("founded_date"),
-        profileImage=updated_company.get("profileImage"),
         created_at=updated_company.get("created_at"),
         updated_at=updated_company.get("updated_at")
     )
