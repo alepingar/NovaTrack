@@ -141,6 +141,20 @@ function RegisterCompany() {
                                     />
                                 </div>
                                 <div className="mb-3">
+                                    <label htmlFor="confirm_password" className="form-label">
+                                        Confirmar Contraseña <span className="text-danger">*</span>
+                                    </label>
+                                    <input
+                                        type="password"
+                                        className="form-control"
+                                        id="confirm_password"
+                                        name="confirm_password"
+                                        placeholder="Confirmación de la contraseña"
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
                                     <label htmlFor="country" className="form-label">
                                         País <span className="text-danger">*</span>
                                     </label>

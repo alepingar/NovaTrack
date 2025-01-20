@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
 from app.utils.security import hash_password, verify_password, create_access_token, get_current_user
 from app.database import db
-from app.schemas import CompanyCreate, CompanyResponse, Token, LoginRequest , UpdateCompanyProfile , UserResponse , UserCreate , UserUpdate
+from app.schemas import CompanyCreate, CompanyResponse, Token, LoginRequest , UpdateCompanyProfile , UserResponse , UserCreate , UserUpdate , PasswordResetRequest, PasswordResetConfirm
 from bson import ObjectId
 from typing import List
 from datetime import datetime
+from app.services import send_email
 
 router = APIRouter()
 
@@ -57,17 +58,23 @@ async def register_company(company: CompanyCreate):
     try:
         print(f"Datos recibidos: {company.dict()}")
         # Verificar si la empresa ya existe
+
+        if company.password != company.confirm_password:
+            raise HTTPException(status_code=400, detail="Las contraseñas no coinciden")
+        
         existing_company = await db.companies.find_one({"email": company.email})
         if existing_company:
             raise HTTPException(status_code=400, detail="La empresa ya está registrada")
 
         # Hashear la contraseña
         hashed_password = hash_password(company.password)
-        company.password = hashed_password
+        
 
         # Agregar campos adicionales
         company_data = company.dict()
+        company_data.pop("confirm_password")
         company_data.update({
+            "password": hashed_password,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
         })
@@ -164,7 +171,58 @@ async def update_company_profile(
         updated_at=updated_company.get("updated_at")
     )
 
+@router.post("/reset-password")
+async def reset_password(request: PasswordResetRequest):
+    try:
+        # Buscar el usuario en la base de datos
+        user = await db.companies.find_one({"email": request.email})
+        if not user:
+            raise HTTPException(status_code=404, detail="Correo no registrado")
 
+        # Crear un token de recuperación (ejemplo: simple hash)
+        reset_token = "TOKEN_GENERADO_AQUI"
+
+        # Guardar el token en la base de datos (opcional)
+        await db.companies.update_one({"email": request.email}, {"$set": {"reset_token": reset_token}})
+
+        # Crear enlace de recuperación
+        reset_link = f"http://localhost:3000/reset-password?token={reset_token}"
+
+        # Enviar el correo
+        subject = "Recupera tu contraseña"
+        content = f"""
+        <h1>Recupera tu contraseña</h1>
+        <p>Haz clic en el enlace para restablecer tu contraseña:</p>
+        <a href="{reset_link}">{reset_link}</a>
+        """
+        send_email(request.email, subject, content)
+
+        return {"message": "Correo de recuperación enviado"}
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="No se pudo enviar el correo de recuperación")
+    
+
+@router.post("/reset-password-confirm")
+async def reset_password_confirm(request: PasswordResetConfirm):
+    try:
+        # Verificar token
+        user = await db.companies.find_one({"reset_token": request.token})
+        if not user:
+            raise HTTPException(status_code=400, detail="Token inválido o expirado")
+
+        # Actualizar contraseña
+        hashed_password = hash_password(request.password)
+        await db.companies.update_one({"reset_token": request.token}, {
+            "$set": {"password": hashed_password},
+            "$unset": {"reset_token": ""},
+        })
+
+        return {"message": "Contraseña restablecida correctamente"}
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Error al restablecer contraseña")
+    
 @router.get("/users", response_model=List[UserResponse])
 async def get_company_users(current_user: dict = Depends(get_current_user)):
     """

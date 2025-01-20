@@ -1,14 +1,34 @@
-from pydantic import BaseModel, EmailStr , HttpUrl
+from pydantic import BaseModel, EmailStr , HttpUrl , validator
 from typing import Optional
 from datetime import datetime
+from pydantic_settings import BaseSettings
+
 class LoginRequest(BaseModel):
     email: EmailStr
+    password: str
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
     password: str
     
 class CompanyCreate(BaseModel):
     name: str  # Nombre de la empresa
     email: EmailStr  # Correo principal de contacto
     password: str  # Contraseña de la cuenta
+    confirm_password: str
+
+    @validator("confirm_password")
+    def passwords_match(cls, confirm_password, values):
+        password = values.get("password")
+        if password != confirm_password:
+            raise ValueError("Las contraseñas no coinciden")
+        return confirm_password
+    
     industry: Optional[str] = None  # Sector industrial (opcional)
     role: str = "admin"  # Rol predeterminado (admin)
     country: str  # País de la empresa
@@ -102,3 +122,18 @@ class TransferResponse(BaseModel):
     to_account: str
     timestamp: datetime
     is_anomalous: Optional[bool] = False
+
+
+
+class Settings(BaseSettings):
+    email_host: str
+    email_port: int
+    email_user: str
+    email_password: str
+    email_from: str
+    email_name: str
+
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
