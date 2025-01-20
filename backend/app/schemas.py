@@ -1,25 +1,26 @@
-from pydantic import BaseModel, EmailStr , HttpUrl , validator
+from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
 from typing import Optional
 from datetime import datetime
 from pydantic_settings import BaseSettings
 
+# Login Schema
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(..., min_length=8, max_length=50, description="La contraseña debe tener entre 8 y 50 caracteres")
 
-
+# Password Reset Schemas
 class PasswordResetRequest(BaseModel):
     email: EmailStr
 
-
 class PasswordResetConfirm(BaseModel):
     token: str
-    password: str
-    
+    password: str = Field(..., min_length=8, max_length=50, description="La nueva contraseña debe tener entre 8 y 50 caracteres")
+
+# Company Schemas
 class CompanyCreate(BaseModel):
-    name: str  # Nombre de la empresa
-    email: EmailStr  # Correo principal de contacto
-    password: str  # Contraseña de la cuenta
+    name: str = Field(..., min_length=2, max_length=40, description="El nombre debe tener entre 2 y 40 caracteres")
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=50, description="La contraseña debe tener entre 8 y 50 caracteres")
     confirm_password: str
 
     @validator("confirm_password")
@@ -28,16 +29,18 @@ class CompanyCreate(BaseModel):
         if password != confirm_password:
             raise ValueError("Las contraseñas no coinciden")
         return confirm_password
-    
-    industry: Optional[str] = None  # Sector industrial (opcional)
-    role: str = "admin"  # Rol predeterminado (admin)
-    country: str  # País de la empresa
-    phone_number: Optional[str] = None  # Teléfono de contacto
-    tax_id: Optional[str] = None  # Número de identificación fiscal (CIF, NIF, etc.)
-    website: Optional[HttpUrl] = None  # Página web de la empresa
-    description: Optional[str] = None  # Descripción breve de la empresa
-    address: Optional[str] = None  # Dirección física de la empresa
-    founded_date: Optional[datetime] = None  # Fecha de fundación de la empresa
+
+    industry: Optional[str] = Field(None, max_length=50, description="El sector industrial no debe superar los 50 caracteres")
+    role: str = "admin"
+    country: str = Field(..., min_length=2, max_length=50, description="El país debe tener entre 2 y 50 caracteres")
+    phone_number: Optional[str] = Field(
+        None, pattern=r"^\+?[1-9]\d{1,14}$", description="El número de teléfono debe seguir el formato internacional (E.164)"
+    )
+    tax_id: Optional[str] = Field(None, min_length=8, max_length=15, description="El ID fiscal debe tener entre 8 y 15 caracteres")
+    website: Optional[HttpUrl]
+    description: Optional[str] = Field(None, max_length=500, description="La descripción no debe superar los 500 caracteres")
+    address: Optional[str] = Field(None, max_length=200, description="La dirección no debe superar los 200 caracteres")
+    founded_date: Optional[datetime]
 
 class CompanyResponse(BaseModel):
     id: str
@@ -52,25 +55,27 @@ class CompanyResponse(BaseModel):
     description: Optional[str] = None
     address: Optional[str] = None
     founded_date: Optional[datetime] = None
-    created_at: datetime  # Fecha de creación del registro
-    updated_at: datetime  # Última fecha de actualización del perfil
+    created_at: datetime
+    updated_at: datetime
 
 class UpdateCompanyProfile(BaseModel):
-    name: Optional[str]
+    name: Optional[str] = Field(None, min_length=2, max_length=40)
     email: Optional[EmailStr]
-    industry: Optional[str]
-    country: Optional[str]
-    phone_number: Optional[str]
-    tax_id: Optional[str]
+    industry: Optional[str] = Field(None, max_length=50)
+    country: Optional[str] = Field(None, min_length=2, max_length=50)
+    phone_number: Optional[str] = Field(None, pattern=r"^\+?[1-9]\d{1,14}$")
+    tax_id: Optional[str] = Field(None, min_length=8, max_length=15)
     website: Optional[HttpUrl]
-    description: Optional[str]
-    address: Optional[str]
+    description: Optional[str] = Field(None, max_length=500)
+    address: Optional[str] = Field(None, max_length=200)
     founded_date: Optional[datetime]
 
+# Token Schema
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+# User Schemas
 class UserResponse(BaseModel):
     id: str
     name: str
@@ -79,36 +84,35 @@ class UserResponse(BaseModel):
     role: str
 
 class UserCreate(BaseModel):
-    name: str
-    surname: str
+    name: str = Field(..., min_length=2, max_length=30, description="El nombre debe tener entre 2 y 30 caracteres")
+    surname: str = Field(..., min_length=2, max_length=30, description="El apellido debe tener entre 2 y 30 caracteres")
     email: EmailStr
-    password: str
-    role: str
+    password: str = Field(..., min_length=8, max_length=50, description="La contraseña debe tener entre 8 y 50 caracteres")
+    role: str = Field(..., pattern=r"^(admin|user)$", description="El rol debe ser 'admin' o 'user'")
 
 class UserUpdate(BaseModel):
-    name: Optional[str]
-    surname: Optional[str]
+    name: Optional[str] = Field(None, min_length=2, max_length=30)
+    surname: Optional[str] = Field(None, min_length=2, max_length=30)
     email: Optional[EmailStr]
-    role: Optional[str]
+    role: Optional[str] = Field(None, pattern=r"^(admin|user)$")
 
-
-
+# Transfer Schemas
 class Transfer(BaseModel):
     id: int
-    amount: float
-    currency: str
-    from_account: str
-    to_account: str
+    amount: float = Field(..., gt=0, description="El monto debe ser mayor a 0")
+    currency: str = Field(..., min_length=3, max_length=3, description="El código de moneda debe tener exactamente 3 caracteres (ISO 4217)")
+    from_account: str = Field(..., min_length=10, max_length=20, description="El número de cuenta debe tener entre 10 y 20 caracteres")
+    to_account: str = Field(..., min_length=10, max_length=20, description="El número de cuenta debe tener entre 10 y 20 caracteres")
     timestamp: datetime
-    description: Optional[str] = None
-    category: Optional[str] = None
-    origin_location: Optional[str] = None
-    destination_location: Optional[str] = None
-    payment_method: Optional[str] = None
-    status: str
-    user_id: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=500)
+    category: Optional[str] = Field(None, max_length=50)
+    origin_location: Optional[str] = Field(None, max_length=100)
+    destination_location: Optional[str] = Field(None, max_length=100)
+    payment_method: Optional[str] = Field(None, max_length=50)
+    status: str = Field(..., pattern=r"^(pending|completed|failed)$", description="El estado debe ser 'pending', 'completed' o 'failed'")
+    user_id: Optional[str]
     recurring: Optional[bool] = False
-    client_ip: Optional[str] = None
+    client_ip: Optional[str] = Field(None, pattern=r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", description="La IP debe ser válida")
     company_id: str
     is_anomalous: Optional[bool] = False
 
@@ -120,8 +124,7 @@ class TransferResponse(BaseModel):
     timestamp: datetime
     is_anomalous: Optional[bool] = False
 
-
-
+# Settings Schema
 class Settings(BaseSettings):
     email_host: str
     email_port: int

@@ -15,6 +15,8 @@ function EditProfile() {
         description: "",
         founded_date: "",
     });
+
+    const [errors, setErrors] = useState({});
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,7 +40,6 @@ function EditProfile() {
                     tax_id: data.tax_id || "",
                     description: data.description || "",
                     founded_date: data.founded_date ? new Date(data.founded_date).toISOString().slice(0, 10) : "",
-                    profileImage: data.profileImage || "",
                 });
             } catch (error) {
                 console.error("Error al obtener los datos de la empresa:", error);
@@ -48,21 +49,81 @@ function EditProfile() {
         fetchCompanyData();
     }, []);
 
+    const validateField = (name, value) => {
+        let error = "";
+
+        switch (name) {
+            case "name":
+                if (value.trim().length < 2 || value.trim().length > 40) {
+                    error = "El nombre debe tener entre 2 y 40 caracteres.";
+                }
+                break;
+            case "email":
+                if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) {
+                    error = "Introduce un correo electrónico válido.";
+                }
+                break;
+            case "phone_number":
+                if (value && !/^\+?[1-9]\d{1,14}$/.test(value)) {
+                    error = "El número de teléfono debe seguir el formato internacional (E.164).";
+                }
+                break;
+            case "tax_id":
+                if (value.trim().length < 8 || value.trim().length > 15) {
+                    error = "El ID fiscal debe tener entre 8 y 15 caracteres.";
+                }
+                break;
+            case "website":
+                if (value && !/^https?:\/\/[\w\-]+(\.[\w\-]+)+[/#?]?.*$/.test(value)) {
+                    error = "Introduce una URL válida.";
+                }
+                break;
+            case "country":
+                if (value.trim().length < 2 || value.trim().length > 50) {
+                    error = "El país debe tener entre 2 y 50 caracteres.";
+                }
+                break;
+            default:
+                break;
+        }
+
+        return error;
+    };
+
     const handleChange = (e) => {
+        const { name, value } = e.target;
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value,
+            [name]: value,
         });
+
+        const error = validateField(name, value);
+        setErrors((prevErrors) => ({
+            ...prevErrors,
+            [name]: error,
+        }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
-        // Reemplaza valores vacíos con null para campos opcionales
+
+        const newErrors = {};
+        Object.keys(formData).forEach((key) => {
+            const error = validateField(key, formData[key]);
+            if (error) {
+                newErrors[key] = error;
+            }
+        });
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
         const sanitizedData = Object.fromEntries(
             Object.entries(formData).map(([key, value]) => [key, value.trim() === "" ? null : value])
         );
-    
+
         try {
             const token = localStorage.getItem("token");
             await axios.put("http://127.0.0.1:8000/companies/profile", sanitizedData, {
@@ -78,7 +139,6 @@ function EditProfile() {
         }
     };
 
-
     return (
         <div className="container mt-5">
             <div className="card shadow">
@@ -87,118 +147,45 @@ function EditProfile() {
                 </div>
                 <div className="card-body">
                     <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label htmlFor="name" className="form-label">Nombre de la Empresa</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                id="name"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="email" className="form-label">Correo Electrónico</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                id="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="industry" className="form-label">Industria</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                id="industry"
-                                name="industry"
-                                value={formData.industry}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="address" className="form-label">Dirección</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                id="address"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="phone_number" className="form-label">Teléfono</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                id="phone_number"
-                                name="phone_number"
-                                value={formData.phone_number}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="website" className="form-label">Sitio Web</label>
-                            <input
-                                type="url"
-                                className="form-control"
-                                id="website"
-                                name="website"
-                                value={formData.website}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="country" className="form-label">País</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                id="country"
-                                name="country"
-                                value={formData.country}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="tax_id" className="form-label">ID Fiscal</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                id="tax_id"
-                                name="tax_id"
-                                value={formData.tax_id}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="description" className="form-label">Descripción</label>
-                            <textarea
-                                className="form-control"
-                                id="description"
-                                name="description"
-                                rows="3"
-                                value={formData.description}
-                                onChange={handleChange}
-                            ></textarea>
-                        </div>
-                        <div className="mb-3">
-                            <label htmlFor="founded_date" className="form-label">Fecha de Fundación</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                id="founded_date"
-                                name="founded_date"
-                                value={formData.founded_date}
-                                onChange={handleChange}
-                            />
-                        </div>
+                        {[
+                            { id: "name", label: "Nombre de la Empresa", required: true },
+                            { id: "email", label: "Correo Electrónico", required: true },
+                            { id: "industry", label: "Industria" },
+                            { id: "address", label: "Dirección" },
+                            { id: "phone_number", label: "Teléfono" },
+                            { id: "website", label: "Sitio Web", type: "url" },
+                            { id: "country", label: "País", required: true },
+                            { id: "tax_id", label: "ID Fiscal" },
+                            { id: "description", label: "Descripción", type: "textarea" },
+                            { id: "founded_date", label: "Fecha de Fundación", type: "date" },
+                        ].map(({ id, label, required, type = "text" }) => (
+                            <div className="mb-3" key={id}>
+                                <label htmlFor={id} className="form-label">
+                                    {label} {required && <span className="text-danger">*</span>}
+                                </label>
+                                {type === "textarea" ? (
+                                    <textarea
+                                        className={`form-control ${errors[id] ? "is-invalid" : ""}`}
+                                        id={id}
+                                        name={id}
+                                        placeholder={label}
+                                        value={formData[id]}
+                                        onChange={handleChange}
+                                    />
+                                ) : (
+                                    <input
+                                        type={type}
+                                        className={`form-control ${errors[id] ? "is-invalid" : ""}`}
+                                        id={id}
+                                        name={id}
+                                        placeholder={label}
+                                        value={formData[id]}
+                                        onChange={handleChange}
+                                    />
+                                )}
+                                {errors[id] && <div className="invalid-feedback">{errors[id]}</div>}
+                            </div>
+                        ))}
                         <button type="submit" className="btn btn-primary w-100">Guardar Cambios</button>
                     </form>
                 </div>
