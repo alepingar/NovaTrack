@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "../css/RegisterCompany.css";
 
 function RegisterCompany() {
     const [formData, setFormData] = useState({
@@ -19,13 +20,43 @@ function RegisterCompany() {
         founded_date: "",
     });
 
+    const [currentStep, setCurrentStep] = useState(0);
     const [errors, setErrors] = useState({});
     const [errorMessage, setErrorMessage] = useState(null);
     const navigate = useNavigate();
 
+    const steps = [
+        {
+            title: "Información Básica",
+            fields: [
+                { id: "name", label: "Nombre de la Empresa", required: true },
+                { id: "email", label: "Correo Electrónico", required: true },
+                { id: "password", label: "Contraseña", required: true, type: "password" },
+                { id: "confirm_password", label: "Confirmar Contraseña", required: true, type: "password" },
+            ],
+        },
+        {
+            title: "Detalles de Contacto",
+            fields: [
+                { id: "country", label: "País", required: true },
+                { id: "phone_number", label: "Teléfono" },
+                { id: "address", label: "Dirección" },
+                { id: "website", label: "Sitio Web", type: "url" },
+            ],
+        },
+        {
+            title: "Información Adicional",
+            fields: [
+                { id: "industry", label: "Industria" },
+                { id: "tax_id", label: "ID Fiscal" },
+                { id: "description", label: "Descripción", type: "textarea" },
+                { id: "founded_date", label: "Fecha de Fundación", type: "date" },
+            ],
+        },
+    ];
+
     const validateField = (name, value) => {
         let error = "";
-
         switch (name) {
             case "name":
                 if (value.trim().length < 2 || value.trim().length > 40) {
@@ -70,7 +101,6 @@ function RegisterCompany() {
             default:
                 break;
         }
-
         return error;
     };
 
@@ -80,7 +110,6 @@ function RegisterCompany() {
             ...formData,
             [name]: value,
         });
-
         const error = validateField(name, value);
         setErrors((prevErrors) => ({
             ...prevErrors,
@@ -90,7 +119,6 @@ function RegisterCompany() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         const newErrors = {};
         Object.keys(formData).forEach((key) => {
             const error = validateField(key, formData[key]);
@@ -105,41 +133,43 @@ function RegisterCompany() {
         }
 
         try {
-            setErrorMessage(null); // Reinicia el mensaje de error
-
+            setErrorMessage(null);
             const payload = Object.fromEntries(
                 Object.entries(formData).filter(([_, value]) => value.trim() !== "")
             );
-
             if (payload.founded_date) {
                 payload.founded_date = new Date(payload.founded_date).toISOString();
             }
-
             await axios.post("http://127.0.0.1:8000/companies/register", payload);
             alert("Registro exitoso");
             navigate("/login");
         } catch (error) {
             console.error("Error del servidor:", error.response?.data || error.message);
-            if (error.response && error.response.data) {
-                const details = error.response.data.detail;
-                if (Array.isArray(details)) {
-                    setErrorMessage(details.map((d) => `${d.loc?.join(".")}: ${d.msg}`).join(", "));
-                } else {
-                    setErrorMessage(details || "Error al registrar la empresa");
-                }
-            } else {
-                setErrorMessage("No se pudo conectar con el servidor.");
-            }
+            setErrorMessage("No se pudo conectar con el servidor.");
         }
     };
 
+    const nextStep = () => {
+        if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+    };
+
+    const prevStep = () => {
+        if (currentStep > 0) setCurrentStep(currentStep - 1);
+    };
+
     return (
-        <div className="container mt-5">
-            <div className="row justify-content-center">
-                <div className="col-md-8">
+        <div className="d-flex" style={{ height: "100vh" }}>
+            <div className="col-md-6 d-flex align-items-center justify-content-center bg-dark text-white text-center">
+                <div>
+                    <h1 className="mb-4">Crea tu cuenta empresarial</h1>
+                    <p>Explora funciones avanzadas y optimiza tus operaciones.</p>
+                </div>
+            </div>
+            <div className="col-md-6 d-flex align-items-center">
+                <div className="container">
                     <div className="card shadow">
-                        <div className="card-header text-center">
-                            <h2>Registro de Empresa</h2>
+                        <div className="card-header bg-primary text-white text-center">
+                            <h2>{steps[currentStep].title}</h2>
                         </div>
                         <div className="card-body">
                             {errorMessage && (
@@ -148,20 +178,7 @@ function RegisterCompany() {
                                 </div>
                             )}
                             <form onSubmit={handleSubmit}>
-                                {[
-                                    { id: "name", label: "Nombre de la Empresa", required: true },
-                                    { id: "email", label: "Correo Electrónico", required: true },
-                                    { id: "password", label: "Contraseña", required: true, type: "password" },
-                                    { id: "confirm_password", label: "Confirmar Contraseña", required: true, type: "password" },
-                                    { id: "country", label: "País", required: true },
-                                    { id: "industry", label: "Industria" },
-                                    { id: "address", label: "Dirección" },
-                                    { id: "phone_number", label: "Teléfono" },
-                                    { id: "website", label: "Sitio Web", type: "url" },
-                                    { id: "tax_id", label: "ID Fiscal" },
-                                    { id: "description", label: "Descripción", type: "textarea" },
-                                    { id: "founded_date", label: "Fecha de Fundación", type: "date" },
-                                ].map(({ id, label, required, type = "text" }) => (
+                                {steps[currentStep].fields.map(({ id, label, required, type = "text" }) => (
                                     <div className="mb-3" key={id}>
                                         <label htmlFor={id} className="form-label">
                                             {label} {required && <span className="text-danger">*</span>}
@@ -189,7 +206,22 @@ function RegisterCompany() {
                                         {errors[id] && <div className="invalid-feedback">{errors[id]}</div>}
                                     </div>
                                 ))}
-                                <button type="submit" className="btn btn-primary w-100">Registrar</button>
+                                <div className="d-flex justify-content-between">
+                                    {currentStep > 0 && (
+                                        <button type="button" className="btn btn-secondary" onClick={prevStep}>
+                                            Atrás
+                                        </button>
+                                    )}
+                                    {currentStep < steps.length - 1 ? (
+                                        <button type="button" className="btn btn-primary" onClick={nextStep}>
+                                            Siguiente
+                                        </button>
+                                    ) : (
+                                        <button type="submit" className="btn btn-success">
+                                            Registrar
+                                        </button>
+                                    )}
+                                </div>
                             </form>
                         </div>
                     </div>
