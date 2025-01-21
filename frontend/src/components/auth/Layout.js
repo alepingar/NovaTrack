@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { Outlet, useNavigate } from "react-router-dom";
-import Footer from "./footer/Footer";
+import Footer from "../footer/Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
-import '../App.css'; // Importa los estilos
+import '../../css/App.css'; // Importa los estilos
 
 function Layout() {
     const [userData, setUserData] = useState(null);

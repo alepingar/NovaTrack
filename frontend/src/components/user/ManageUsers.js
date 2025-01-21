@@ -19,7 +19,7 @@ function ManageUsers() {
     const fetchUsers = async () => {
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.get("http://127.0.0.1:8000/companies/users", {
+            const response = await axios.get("http://127.0.0.1:8000/users", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -43,7 +43,7 @@ function ManageUsers() {
         e.preventDefault();
         try {
             const token = localStorage.getItem("token");
-            await axios.post("http://127.0.0.1:8000/companies/users", newUser, {
+            await axios.post("http://127.0.0.1:8000/users", newUser, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -60,7 +60,7 @@ function ManageUsers() {
     const handleDeleteUser = async (userId) => {
         try {
             const token = localStorage.getItem("token");
-            await axios.delete(`http://127.0.0.1:8000/companies/users/${userId}`, {
+            await axios.delete(`http://127.0.0.1:8000/users/${userId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -92,7 +92,7 @@ function ManageUsers() {
             }, {});
 
             await axios.put(
-                `http://127.0.0.1:8000/companies/users/${editingUser.id}`,
+                `http://127.0.0.1:8000/users/${editingUser.id}`,
                 updatedUser,
                 {
                     headers: {

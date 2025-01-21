@@ -11,7 +11,7 @@ producer = Producer(producer_config)
 
 # Conexión a MongoDB
 client = MongoClient("mongodb://localhost:27017/")
-db = client["nova_track"]  
+db = client["nova_track"]
 
 def get_companies():
     """
@@ -22,13 +22,14 @@ def get_companies():
 def generate_random_transfer(company_id):
     """
     Genera una transferencia aleatoria asociada a una empresa.
+    Ajustada para reflejar los campos del modelo Transfer.
     """
     return {
         "id": random.randint(1, 10000),
         "amount": round(random.uniform(10, 5000), 2),
         "currency": random.choice(["USD", "EUR", "GBP"]),
-        "from_account": f"Cuenta_{random.randint(1, 100)}",
-        "to_account": f"Cuenta_{random.randint(1, 100)}",
+        "from_account": f"Cuenta_{random.randint(1000000000, 9999999999)}",
+        "to_account": f"Cuenta_{random.randint(1000000000, 9999999999)}",
         "timestamp": datetime.utcnow().isoformat(),
         "description": random.choice(["Compra", "Pago de servicios", "Transferencia interna"]),
         "category": random.choice(["utilities", "groceries", "entertainment"]),
@@ -36,10 +37,15 @@ def generate_random_transfer(company_id):
         "destination_location": random.choice(["Paris, France", "Berlin, Germany", "Madrid, Spain"]),
         "payment_method": random.choice(["credit_card", "bank_transfer", "cash"]),
         "status": random.choice(["completed", "pending", "failed"]),
-        "user_id": f"user_{random.randint(1, 100)}",
-        "recurring": random.choice([True, False]),
+        "user_identifier": f"user_{random.randint(1, 100)}",  
+        "is_recurring": random.choice([True, False]),         
+        "device_fingerprint": f"device_{random.randint(1000, 9999)}",  
         "client_ip": f"192.168.1.{random.randint(1, 255)}",
-        "company_id": str(company_id),  
+        "company_id": str(company_id),
+        "transaction_fee": round(random.uniform(0, 20), 2),   
+        "is_anomalous": random.choice([True, False]),         
+        "linked_order_id": (f"order_{random.randint(1, 500)}"
+                            if random.random() > 0.5 else None)
     }
 
 def produce_continuous_transfers():
@@ -63,6 +69,7 @@ def produce_continuous_transfers():
             )
             producer.flush()
             print(f"Transferencia enviada para {company['name']}: {transfer}")
+            
             time.sleep(random.uniform(40, 120))  
     except KeyboardInterrupt:
         print("\nGeneración de transferencias interrumpida.")

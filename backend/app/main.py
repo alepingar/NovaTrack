@@ -1,24 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import company_routes, transfer_routes
+from app.routes import company_routes, transfer_routes , dashboard_routes , user_routes , auth_routes
 from app.database import db
 from fastapi.staticfiles import StaticFiles
 
-import os
 
-UPLOAD_DIR = "./uploads"
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
 
 
 app = FastAPI()
 
 # Rutas
 
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-
+app.include_router(auth_routes.router, prefix="/auth", tags=["Auth"])
+app.include_router(user_routes.router, prefix="/users", tags=["Users"])
+app.include_router(dashboard_routes.router, prefix="/dashboard", tags=["Dashboard"])
 app.include_router(company_routes.router, prefix="/companies", tags=["Companies"])
-app.include_router(transfer_routes.router, prefix="/companies", tags=["Transfers"])
+app.include_router(transfer_routes.router, prefix="/transfers", tags=["Transfers"])
 
 # Middleware CORS
 app.add_middleware(
