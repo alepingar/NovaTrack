@@ -4,7 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { Outlet, useNavigate } from "react-router-dom";
 import Footer from "../footer/Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
-import '../../css/App.css'; // Importa los estilos
+import '../../css/App.css'; 
 
 function Layout() {
     const [userData, setUserData] = useState(null);
@@ -32,7 +32,7 @@ function Layout() {
                 const endpoint =
                     decoded.role === "admin"
                         ? "http://127.0.0.1:8000/companies/profile"
-                        : "http://127.0.0.1:8000/companies/users/profile";
+                        : "http://127.0.0.1:8000/users/profile";
 
                 const response = await axios.get(endpoint, {
                     headers: {

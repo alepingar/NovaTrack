@@ -30,7 +30,7 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post("http://127.0.0.1:8000/companies/login", credentials);
+            const response = await axios.post("http://127.0.0.1:8000/auth/login", credentials);
             alert("Inicio de sesión exitoso");
 
             const { access_token } = response.data;
@@ -44,7 +44,7 @@ function Login() {
 
     const handlePasswordReset = async () => {
         try {
-            await axios.post("http://127.0.0.1:8000/companies/reset-password", { email: emailForReset });
+            await axios.post("http://127.0.0.1:8000/auth/reset-password", { email: emailForReset });
             alert("Se ha enviado un correo para recuperar tu contraseña.");
             setShowResetModal(false);
         } catch (error) {
