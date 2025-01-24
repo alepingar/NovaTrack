@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Layout, Typography, Row, Col, Card, List } from "antd";
+import {
+  LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
+import { Layout, Typography, Row, Col, Card } from "antd";
 import axios from "axios";
 
 const { Header, Content } = Layout;
@@ -11,33 +14,33 @@ const HomeDashboard = () => {
     totalAnomalies: 0,
     totalAmount: 0,
   });
-  const [transactions, setTransactions] = useState([]);
-  const [anomalies, setAnomalies] = useState([]);
-
-  const fetchSummaryData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      console.log("Token obtenido:", token);
-
-      // Realiza la solicitud al backend
-      const response = await axios.get(
-        "http://127.0.0.1:8000/transfers/summary-data",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      console.log("Respuesta del backend:", response.data);
-
-      // Actualiza el estado con los datos reales
-      setSummary(response.data);
-    } catch (error) {
-      console.error("Error al obtener el resumen:", error.response || error.message);
-    }
-  };
+  const [volumeByDay, setVolumeByDay] = useState([]);
+  const [amountByCategory, setAmountByCategory] = useState([]);
+  const [statusDistribution, setStatusDistribution] = useState([]);
+  const [topOriginLocations, setTopOriginLocations] = useState([]);
 
   useEffect(() => {
-    fetchSummaryData();
+    const fetchData = async () => {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Resumen general
+      const summaryRes = await axios.get("http://127.0.0.1:8000/transfers/summary-data", { headers });
+      setSummary(summaryRes.data);
+
+      // Datos para los gráficos
+      const volumeRes = await axios.get("http://127.0.0.1:8000/transfers/volume-by-day", { headers });
+      const categoryRes = await axios.get("http://127.0.0.1:8000/transfers/amount-by-category", { headers });
+      const statusRes = await axios.get("http://127.0.0.1:8000/transfers/status-distribution", { headers });
+      const locationRes = await axios.get("http://127.0.0.1:8000/transfers/top-origin-locations", { headers });
+
+      setVolumeByDay(volumeRes.data);
+      setAmountByCategory(categoryRes.data);
+      setStatusDistribution(statusRes.data);
+      setTopOriginLocations(locationRes.data);
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -48,6 +51,7 @@ const HomeDashboard = () => {
         </Title>
       </Header>
       <Content style={{ margin: "20px" }}>
+        {/* Tarjetas de resumen */}
         <Row gutter={[16, 16]}>
           <Col span={8}>
             <Card>
@@ -75,29 +79,63 @@ const HomeDashboard = () => {
           </Col>
         </Row>
 
+        {/* Gráficos */}
         <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
           <Col span={12}>
-            <Card title="Últimas Transacciones">
-              <List
-                dataSource={transactions}
-                renderItem={(transaction) => (
-                  <List.Item>
-                    Fecha: {transaction.date}, Monto: ${transaction.amount}
-                  </List.Item>
-                )}
-              />
+            <Card title="Volumen de Transacciones por Día">
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={volumeByDay}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="count" stroke="#8884d8" />
+                </LineChart>
+              </ResponsiveContainer>
             </Card>
           </Col>
           <Col span={12}>
-            <Card title="Anomalías Detectadas">
-              <List
-                dataSource={anomalies}
-                renderItem={(anomaly) => (
-                  <List.Item>
-                    {anomaly.description} - {anomaly.date}
-                  </List.Item>
-                )}
-              />
+            <Card title="Distribución de Montos por Categoría">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={amountByCategory} dataKey="amount" nameKey="category" cx="50%" cy="50%" outerRadius={100}>
+                    {amountByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`hsl(${index * 40}, 70%, 50%)`} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
+        </Row>
+
+        <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
+          <Col span={12}>
+            <Card title="Distribución del Estado de las Transacciones">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={statusDistribution} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={100}>
+                    {statusDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`hsl(${index * 40}, 70%, 50%)`} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card title="Ubicaciones de Origen Más Comunes">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={topOriginLocations}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="location" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
             </Card>
           </Col>
         </Row>
