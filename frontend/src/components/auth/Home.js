@@ -1,130 +1,109 @@
 import React, { useEffect, useState } from "react";
+import { Layout, Typography, Row, Col, Card, List } from "antd";
 import axios from "axios";
-import {
-    BarChart,
-    Bar,
-    PieChart,
-    Pie,
-    Cell,
-    XAxis,
-    YAxis,
-    Tooltip,
-    ResponsiveContainer,
-    Legend,
-} from "recharts";
-import "../../css/styles.css";
 
-function Home() {
-    const [data, setData] = useState({
-        topUsers: [],
-        anomalyDistribution: [],
-        dailyTransactions: [],
-    });
+const { Header, Content } = Layout;
+const { Title, Text } = Typography;
 
-    const [loading, setLoading] = useState(true);
+const HomeDashboard = () => {
+  const [summary, setSummary] = useState({
+    totalTransactions: 0,
+    totalAnomalies: 0,
+    totalAmount: 0,
+  });
+  const [transactions, setTransactions] = useState([]);
+  const [anomalies, setAnomalies] = useState([]);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                const response = await axios.get("http://127.0.0.1:8000/dashboard", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+  const fetchSummaryData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      console.log("Token obtenido:", token);
 
-                setData(response.data);
-                setLoading(false);
-            } catch (error) {
-                console.error("Error fetching dashboard data:", error);
-                setLoading(false);
-            }
-        };
+      // Realiza la solicitud al backend
+      const response = await axios.get(
+        "http://127.0.0.1:8000/transfers/summary-data",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-        fetchData();
-    }, []);
+      console.log("Respuesta del backend:", response.data);
 
-    if (loading) {
-        return <div className="text-center">Cargando...</div>;
+      // Actualiza el estado con los datos reales
+      setSummary(response.data);
+    } catch (error) {
+      console.error("Error al obtener el resumen:", error.response || error.message);
     }
+  };
 
-    const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+  useEffect(() => {
+    fetchSummaryData();
+  }, []);
 
-    return (
-        <div className="container mt-5">
-            <div className="row">
-                <div className="col-md-6 mb-4">
-                    <div className="card shadow-sm">
-                        <div className="card-header bg-primary text-white">
-                            <h5>Usuarios con más transferencias</h5>
-                        </div>
-                        <div className="card-body">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={data.topUsers}>
-                                    <XAxis dataKey="user" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Legend />
-                                    <Bar dataKey="transactions" fill="#8884d8" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <Layout>
+      <Header style={{ background: "#001529", padding: "0 20px" }}>
+        <Title level={3} style={{ color: "#fff", margin: 0 }}>
+          Dashboard de Transferencias
+        </Title>
+      </Header>
+      <Content style={{ margin: "20px" }}>
+        <Row gutter={[16, 16]}>
+          <Col span={8}>
+            <Card>
+              <Title level={4}>Transacciones Totales</Title>
+              <Text style={{ fontSize: "20px", fontWeight: "bold" }}>
+                {summary.totalTransactions}
+              </Text>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card>
+              <Title level={4}>Anomalías Detectadas</Title>
+              <Text style={{ fontSize: "20px", fontWeight: "bold" }}>
+                {summary.totalAnomalies}
+              </Text>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card>
+              <Title level={4}>Monto Total Transferido</Title>
+              <Text style={{ fontSize: "20px", fontWeight: "bold" }}>
+                ${summary.totalAmount.toLocaleString("es-ES")}
+              </Text>
+            </Card>
+          </Col>
+        </Row>
 
-                <div className="col-md-6 mb-4">
-                    <div className="card shadow-sm">
-                        <div className="card-header bg-primary text-white">
-                            <h5>Distribución de anomalías</h5>
-                        </div>
-                        <div className="card-body">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie
-                                        data={data.anomalyDistribution}
-                                        dataKey="value"
-                                        nameKey="type"
-                                        cx="50%"
-                                        cy="50%"
-                                        outerRadius={100}
-                                        fill="#8884d8"
-                                        label
-                                    >
-                                        {data.anomalyDistribution.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                    <Legend />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <Row gutter={[16, 16]} style={{ marginTop: "20px" }}>
+          <Col span={12}>
+            <Card title="Últimas Transacciones">
+              <List
+                dataSource={transactions}
+                renderItem={(transaction) => (
+                  <List.Item>
+                    Fecha: {transaction.date}, Monto: ${transaction.amount}
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </Col>
+          <Col span={12}>
+            <Card title="Anomalías Detectadas">
+              <List
+                dataSource={anomalies}
+                renderItem={(anomaly) => (
+                  <List.Item>
+                    {anomaly.description} - {anomaly.date}
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </Col>
+        </Row>
+      </Content>
+    </Layout>
+  );
+};
 
-            <div className="row">
-                <div className="col-md-12">
-                    <div className="card shadow-sm">
-                        <div className="card-header bg-primary text-white">
-                            <h5>Transacciones Diarias</h5>
-                        </div>
-                        <div className="card-body">
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={data.dailyTransactions}>
-                                    <XAxis dataKey="date" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Legend />
-                                    <Bar dataKey="transactions" fill="#82ca9d" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-export default Home;
+export default HomeDashboard;
