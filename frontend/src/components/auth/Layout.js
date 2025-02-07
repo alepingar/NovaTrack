@@ -4,10 +4,13 @@ import { jwtDecode } from "jwt-decode";
 import { Outlet, useNavigate } from "react-router-dom";
 import Footer from "../footer/Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
-import '../../css/App.css'; 
+import '../../css/App.css';
+import { Badge, Dropdown, List } from "antd";
+import { BellOutlined } from "@ant-design/icons";
 
 function Layout() {
     const [userData, setUserData] = useState(null);
+    const [anomalies, setAnomalies] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -51,13 +54,37 @@ function Layout() {
         fetchData();
     }, [navigate]);
 
+    // 🔥 Conectar con WebSocket para recibir anomalías en tiempo real
+    useEffect(() => {
+        const ws = new WebSocket("ws://127.0.0.1:8000/ws/anomalies");
+
+        ws.onmessage = (event) => {
+            const anomaly = JSON.parse(event.data);
+            console.log("⚠️ Nueva anomalía detectada:", anomaly);
+            setAnomalies((prev) => [anomaly, ...prev]);
+        };
+
+        return () => ws.close();
+    }, []);
+
     if (!userData) {
         return <div className="text-center mt-5">Cargando...</div>;
     }
 
+    const notificationsMenu = (
+        <List
+            dataSource={anomalies}
+            renderItem={(item) => (
+                <List.Item>
+                    <strong>Monto:</strong> ${item.amount} - <strong>Estado:</strong> {item.status}
+                </List.Item>
+            )}
+        />
+    );
+
     return (
         <div className="d-flex flex-column" style={{ minHeight: "100vh" }}>
-            {/* Navbar Superior */}
+            {/* Navbar */}
             <nav className="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
                 <div className="container-fluid">
                     <a className="navbar-brand fw-bold text-white" href="/home">
@@ -86,6 +113,7 @@ function Layout() {
                                     <i className="bi bi-exclamation-circle me-1"></i>Anomalías
                                 </a>
                             </li>
+                            {/* ✅ REINTEGRADO: Gestión de Usuarios para Admins */}
                             {userData?.role === "admin" && (
                                 <li className="nav-item">
                                     <a className="nav-link text-white" href="/manage-users">
@@ -95,42 +123,25 @@ function Layout() {
                             )}
                         </ul>
 
-                        {/* Perfil del usuario o empresa */}
+                        {/* 🔔 Notificaciones */}
+                        <Dropdown overlay={notificationsMenu} trigger={["click"]}>
+                            <Badge count={anomalies.length} offset={[10, 0]}>
+                                <BellOutlined style={{ fontSize: "24px", color: "#fff", cursor: "pointer", marginRight: "20px" }} />
+                            </Badge>
+                        </Dropdown>
+
+                        {/* Perfil */}
                         <div className="d-flex align-items-center">
                             {userData && (
                                 <div className="dropdown d-flex align-items-center">
-                                    <button
-                                        className="btn btn-light dropdown-toggle"
-                                        type="button"
-                                        id="profileDropdown"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false"
-                                    >
+                                    <button className="btn btn-light dropdown-toggle" type="button" id="profileDropdown"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
                                         {userData.name}
                                     </button>
-                                    <ul
-                                        className="dropdown-menu dropdown-menu-end"
-                                        aria-labelledby="profileDropdown"
-                                    >
-                                        <li>
-                                            <button
-                                                className="dropdown-item"
-                                                onClick={() => navigate("/profile")}
-                                            >
-                                                Ver Perfil
-                                            </button>
-                                        </li>
-                                        <li>
-                                            <button
-                                                className="dropdown-item text-danger"
-                                                onClick={() => {
-                                                    localStorage.removeItem("token");
-                                                    navigate("/login");
-                                                }}
-                                            >
-                                                Cerrar Sesión
-                                            </button>
-                                        </li>
+                                    <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                                        <li><button className="dropdown-item" onClick={() => navigate("/profile")}>Ver Perfil</button></li>
+                                        <li><button className="dropdown-item text-danger"
+                                            onClick={() => { localStorage.removeItem("token"); navigate("/login"); }}>Cerrar Sesión</button></li>
                                     </ul>
                                 </div>
                             )}
@@ -139,7 +150,7 @@ function Layout() {
                 </div>
             </nav>
 
-            {/* Contenido Principal */}
+            {/* Contenido */}
             <main className="flex-grow-1 container mt-5 pt-4">
                 <Outlet />
             </main>
