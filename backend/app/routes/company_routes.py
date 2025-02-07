@@ -6,7 +6,7 @@ from app.services.company_services import (
     fetch_company_profile,
     update_company_profile
 )
-from app.schemas import CompanyResponse, CompanyCreate, UpdateCompanyProfile
+from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile
 from typing import List
 from app.database import db
 from bson import ObjectId

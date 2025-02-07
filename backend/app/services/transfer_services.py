@@ -1,5 +1,5 @@
 from app.database import db
-from app.schemas import Transfer, TransferResponse
+from app.models.transfer import Transfer, TransferResponse
 from datetime import datetime, timedelta
 from typing import List
 from fastapi import HTTPException

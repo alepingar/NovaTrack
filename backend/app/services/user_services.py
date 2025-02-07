@@ -1,5 +1,5 @@
 from app.database import db
-from app.schemas import UserResponse, UserCreate, UserUpdate
+from app.models.user import UserResponse, UserCreate, UserUpdate
 from bson import ObjectId
 from fastapi import HTTPException
 from app.utils.security import hash_password

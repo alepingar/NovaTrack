@@ -5,7 +5,7 @@ from fastapi import HTTPException
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from app.schemas import settings  # Asegúrate de tener tus configuraciones cargadas
+from app.models.auth import settings  # Asegúrate de tener tus configuraciones cargadas
 
 
 async def authenticate_user(email: str, password: str):

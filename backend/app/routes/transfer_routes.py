@@ -9,7 +9,7 @@ from app.services.transfer_services import (
     fetch_top_origin_locations,
     fetch_volume_by_day,
 )
-from app.schemas import TransferResponse, Transfer
+from app.models.transfer import TransferResponse, Transfer
 from typing import List
 from typing import Dict, Union
 from app.database import db

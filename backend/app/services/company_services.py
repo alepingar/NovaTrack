@@ -1,5 +1,5 @@
 from app.database import db
-from app.schemas import CompanyResponse, CompanyCreate, UpdateCompanyProfile
+from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile
 from bson import ObjectId
 from fastapi import HTTPException
 from app.utils.security import hash_password

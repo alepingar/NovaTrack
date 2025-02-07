@@ -1,6 +1,6 @@
 # auth_routes.py
 from fastapi import APIRouter, HTTPException
-from app.schemas import Token, LoginRequest, PasswordResetRequest, PasswordResetConfirm
+from app.models.auth import Token, LoginRequest, PasswordResetRequest, PasswordResetConfirm
 from app.services.auth_services import authenticate_user, generate_reset_token, reset_user_password
 
 router = APIRouter()

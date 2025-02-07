@@ -7,7 +7,7 @@ from app.services.user_services import (
     update_company_user,
     fetch_user_profile
 )
-from app.schemas import UserResponse, UserCreate, UserUpdate
+from app.models.user import UserResponse, UserCreate, UserUpdate
 from typing import List
 
 router = APIRouter()
