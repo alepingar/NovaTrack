@@ -60,6 +60,7 @@ const routes = [
     icon: <Icon fontSize="small">dashboard</Icon>,
     route: "/dashboard",
     component: <Dashboard />,
+    protected: false,
   },
   {
     type: "collapse",
@@ -68,6 +69,7 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/tables",
     component: <Tables />,
+    protected: true,
   },
   {
     type: "collapse",
@@ -76,6 +78,7 @@ const routes = [
     icon: <Icon fontSize="small">receipt_long</Icon>,
     route: "/billing",
     component: <Billing />,
+    protected: true,
   },
   {
     type: "collapse",
@@ -84,6 +87,7 @@ const routes = [
     icon: <Icon fontSize="small">format_textdirection_r_to_l</Icon>,
     route: "/rtl",
     component: <RTL />,
+    protected: false,
   },
   {
     type: "collapse",
@@ -92,6 +96,7 @@ const routes = [
     icon: <Icon fontSize="small">notifications</Icon>,
     route: "/notifications",
     component: <Notifications />,
+    protected: true,
   },
   {
     type: "collapse",
@@ -100,11 +105,13 @@ const routes = [
     icon: <Icon fontSize="small">person</Icon>,
     route: "/profile",
     component: <Profile />,
+    protected: true,
   },
   {
     type: "invisible",
     route: "/transfers/:id",
     component: <TransferDetails />,
+    protected: true,
   },
   !isAuthenticated && {
     type: "collapse",
@@ -113,6 +120,7 @@ const routes = [
     icon: <Icon fontSize="small">login</Icon>,
     route: "/authentication/sign-in",
     component: <SignIn />,
+    protected: false,
   },
   !isAuthenticated && {
     type: "collapse",
@@ -121,6 +129,7 @@ const routes = [
     icon: <Icon fontSize="small">assignment</Icon>,
     route: "/authentication/sign-up",
     component: <SignUp />,
+    protected: false,
   },
   isAuthenticated && {
     type: "collapse",
@@ -129,6 +138,7 @@ const routes = [
     icon: <Icon fontSize="small">logout</Icon>,
     route: "/authentication/log-out",
     component: <Logout />,
+    protected: true,
   },
 ].filter(Boolean);
 

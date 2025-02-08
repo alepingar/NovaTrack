@@ -53,8 +53,12 @@ import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "co
 import brandWhite from "assets/images/logo-ct.png";
 import brandDark from "assets/images/logo-ct-dark.png";
 
+import { useAuth } from "context/AuthContext"; // Importar el contexto de autenticación
+
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
+  const { isAuthenticated } = useAuth(); // Estado de autenticación
+
   const {
     miniSidenav,
     direction,
@@ -69,17 +73,14 @@ export default function App() {
   const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
 
-  // Cache for the rtl
   useMemo(() => {
     const cacheRtl = createCache({
       key: "rtl",
       stylisPlugins: [rtlPlugin],
     });
-
     setRtlCache(cacheRtl);
   }, []);
 
-  // Open sidenav when mouse enter on mini sidenav
   const handleOnMouseEnter = () => {
     if (miniSidenav && !onMouseEnter) {
       setMiniSidenav(dispatch, false);
@@ -87,7 +88,6 @@ export default function App() {
     }
   };
 
-  // Close sidenav when mouse leave mini sidenav
   const handleOnMouseLeave = () => {
     if (onMouseEnter) {
       setMiniSidenav(dispatch, true);
@@ -95,15 +95,12 @@ export default function App() {
     }
   };
 
-  // Change the openConfigurator state
   const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
 
-  // Setting the dir attribute for the body element
   useEffect(() => {
     document.body.setAttribute("dir", direction);
   }, [direction]);
 
-  // Setting page scroll to 0 when changing the route
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
@@ -111,8 +108,9 @@ export default function App() {
 
   const getRoutes = (allRoutes) =>
     allRoutes
-      .filter((route) => route.type !== "divider" && route.type !== "title") // Excluir títulos y divisores
+      .filter((route) => route.type !== "divider" && route.type !== "title")
       .map((route) => {
+        if (route.protected && !isAuthenticated) return null; // Ocultar rutas protegidas si no está autenticado
         if (route.collapse) {
           return getRoutes(route.collapse);
         }
@@ -163,7 +161,7 @@ export default function App() {
               color={sidenavColor}
               brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
               brandName="NovaTrack"
-              routes={routes}
+              routes={routes.filter((route) => !route.protected || isAuthenticated)} // Filtrar rutas protegidas
               onMouseEnter={handleOnMouseEnter}
               onMouseLeave={handleOnMouseLeave}
             />
@@ -171,7 +169,6 @@ export default function App() {
             {configsButton}
           </>
         )}
-        {layout === "vr" && <Configurator />}
         <Routes>
           {getRoutes(routes)}
           <Route path="*" element={<Navigate to="/dashboard" />} />
@@ -187,7 +184,7 @@ export default function App() {
             color={sidenavColor}
             brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
             brandName="NovaTrack"
-            routes={routes}
+            routes={routes.filter((route) => !route.protected || isAuthenticated)} // Filtrar rutas protegidas
             onMouseEnter={handleOnMouseEnter}
             onMouseLeave={handleOnMouseLeave}
           />
@@ -195,7 +192,6 @@ export default function App() {
           {configsButton}
         </>
       )}
-      {layout === "vr" && <Configurator />}
       <Routes>
         {getRoutes(routes)}
         <Route path="*" element={<Navigate to="/dashboard" />} />

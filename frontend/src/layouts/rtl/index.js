@@ -33,10 +33,6 @@ import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatist
 import reportsBarChartData from "layouts/rtl/data/reportsBarChartData";
 import reportsLineChartData from "layouts/rtl/data/reportsLineChartData";
 
-// RTL components
-import Projects from "layouts/rtl/components/Projects";
-import OrdersOverview from "layouts/rtl/components/OrdersOverview";
-
 // Material Dashboard 2 React contexts
 import { useMaterialUIController, setDirection } from "context";
 
@@ -154,16 +150,6 @@ function RTL() {
                   chart={tasks}
                 />
               </MDBox>
-            </Grid>
-          </Grid>
-        </MDBox>
-        <MDBox>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={8}>
-              <Projects />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <OrdersOverview />
             </Grid>
           </Grid>
         </MDBox>
