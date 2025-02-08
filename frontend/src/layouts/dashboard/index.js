@@ -25,6 +25,19 @@ import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import PieChart from "examples/Charts/PieChart";
 import MDTypography from "components/MDTypography";
+import {
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+} from "recharts";
 
 function Dashboard() {
   const [summary, setSummary] = useState({
@@ -53,15 +66,26 @@ function Dashboard() {
         });
         setVolumeByDay(volumeRes.data);
 
-        const categoryRes = await axios.get("http://127.0.0.1:8000/transfers/amount-by-category", {
-          headers,
-        });
-        setAmountByCategory(categoryRes.data);
+        if (amountByCategory.length === 0) {
+          console.log("No hay datos en amountByCategory:", amountByCategory);
+        } else {
+          const categoryRes = await axios.get(
+            "http://127.0.0.1:8000/transfers/amount-by-category",
+            {
+              headers,
+            }
+          );
+          setAmountByCategory(categoryRes.data);
+        }
 
-        const statusRes = await axios.get("http://127.0.0.1:8000/transfers/status-distribution", {
-          headers,
-        });
-        setStatusDistribution(statusRes.data);
+        if (statusDistribution.length === 0) {
+          console.log("No hay datos en statusDistribution:", statusDistribution);
+        } else {
+          const statusRes = await axios.get("http://127.0.0.1:8000/transfers/status-distribution", {
+            headers,
+          });
+          setStatusDistribution(statusRes.data);
+        }
 
         const locationRes = await axios.get(
           "http://127.0.0.1:8000/transfers/top-origin-locations",
@@ -131,24 +155,23 @@ function Dashboard() {
             <Grid item xs={12} md={6} lg={6}>
               <MDBox mb={3}>
                 {volumeByDay.length > 0 ? (
-                  <ReportsLineChart
-                    color="info"
-                    title="Transaction Volume by Day"
-                    description="Overview of daily transactions"
-                    date="Updated recently"
-                    chart={{
-                      labels: volumeByDay.map((d) => d.date),
-                      datasets: [
-                        {
-                          label: "Transactions",
-                          data: volumeByDay.map((d) => d.count),
-                          backgroundColor: "rgba(75, 192, 192, 0.2)",
-                          borderColor: "rgba(75, 192, 192, 1)",
-                          borderWidth: 2,
-                        },
-                      ],
-                    }}
-                  />
+                  <MDBox>
+                    <MDTypography variant="h6" fontWeight="medium">
+                      Transaction Volume by Day
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text">
+                      Overview of daily transactions
+                    </MDTypography>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={volumeByDay}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </MDBox>
                 ) : (
                   <MDTypography variant="caption" color="text">
                     No data available
@@ -159,20 +182,31 @@ function Dashboard() {
             <Grid item xs={12} md={6} lg={6}>
               <MDBox mb={3}>
                 {amountByCategory.length > 0 ? (
-                  <PieChart
-                    icon={{ color: "primary", component: "pie_chart" }}
-                    title="Amount by Category"
-                    description="Distribution of transaction amounts"
-                    chart={{
-                      labels: amountByCategory.map((d) => d.category),
-                      datasets: [
-                        {
-                          data: amountByCategory.map((d) => d.amount),
-                          backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
-                        },
-                      ],
-                    }}
-                  />
+                  <MDBox>
+                    <MDTypography variant="h6" fontWeight="medium">
+                      Amount by Category
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text">
+                      Distribution of transaction amounts
+                    </MDTypography>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={amountByCategory}
+                          dataKey="amount"
+                          nameKey="category"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                        >
+                          {amountByCategory.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={`hsl(${index * 40}, 70%, 50%)`} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </MDBox>
                 ) : (
                   <MDTypography variant="caption" color="text">
                     No data available
@@ -182,23 +216,36 @@ function Dashboard() {
             </Grid>
           </Grid>
           <Grid container spacing={3}>
+            {/* Gráfica de Distribución del Estado de las Transacciones */}
             <Grid item xs={12} md={6} lg={6}>
               <MDBox mb={3}>
                 {statusDistribution.length > 0 ? (
-                  <PieChart
-                    icon={{ color: "warning", component: "pie_chart" }}
-                    title="Transaction Status Distribution"
-                    description="Breakdown of transaction statuses"
-                    chart={{
-                      labels: statusDistribution.map((s) => s.status),
-                      datasets: [
-                        {
-                          data: statusDistribution.map((s) => s.count),
-                          backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
-                        },
-                      ],
-                    }}
-                  />
+                  <MDBox>
+                    <MDTypography variant="h6" fontWeight="medium">
+                      Transaction Status Distribution
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text">
+                      Breakdown of transaction statuses
+                    </MDTypography>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={statusDistribution}
+                          dataKey="count"
+                          nameKey="status"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          fill="#8884d8"
+                        >
+                          {statusDistribution.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={`hsl(${index * 40}, 70%, 50%)`} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </MDBox>
                 ) : (
                   <MDTypography variant="caption" color="text">
                     No data available
@@ -209,22 +256,23 @@ function Dashboard() {
             <Grid item xs={12} md={6} lg={6}>
               <MDBox mb={3}>
                 {topOriginLocations.length > 0 ? (
-                  <ReportsBarChart
-                    color="primary"
-                    title="Top Origin Locations"
-                    description="Most common transaction origins"
-                    date="Updated just now"
-                    chart={{
-                      labels: topOriginLocations.map((loc) => loc.location),
-                      datasets: [
-                        {
-                          label: "Count",
-                          data: topOriginLocations.map((loc) => loc.count),
-                          backgroundColor: "#82ca9d",
-                        },
-                      ],
-                    }}
-                  />
+                  <MDBox>
+                    <MDTypography variant="h6" fontWeight="medium">
+                      Top Origin Locations
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text">
+                      Most common transaction origins
+                    </MDTypography>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={topOriginLocations}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="location" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#82ca9d" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </MDBox>
                 ) : (
                   <MDTypography variant="caption" color="text">
                     No data available
