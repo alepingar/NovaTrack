@@ -45,7 +45,7 @@ import Profile from "layouts/profile";
 import SignIn from "layouts/authentication/sign-in";
 import SignUp from "layouts/authentication/sign-up";
 import Logout from "layouts/authentication/log-out";
-
+import TransferDetails from "layouts/tables/data/transfersDetails";
 // @mui icons
 import Icon from "@mui/material/Icon";
 
@@ -101,7 +101,11 @@ const routes = [
     route: "/profile",
     component: <Profile />,
   },
-  // Mostrar "Sign In" y "Sign Up" solo si el usuario no está autenticado
+  {
+    type: "invisible",
+    route: "/transfers/:id",
+    component: <TransferDetails />,
+  },
   !isAuthenticated && {
     type: "collapse",
     name: "Sign In",
@@ -118,7 +122,6 @@ const routes = [
     route: "/authentication/sign-up",
     component: <SignUp />,
   },
-  // Mostrar "Cerrar Sesión" solo si el usuario está autenticado
   isAuthenticated && {
     type: "collapse",
     name: "Cerrar Sesión",
@@ -127,6 +130,6 @@ const routes = [
     route: "/authentication/log-out",
     component: <Logout />,
   },
-].filter(Boolean); // Filtrar rutas nulas si la condición no se cumple
+].filter(Boolean);
 
 export default routes;

@@ -44,8 +44,8 @@ export default function data() {
     };
 
     fetchTransfers();
-    const interval = setInterval(fetchTransfers, 5000); // Actualizar cada 5 segundos
-    return () => clearInterval(interval); // Limpiar intervalo al desmontar
+    const interval = setInterval(fetchTransfers, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const rows = transfers.map((transfer) => ({
