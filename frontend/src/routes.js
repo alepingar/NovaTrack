@@ -46,6 +46,7 @@ import SignIn from "layouts/authentication/sign-in";
 import SignUp from "layouts/authentication/sign-up";
 import Logout from "layouts/authentication/log-out";
 import TransferDetails from "layouts/tables/data/transfersDetails";
+import GeneralDashboard from "layouts/dashboard/generalDashboard";
 // @mui icons
 import Icon from "@mui/material/Icon";
 
@@ -57,7 +58,17 @@ const routes = [
     icon: <Icon fontSize="small">dashboard</Icon>,
     route: "/dashboard",
     component: <Dashboard />,
+    protected: true,
+  },
+  {
+    type: "collapse",
+    name: "General Dashboard",
+    key: "general-dashboard",
+    icon: <Icon fontSize="small">general_dashboard</Icon>,
+    route: "/general-dashboard",
+    component: <GeneralDashboard />,
     protected: false,
+    onlyGuest: true,
   },
   {
     type: "collapse",

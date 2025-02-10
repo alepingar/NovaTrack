@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException , Query
+from fastapi import APIRouter, Depends, HTTPException
 from app.utils.security import get_current_user
 from app.services.transfer_services import (
     fetch_transfers,
@@ -8,6 +8,7 @@ from app.services.transfer_services import (
     fetch_status_distribution,
     fetch_top_origin_locations,
     fetch_volume_by_day,
+    fetch_public_summary_data
 )
 from app.models.transfer import TransferResponse, Transfer
 from typing import List
@@ -25,6 +26,18 @@ async def get_transfers(current_user: dict = Depends(get_current_user)):
     company_id = current_user["company_id"]
     return await fetch_transfers(company_id)
 
+
+
+@router.get("/public/summary-data", response_model=Dict[str, Union[int, float]])
+async def get_public_summary_data():
+    """
+    Devuelve un resumen de todas las transferencias
+    """
+    try:
+        return await fetch_public_summary_data()
+    except Exception as e:
+        print(f"Error al obtener el resumen: {e}")
+        raise HTTPException(status_code=500, detail="Error al generar el resumen")
 
 @router.get("/summary-data", response_model=Dict[str, Union[int, float]])
 async def get_summary_data(current_user: dict = Depends(get_current_user)):

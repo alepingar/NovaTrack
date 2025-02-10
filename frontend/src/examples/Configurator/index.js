@@ -274,7 +274,7 @@ function Configurator() {
           mt={3}
           lineHeight={1}
         >
-          <MDTypography variant="h6">Panel lateral fijo</MDTypography>
+          <MDTypography variant="h6">Panel superior fijo</MDTypography>
 
           <Switch checked={fixedNavbar} onChange={handleFixedNavbar} />
         </MDBox>

@@ -34,6 +34,29 @@ async def fetch_transfer_details(company_id: str, transfer_id: int) -> Transfer:
     return Transfer(**transfer_doc)
 
 
+async def fetch_public_summary_data() -> Dict[str, Union[int, float]]:
+    """
+    Obtiene un resumen de todas las transferencias.
+    """
+    
+    try:
+        total_transactions = await db.transfers.count_documents({})
+
+        total_anomalies = await db.transfers.count_documents({"is_anomalous": True})
+
+        total_amount = await db.transfers.aggregate([
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(length=1)
+
+        return {
+            "totalTransactions": total_transactions,
+            "totalAnomalies": total_anomalies,
+            "totalAmount": round(total_amount[0]["total"], 2) if total_amount else 0.0,
+        }
+    except Exception as e:
+        print(f"Error al procesar el resumen: {e}")
+        raise
+
 async def fetch_summary(company_id: str) -> Dict[str, Union[int, float]]:
     """
     Obtiene un resumen de las transferencias para una empresa específica.
