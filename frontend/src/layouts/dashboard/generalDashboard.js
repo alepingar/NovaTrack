@@ -38,7 +38,7 @@ function GeneralDashboard() {
           <MDTypography variant="h4" fontWeight="bold">
             Beneficios y Características
           </MDTypography>
-          <MDTypography variant="body1" color="textSecondary">
+          <MDTypography variant="body1" color="secondary">
             Descubre cómo nuestro sistema puede ayudarte a proteger tus transacciones.
           </MDTypography>
         </MDBox>
@@ -55,7 +55,7 @@ function GeneralDashboard() {
               <MDTypography variant="h6" fontWeight="medium">
                 Detección de Anomalías en Tiempo Real
               </MDTypography>
-              <MDTypography variant="body2" color="textSecondary">
+              <MDTypography variant="body2" color="secondary">
                 Nuestro sistema detecta anomalías de manera instantánea, asegurando que ninguna
                 transacción sospechosa pase desapercibida.
               </MDTypography>
@@ -72,7 +72,7 @@ function GeneralDashboard() {
               <MDTypography variant="h6" fontWeight="medium">
                 Prevención de Fraudes con Algoritmos Avanzados
               </MDTypography>
-              <MDTypography variant="body2" color="textSecondary">
+              <MDTypography variant="body2" color="secondary">
                 Utilizamos algoritmos de Machine Learning para prevenir fraudes antes de que
                 ocurran.
               </MDTypography>
@@ -89,7 +89,7 @@ function GeneralDashboard() {
               <MDTypography variant="h6" fontWeight="medium">
                 Ahorro de Tiempo y Dinero al Automatizar la Seguridad
               </MDTypography>
-              <MDTypography variant="body2" color="textSecondary">
+              <MDTypography variant="body2" color="secondary">
                 Al automatizar la detección de anomalías, ahorramos tiempo valioso y reducimos los
                 costos asociados con la seguridad manual.
               </MDTypography>
