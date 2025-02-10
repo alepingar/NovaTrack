@@ -62,7 +62,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "General Dashboard",
+    name: "Dashboard General",
     key: "general-dashboard",
     icon: <Icon fontSize="small">general_dashboard</Icon>,
     route: "/general-dashboard",
@@ -81,7 +81,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Billing",
+    name: "Facturación",
     key: "billing",
     icon: <Icon fontSize="small">receipt_long</Icon>,
     route: "/billing",
@@ -90,7 +90,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Notifications",
+    name: "Notificaciones",
     key: "notifications",
     icon: <Icon fontSize="small">notifications</Icon>,
     route: "/notifications",
@@ -99,7 +99,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Profile",
+    name: "Perfil",
     key: "profile",
     icon: <Icon fontSize="small">person</Icon>,
     route: "/profile",
@@ -114,7 +114,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Sign In",
+    name: "Inicio de Sesión",
     key: "sign-in",
     icon: <Icon fontSize="small">login</Icon>,
     route: "/authentication/sign-in",
@@ -124,7 +124,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Sign Up",
+    name: "Registro",
     key: "sign-up",
     icon: <Icon fontSize="small">assignment</Icon>,
     route: "/authentication/sign-up",

@@ -202,7 +202,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
           color={sidenavColor}
           fullWidth
         >
-          Upgrade to pro
+          Mejora tu suscripción
         </MDButton>
       </MDBox>
     </SidenavRoot>
