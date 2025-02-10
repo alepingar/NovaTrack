@@ -183,7 +183,7 @@ function Cover() {
       <Card>
         <MDBox
           variant="gradient"
-          bgColor="info"
+          bgColor="dark"
           borderRadius="lg"
           coloredShadow="success"
           mx={2}
@@ -244,12 +244,12 @@ function Cover() {
             ))}
             <MDBox mt={4} mb={1} display="flex" justifyContent="space-between">
               {currentStep > 0 && (
-                <MDButton variant="outlined" color="info" onClick={prevStep}>
+                <MDButton variant="outlined" color="dark" onClick={prevStep}>
                   Atrás
                 </MDButton>
               )}
               {currentStep < steps.length - 1 ? (
-                <MDButton variant="gradient" color="info" onClick={nextStep}>
+                <MDButton variant="gradient" color="dark" onClick={nextStep}>
                   Siguiente
                 </MDButton>
               ) : (

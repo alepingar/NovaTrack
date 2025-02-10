@@ -49,9 +49,6 @@ import TransferDetails from "layouts/tables/data/transfersDetails";
 // @mui icons
 import Icon from "@mui/material/Icon";
 
-// Verificar si el usuario está autenticado
-const isAuthenticated = !!localStorage.getItem("token");
-
 const routes = [
   {
     type: "collapse",
@@ -82,15 +79,6 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "RTL",
-    key: "rtl",
-    icon: <Icon fontSize="small">format_textdirection_r_to_l</Icon>,
-    route: "/rtl",
-    component: <RTL />,
-    protected: false,
-  },
-  {
-    type: "collapse",
     name: "Notifications",
     key: "notifications",
     icon: <Icon fontSize="small">notifications</Icon>,
@@ -113,7 +101,7 @@ const routes = [
     component: <TransferDetails />,
     protected: true,
   },
-  !isAuthenticated && {
+  {
     type: "collapse",
     name: "Sign In",
     key: "sign-in",
@@ -121,8 +109,9 @@ const routes = [
     route: "/authentication/sign-in",
     component: <SignIn />,
     protected: false,
+    onlyGuest: true,
   },
-  !isAuthenticated && {
+  {
     type: "collapse",
     name: "Sign Up",
     key: "sign-up",
@@ -130,8 +119,9 @@ const routes = [
     route: "/authentication/sign-up",
     component: <SignUp />,
     protected: false,
+    onlyGuest: true,
   },
-  isAuthenticated && {
+  {
     type: "collapse",
     name: "Cerrar Sesión",
     key: "log-out",
@@ -139,6 +129,7 @@ const routes = [
     route: "/authentication/log-out",
     component: <Logout />,
     protected: true,
+    onlyAuth: true,
   },
 ].filter(Boolean);
 

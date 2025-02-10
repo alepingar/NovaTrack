@@ -1,4 +1,4 @@
-/**
+/** 
 =========================================================
 * Material Dashboard 2 React - v2.2.0
 =========================================================
@@ -40,11 +40,13 @@ import MDButton from "components/MDButton";
 import BasicLayout from "layouts/authentication/components/BasicLayout";
 
 // Images
-import bgImage from "assets/images/bg-sign-in-basic.jpeg";
+import bgImage from "assets/images/marie.jpg";
+import { useAuth } from "context/AuthContext";
 
 function SignIn() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [rememberMe, setRememberMe] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   // Redirigir si ya está logueado
@@ -70,11 +72,9 @@ function SignIn() {
       const response = await axios.post("http://127.0.0.1:8000/auth/login", credentials);
       const { access_token } = response.data;
 
-      // Guardar el token en localStorage
-      localStorage.setItem("token", access_token);
+      login(access_token);
       alert("Inicio de sesión exitoso");
 
-      // Redirigir al dashboard
       navigate("/dashboard");
     } catch (error) {
       console.error("Error al iniciar sesión:", error.response?.data || error.message);
@@ -87,7 +87,7 @@ function SignIn() {
       <Card>
         <MDBox
           variant="gradient"
-          bgColor="info"
+          bgColor="dark"
           borderRadius="lg"
           coloredShadow="info"
           mx={2}
@@ -141,7 +141,7 @@ function SignIn() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth type="submit">
+              <MDButton variant="gradient" color="dark" fullWidth type="submit">
                 Iniciar Sesión
               </MDButton>
             </MDBox>
@@ -156,7 +156,7 @@ function SignIn() {
                   fontWeight="medium"
                   textGradient
                 >
-                  Regístrate
+                  Regístrate como empresa
                 </MDTypography>
               </MDTypography>
             </MDBox>

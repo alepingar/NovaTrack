@@ -87,7 +87,17 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
 
   // Render all the routes from the routes.js (All the visible items on the Sidenav)
   const renderRoutes = routes
-    .filter((route) => !route.protected || isAuthenticated) // Filtrar rutas protegidas
+    .filter((route) => {
+      // Ocultar rutas "protected" si no estás logueado
+      if (route.protected && !isAuthenticated) return false;
+      // Ocultar rutas "solo invitado" si ya estás logueado
+      if (route.onlyGuest && isAuthenticated) return false;
+      // Ocultar rutas "solo auth" si NO estás logueado
+      if (route.onlyAuth && !isAuthenticated) return false;
+
+      // Si nada coincide, la ruta se queda
+      return true;
+    }) // Filtrar rutas protegidas
     .map(({ type, name, icon, title, noCollapse, key, href, route }) => {
       let returnValue;
       if (type === "collapse") {
@@ -192,7 +202,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
           color={sidenavColor}
           fullWidth
         >
-          upgrade to pro
+          Upgrade to pro
         </MDButton>
       </MDBox>
     </SidenavRoot>
