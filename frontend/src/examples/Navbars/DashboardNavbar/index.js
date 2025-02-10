@@ -35,7 +35,7 @@ import MDInput from "components/MDInput";
 // Material Dashboard 2 React example components
 import Breadcrumbs from "examples/Breadcrumbs";
 import NotificationItem from "examples/Items/NotificationItem";
-
+import MDTypography from "components/MDTypography";
 // Custom styles for DashboardNavbar
 import {
   navbar,
@@ -131,7 +131,9 @@ function DashboardNavbar({ absolute, light, isMini }) {
     >
       <Toolbar sx={(theme) => navbarContainer(theme)}>
         <MDBox color="inherit" mb={{ xs: 1, md: 0 }} sx={(theme) => navbarRow(theme, { isMini })}>
-          <Breadcrumbs icon="home" title={route[route.length - 1]} route={route} light={light} />
+          <MDTypography variant="h6" color="inherit">
+            Detecta fraudes en tiempo real y ahorra hasta un 30% en pérdidas por anomalías.
+          </MDTypography>
         </MDBox>
         {isMini ? null : (
           <MDBox sx={(theme) => navbarRow(theme, { isMini })}>
@@ -139,7 +141,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
               <MDInput label="Busca aquí" />
             </MDBox>
             <MDBox color={light ? "white" : "inherit"}>
-              <Link to="/authentication/sign-in/basic">
+              <Link to="/authentication/sign-in">
                 <IconButton sx={navbarIconButton} size="small" disableRipple>
                   <Icon sx={iconsStyle}>account_circle</Icon>
                 </IconButton>
