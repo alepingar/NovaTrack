@@ -14,6 +14,6 @@ Coded by www.creative-tim.com
 */
 
 export default {
-  labels: ["Enero", "T", "W", "T", "F", "S", "S"],
-  datasets: { label: "Sales", data: [50, 20, 10, 22, 50, 10, 40] },
+  labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+  datasets: { label: "Transferencias", data: [10, 25, 37, 52, 60, 54, 65, 71, 79, 86, 92, 102] },
 };

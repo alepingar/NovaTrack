@@ -5,6 +5,8 @@ import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatist
 import MDBox from "components/MDBox";
 import Grid from "@mui/material/Grid";
 import axios from "axios";
+import reportsGrowthChartData from "./data/reportsGrowthChartData";
+import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
 
 function GeneralDashboard() {
   const [summary, setSummary] = useState({
@@ -66,7 +68,7 @@ function GeneralDashboard() {
                 color="success"
                 icon="warning"
                 title="Cantidad total transferida"
-                count={summary.totalAmount || 0}
+                count={summary.totalAmount.toLocaleString("es-ES") || 0}
                 percentage={{
                   color: "success",
                   amount: "+3%",
@@ -76,6 +78,19 @@ function GeneralDashboard() {
             </MDBox>
           </Grid>
         </Grid>
+        <MDBox mt={8}>
+          <Grid container spacing={1}>
+            <MDBox mb={3}>
+              <ReportsBarChart
+                color="info"
+                title="Crecimiento de transferencias"
+                description="Cantidad de transferencias analizadas a lo largo del año"
+                date="Actualizado hace 2 días"
+                chart={reportsGrowthChartData}
+              />
+            </MDBox>
+          </Grid>
+        </MDBox>
       </MDBox>
     </DashboardLayout>
   );
