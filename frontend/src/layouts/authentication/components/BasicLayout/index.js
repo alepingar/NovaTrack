@@ -1,18 +1,3 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
 // prop-types is a library for typechecking of props
 import PropTypes from "prop-types";
 
@@ -29,31 +14,17 @@ import PageLayout from "examples/LayoutContainers/PageLayout";
 // Authentication pages components
 import Footer from "layouts/authentication/components/Footer";
 
-function BasicLayout({ image, children }) {
+function BasicLayout({ children }) {
   return (
     <PageLayout>
-      <DefaultNavbar
-      // Elimina esta propiedad para quitar el botón
-      // action={{
-      //   type: "external",
-      //   route: "https://creative-tim.com/product/material-dashboard-react",
-      //   label: "free download",
-      // }}
-      />
+      <DefaultNavbar />
+      {/* Aquí ya no usamos la imagen, sino un fondo de color */}
       <MDBox
         position="absolute"
         width="100%"
         minHeight="100vh"
         sx={{
-          backgroundImage: ({ functions: { linearGradient, rgba }, palette: { gradients } }) =>
-            image &&
-            `${linearGradient(
-              rgba(gradients.dark.main, 0.6),
-              rgba(gradients.dark.state, 0.6)
-            )}, url(${image})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
+          backgroundColor: "#2c3e50", // Color de fondo sólido, puedes cambiarlo si quieres otro color
         }}
       />
       <MDBox px={1} width="100%" height="100vh" mx="auto">
@@ -68,9 +39,8 @@ function BasicLayout({ image, children }) {
   );
 }
 
-// Typechecking props for the BasicLayout
+// Eliminamos la propiedad `image` de las propTypes porque ya no la usamos
 BasicLayout.propTypes = {
-  image: PropTypes.string.isRequired,
   children: PropTypes.node.isRequired,
 };
 
