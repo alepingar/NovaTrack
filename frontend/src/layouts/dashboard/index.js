@@ -22,6 +22,8 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import PieChart from "examples/Charts/PieChart";
+import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
+import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
 import MDTypography from "components/MDTypography";
 import {
   LineChart,
@@ -98,6 +100,27 @@ function Dashboard() {
     fetchData();
   }, []);
 
+  const reportsVolumeByDayChartData = {
+    labels: volumeByDay.map((item) => item.date),
+    datasets: {
+      label: "Transferencias",
+      data: volumeByDay.map((item) => item.count),
+    },
+  };
+
+  console.log(topOriginLocations);
+
+  const reportsTopOriginChartData = {
+    labels: topOriginLocations.map((item) => item.location),
+    datasets: [
+      {
+        data: topOriginLocations.map((item) => item.count),
+        label: "Ubicaciones más comunes",
+        backgroundColor: "rgba(75,192,192,0.6)",
+      },
+    ],
+  };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -150,31 +173,16 @@ function Dashboard() {
         </Grid>
         <MDBox mt={4.5}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={6}>
+            <Grid item xs={12} sm={6} md={6}>
+              {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
               <MDBox mb={3}>
-                {volumeByDay.length > 0 ? (
-                  <MDBox>
-                    <MDTypography variant="h6" fontWeight="medium">
-                      Transaction Volume by Day
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text">
-                      Overview of daily transactions
-                    </MDTypography>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={volumeByDay}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </MDBox>
-                ) : (
-                  <MDTypography variant="caption" color="text">
-                    No data available
-                  </MDTypography>
-                )}
+                <ReportsLineChart
+                  color="info"
+                  title="Crecimiento de transferencias"
+                  description="Cantidad de transferencias analizadas a lo largo del año"
+                  date="Actualizado hace 2 días"
+                  chart={reportsVolumeByDayChartData}
+                />
               </MDBox>
             </Grid>
             <Grid item xs={12} md={6} lg={6}>
@@ -251,31 +259,16 @@ function Dashboard() {
                 )}
               </MDBox>
             </Grid>
-            <Grid item xs={12} md={6} lg={6}>
+            <Grid item xs={12} sm={6} md={6}>
+              {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
               <MDBox mb={3}>
-                {topOriginLocations.length > 0 ? (
-                  <MDBox>
-                    <MDTypography variant="h6" fontWeight="medium">
-                      Top Origin Locations
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text">
-                      Most common transaction origins
-                    </MDTypography>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={topOriginLocations}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="location" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="#82ca9d" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </MDBox>
-                ) : (
-                  <MDTypography variant="caption" color="text">
-                    No data available
-                  </MDTypography>
-                )}
+                <ReportsBarChart
+                  color="success"
+                  title="Mejores ubicaciones de origen"
+                  description="Ubicaciones más comunes de los remitentes"
+                  date="Actualizado hace 2 días"
+                  chart={reportsTopOriginChartData}
+                />
               </MDBox>
             </Grid>
           </Grid>
