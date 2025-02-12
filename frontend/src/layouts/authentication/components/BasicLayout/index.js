@@ -58,7 +58,7 @@ function BasicLayout({ image, children }) {
       />
       <MDBox px={1} width="100%" height="100vh" mx="auto">
         <Grid container spacing={1} justifyContent="center" alignItems="center" height="100%">
-          <Grid item xs={11} sm={9} md={5} lg={4} xl={3}>
+          <Grid item xs={12} sm={12} md={8} lg={7} xl={6}>
             {children}
           </Grid>
         </Grid>
