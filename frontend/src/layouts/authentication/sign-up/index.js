@@ -1,18 +1,3 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +8,6 @@ import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import CoverLayout from "layouts/authentication/components/CoverLayout";
-import bgImage from "assets/images/bg-sign-up-cover.jpeg";
 
 function Cover() {
   const [formData, setFormData] = useState({
@@ -171,7 +155,13 @@ function Cover() {
   };
 
   const nextStep = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+    const currentFields = steps[currentStep].fields;
+    const invalidFields = currentFields.some((field) => {
+      return !formData[field.id] || errors[field.id];
+    });
+    if (!invalidFields) {
+      if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+    }
   };
 
   const prevStep = () => {
@@ -179,89 +169,91 @@ function Cover() {
   };
 
   return (
-    <CoverLayout image={bgImage}>
-      <Card>
-        <MDBox
-          variant="gradient"
-          bgColor="dark"
-          borderRadius="lg"
-          coloredShadow="success"
-          mx={2}
-          mt={-3}
-          p={3}
-          mb={1}
-          textAlign="center"
-        >
-          <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
-            {steps[currentStep].title}
-          </MDTypography>
-          <MDTypography display="block" variant="button" color="white" my={1}>
-            Completa la información para continuar
-          </MDTypography>
-        </MDBox>
-        <MDBox pt={4} pb={3} px={3}>
-          {errorMessage && (
-            <MDBox mb={2}>
-              <MDTypography variant="button" color="error" textAlign="center">
-                {errorMessage}
-              </MDTypography>
-            </MDBox>
-          )}
-          <MDBox component="form" role="form" onSubmit={handleSubmit}>
-            {steps[currentStep].fields.map(({ id, label, required, type = "text" }) => (
-              <MDBox mb={2} key={id}>
-                {type === "textarea" ? (
-                  <MDInput
-                    multiline
-                    rows={4}
-                    variant="standard"
-                    fullWidth
-                    id={id}
-                    name={id}
-                    label={label}
-                    required={required}
-                    value={formData[id]}
-                    onChange={handleChange}
-                    error={Boolean(errors[id])}
-                    helperText={errors[id]}
-                  />
+    <Grid container style={{ backgroundColor: "#2c3e50" }}>
+      <CoverLayout>
+        <Card>
+          <MDBox
+            variant="gradient"
+            bgColor="dark"
+            borderRadius="lg"
+            coloredShadow="success"
+            mx={2}
+            mt={-3}
+            p={3}
+            mb={1}
+            textAlign="center"
+          >
+            <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
+              {steps[currentStep].title}
+            </MDTypography>
+            <MDTypography display="block" variant="button" color="white" my={1}>
+              Completa la información para continuar
+            </MDTypography>
+          </MDBox>
+          <MDBox pt={4} pb={3} px={3}>
+            {errorMessage && (
+              <MDBox mb={2}>
+                <MDTypography variant="button" color="error" textAlign="center">
+                  {errorMessage}
+                </MDTypography>
+              </MDBox>
+            )}
+            <MDBox component="form" role="form" onSubmit={handleSubmit}>
+              {steps[currentStep].fields.map(({ id, label, required, type = "text" }) => (
+                <MDBox mb={2} key={id}>
+                  {type === "textarea" ? (
+                    <MDInput
+                      multiline
+                      rows={4}
+                      variant="standard"
+                      fullWidth
+                      id={id}
+                      name={id}
+                      label={label}
+                      required={required}
+                      value={formData[id]}
+                      onChange={handleChange}
+                      error={Boolean(errors[id])}
+                      helperText={errors[id]}
+                    />
+                  ) : (
+                    <MDInput
+                      type={type}
+                      variant="standard"
+                      fullWidth
+                      id={id}
+                      name={id}
+                      label={label}
+                      required={required}
+                      value={formData[id]}
+                      onChange={handleChange}
+                      error={Boolean(errors[id])}
+                      helperText={errors[id]}
+                    />
+                  )}
+                </MDBox>
+              ))}
+              <MDBox mt={4} mb={1} display="flex" justifyContent="space-between">
+                {currentStep > 0 && (
+                  <MDButton variant="outlined" color="dark" onClick={prevStep}>
+                    Atrás
+                  </MDButton>
+                )}
+                {currentStep < steps.length - 1 ? (
+                  <MDButton variant="gradient" color="dark" onClick={nextStep}>
+                    Siguiente
+                  </MDButton>
                 ) : (
-                  <MDInput
-                    type={type}
-                    variant="standard"
-                    fullWidth
-                    id={id}
-                    name={id}
-                    label={label}
-                    required={required}
-                    value={formData[id]}
-                    onChange={handleChange}
-                    error={Boolean(errors[id])}
-                    helperText={errors[id]}
-                  />
+                  <MDButton variant="gradient" color="success" type="submit">
+                    Registrar
+                  </MDButton>
                 )}
               </MDBox>
-            ))}
-            <MDBox mt={4} mb={1} display="flex" justifyContent="space-between">
-              {currentStep > 0 && (
-                <MDButton variant="outlined" color="dark" onClick={prevStep}>
-                  Atrás
-                </MDButton>
-              )}
-              {currentStep < steps.length - 1 ? (
-                <MDButton variant="gradient" color="dark" onClick={nextStep}>
-                  Siguiente
-                </MDButton>
-              ) : (
-                <MDButton variant="gradient" color="success" type="submit">
-                  Registrar
-                </MDButton>
-              )}
             </MDBox>
           </MDBox>
-        </MDBox>
-      </Card>
-    </CoverLayout>
+        </Card>
+      </CoverLayout>
+    </Grid>
   );
 }
 export default Cover;
