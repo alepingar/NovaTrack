@@ -21,7 +21,6 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
-import PieChart from "examples/Charts/PieChart";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
 import MDTypography from "components/MDTypography";
@@ -66,26 +65,15 @@ function Dashboard() {
         });
         setVolumeByDay(volumeRes.data);
 
-        if (amountByCategory.length === 0) {
-          console.log("No hay datos en amountByCategory:", amountByCategory);
-        } else {
-          const categoryRes = await axios.get(
-            "http://127.0.0.1:8000/transfers/amount-by-category",
-            {
-              headers,
-            }
-          );
-          setAmountByCategory(categoryRes.data);
-        }
+        const categoryRes = await axios.get("http://127.0.0.1:8000/transfers/amount-by-category", {
+          headers,
+        });
+        setAmountByCategory(categoryRes.data);
 
-        if (statusDistribution.length === 0) {
-          console.log("No hay datos en statusDistribution:", statusDistribution);
-        } else {
-          const statusRes = await axios.get("http://127.0.0.1:8000/transfers/status-distribution", {
-            headers,
-          });
-          setStatusDistribution(statusRes.data);
-        }
+        const statusRes = await axios.get("http://127.0.0.1:8000/transfers/status-distribution", {
+          headers,
+        });
+        setStatusDistribution(statusRes.data);
 
         const locationRes = await axios.get(
           "http://127.0.0.1:8000/transfers/top-origin-locations",
@@ -108,17 +96,28 @@ function Dashboard() {
     },
   };
 
-  console.log(topOriginLocations);
-
   const reportsTopOriginChartData = {
     labels: topOriginLocations.map((item) => item.location),
-    datasets: [
-      {
-        data: topOriginLocations.map((item) => item.count),
-        label: "Ubicaciones más comunes",
-        backgroundColor: "rgba(75,192,192,0.6)",
-      },
-    ],
+    datasets: {
+      data: topOriginLocations.map((item) => item.count),
+      label: "Ubicaciones más comunes",
+    },
+  };
+
+  const reportsAmountByCategoryChartData = {
+    labels: amountByCategory.map((item) => item.category),
+    datasets: {
+      data: amountByCategory.map((item) => item.amount),
+      label: "Monto total transferido",
+    },
+  };
+
+  const reportsStatusChartData = {
+    labels: statusDistribution.map((item) => item.status),
+    datasets: {
+      data: statusDistribution.map((item) => item.count),
+      label: "Distribución del estado de las Transacciones",
+    },
   };
 
   return (
@@ -185,83 +184,41 @@ function Dashboard() {
                 />
               </MDBox>
             </Grid>
-            <Grid item xs={12} md={6} lg={6}>
+            <Grid item xs={12} sm={6} md={6}>
+              {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
               <MDBox mb={3}>
-                {amountByCategory.length > 0 ? (
-                  <MDBox>
-                    <MDTypography variant="h6" fontWeight="medium">
-                      Amount by Category
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text">
-                      Distribution of transaction amounts
-                    </MDTypography>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={amountByCategory}
-                          dataKey="amount"
-                          nameKey="category"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={100}
-                        >
-                          {amountByCategory.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={`hsl(${index * 40}, 70%, 50%)`} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </MDBox>
-                ) : (
-                  <MDTypography variant="caption" color="text">
-                    No data available
-                  </MDTypography>
-                )}
+                <ReportsBarChart
+                  color="primary"
+                  title="Cantidad de monto por categorías"
+                  description="Distribución de los montos transferidos por categoría"
+                  date="Actualizado hace 4 días"
+                  chart={reportsAmountByCategoryChartData}
+                />
               </MDBox>
             </Grid>
           </Grid>
           <Grid container spacing={3}>
             {/* Gráfica de Distribución del Estado de las Transacciones */}
-            <Grid item xs={12} md={6} lg={6}>
-              <MDBox mb={3}>
+            <Grid item xs={12} sm={6} md={6}>
+              <MDBox mt={4.5}>
                 {statusDistribution.length > 0 ? (
-                  <MDBox>
-                    <MDTypography variant="h6" fontWeight="medium">
-                      Transaction Status Distribution
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text">
-                      Breakdown of transaction statuses
-                    </MDTypography>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={statusDistribution}
-                          dataKey="count"
-                          nameKey="status"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={100}
-                          fill="#8884d8"
-                        >
-                          {statusDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={`hsl(${index * 40}, 70%, 50%)`} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </MDBox>
+                  <ReportsBarChart
+                    color="error"
+                    title="Distribución de estados de transacción"
+                    description="Desglose de los diferentes estados de las transacciones"
+                    date="Actualizado hace 2 días"
+                    chart={reportsStatusChartData}
+                  />
                 ) : (
                   <MDTypography variant="caption" color="text">
-                    No data available
+                    No hay datos disponibles
                   </MDTypography>
                 )}
               </MDBox>
             </Grid>
             <Grid item xs={12} sm={6} md={6}>
               {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
-              <MDBox mb={3}>
+              <MDBox mt={4.5}>
                 <ReportsBarChart
                   color="success"
                   title="Mejores ubicaciones de origen"
