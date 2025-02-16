@@ -206,7 +206,7 @@ function Dashboard() {
                     color="error"
                     title="Distribución de estados de transacción"
                     description="Desglose de los diferentes estados de las transacciones"
-                    date="Actualizado hace 2 días"
+                    date="Actualizado hace 5 días"
                     chart={reportsStatusChartData}
                   />
                 ) : (
@@ -223,7 +223,7 @@ function Dashboard() {
                   color="success"
                   title="Mejores ubicaciones de origen"
                   description="Ubicaciones más comunes de los remitentes"
-                  date="Actualizado hace 2 días"
+                  date="Actualizado hace 3 días"
                   chart={reportsTopOriginChartData}
                 />
               </MDBox>

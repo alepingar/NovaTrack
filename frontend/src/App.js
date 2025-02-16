@@ -130,7 +130,10 @@ export default function App() {
           {configsButton}
         </>
       )}
-      <Routes>{getRoutes(routes)}</Routes>
+      <Routes>
+        <Route path="/" element={<Navigate to="/general-dashboard" />} />
+        {getRoutes(routes)}
+      </Routes>
     </ThemeProvider>
   );
 }
