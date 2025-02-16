@@ -114,7 +114,7 @@ const routes = [
     protected: true,
   },
   {
-    type: "collapse",
+    type: "invisible",
     name: "Términos de sérvicio",
     key: "terms_of_service",
     icon: <Icon fontSize="small">terms_of_service</Icon>,
@@ -124,7 +124,7 @@ const routes = [
     onlyGuest: true,
   },
   {
-    type: "collapse",
+    type: "invisible",
     name: "Política de privacidad",
     key: "privacy_policy",
     icon: <Icon fontSize="small">privacy_policy</Icon>,
@@ -134,7 +134,7 @@ const routes = [
     onlyGuest: true,
   },
   {
-    type: "collapse",
+    type: "invisible",
     name: "Support",
     key: "support",
     icon: <Icon fontSize="small">support</Icon>,
@@ -144,7 +144,7 @@ const routes = [
     onlyGuest: true,
   },
   {
-    type: "collapse",
+    type: "invisible",
     name: "About",
     key: "about",
     icon: <Icon fontSize="small">about</Icon>,
