@@ -11,6 +11,7 @@ start cmd /k ".\bin\windows\zookeeper-server-start.bat .\config\zookeeper.proper
 timeout /t 10 > nul
 
 :: Ejecuta Kafka
+cd /d C:\kafka_2.13-3.9.0
 start cmd /k ".\bin\windows\kafka-server-start.bat .\config\server.properties"
 
 :: Vuelve al directorio de NovaTrack y activa el entorno virtual
@@ -23,7 +24,7 @@ start cmd /k "venv\Scripts\activate && cd frontend && npm start"
 
 :: Ejecuta el consumidor de Kafka
 cd /d C:\Users\alexander\Desktop\NovaTrack
-start cmd /k "venv\Scripts\activate && cd backend && python -m backend.app.kafka.consumer"
+start cmd /k "venv\Scripts\activate && cd backend && python -m app.kafka.consumer"
 
 :: Ejecuta el script de transferencias aleatorias
 cd /d C:\Users\alexander\Desktop\NovaTrack

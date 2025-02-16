@@ -47,6 +47,7 @@ import SignUp from "layouts/authentication/sign-up";
 import Logout from "layouts/authentication/log-out";
 import TransferDetails from "layouts/tables/data/transfersDetails";
 import GeneralDashboard from "layouts/dashboard/generalDashboard";
+import { TermsOfService, PrivacyPolicy, Support, About } from "examples/Footer/legalPages";
 // @mui icons
 import Icon from "@mui/material/Icon";
 
@@ -111,6 +112,46 @@ const routes = [
     route: "/transfers/:id",
     component: <TransferDetails />,
     protected: true,
+  },
+  {
+    type: "collapse",
+    name: "Términos de sérvicio",
+    key: "terms_of_service",
+    icon: <Icon fontSize="small">terms_of_service</Icon>,
+    route: "/terms",
+    component: <TermsOfService />,
+    protected: false,
+    onlyGuest: true,
+  },
+  {
+    type: "collapse",
+    name: "Política de privacidad",
+    key: "privacy_policy",
+    icon: <Icon fontSize="small">privacy_policy</Icon>,
+    route: "/privacy-policy",
+    component: <PrivacyPolicy />,
+    protected: false,
+    onlyGuest: true,
+  },
+  {
+    type: "collapse",
+    name: "Support",
+    key: "support",
+    icon: <Icon fontSize="small">support</Icon>,
+    route: "/support",
+    component: <Support />,
+    protected: false,
+    onlyGuest: true,
+  },
+  {
+    type: "collapse",
+    name: "About",
+    key: "about",
+    icon: <Icon fontSize="small">about</Icon>,
+    route: "/about",
+    component: <About />,
+    protected: false,
+    onlyGuest: true,
   },
   {
     type: "collapse",
