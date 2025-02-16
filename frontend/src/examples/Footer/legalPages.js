@@ -233,7 +233,7 @@ function PrivacyPolicy() {
               Si tienes alguna pregunta o inquietud sobre nuestra Política de Privacidad o deseas
               ejercer tus derechos sobre tus datos personales, no dudes en ponerte en contacto con
               nosotros a través de nuestro correo electrónico:{" "}
-              <Link href="mailto:support@financedetect.com">support@financedetect.com</Link>.
+              <Link href="mailto:novatracksupport@gmail.com">novatracksupport@gmail.com</Link>.
             </Typography>
           </Box>
         </Paper>
@@ -244,31 +244,228 @@ function PrivacyPolicy() {
 
 function Support() {
   return (
-    <Container maxWidth="md">
-      <Paper elevation={3} sx={{ padding: 4, marginTop: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Soporte
-        </Typography>
-        <Typography variant="body1" paragraph>
-          ¿Necesitas ayuda? Contáctanos a través de nuestro correo de soporte...
-        </Typography>
-      </Paper>
-    </Container>
+    <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 4, ml: { xs: 4, md: 18 } }}>
+      <Container maxWidth="lg">
+        <Paper elevation={6} sx={{ padding: 4 }}>
+          <Typography variant="h4" fontWeight="bold" gutterBottom>
+            Soporte
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
+
+          <Typography variant="body1" paragraph>
+            ¿Tienes problemas o preguntas sobre nuestra plataforma? Estamos aquí para ayudarte. En
+            esta sección, te proporcionamos información sobre cómo contactarnos, qué tipo de soporte
+            ofrecemos y qué recursos están disponibles para ayudarte a resolver cualquier
+            inconveniente.
+          </Typography>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              1. Métodos de Contacto
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Si necesitas asistencia, puedes contactarnos de las siguientes formas:
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Correo electrónico**: Envíanos un correo a{" "}
+              <Link href="mailto:novatracksupport@gmail.com">novatracksupport@gmail.com</Link> para
+              cualquier consulta general, dudas sobre la plataforma, o problemas técnicos.
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Chat en vivo**: Si necesitas asistencia en tiempo real, ofrecemos soporte a través
+              de nuestro chat en vivo. Visita nuestra página de soporte para acceder al chat.
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Teléfono**: También puedes llamarnos al número +1 (800) 123-4567 de lunes a
+              viernes, de 9:00 a 18:00 (hora local).
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              2. Tiempo de Respuesta
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Nuestro equipo de soporte está disponible para responder a tus consultas dentro de las
+              24 horas hábiles. Las solicitudes más complejas pueden tomar hasta 72 horas para ser
+              resueltas.
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              3. Recursos de Autoayuda
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Antes de contactarnos, te recomendamos revisar nuestros recursos de autoayuda, que
+              podrían solucionar tu problema rápidamente:
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Centro de Ayuda**: Consulta nuestra sección de preguntas frecuentes (FAQ) donde
+              encontrarás respuestas a las dudas más comunes. [Ir al Centro de Ayuda](#)
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Tutoriales**: Visita nuestros tutoriales paso a paso para aprender cómo utilizar
+              la plataforma de manera efectiva. [Ver Tutoriales](#)
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Foro de la Comunidad**: Participa en el foro para compartir soluciones y discutir
+              problemas con otros usuarios. [Acceder al Foro](#)
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              4. Soporte Técnico
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Si experimentas problemas técnicos, como errores en la aplicación o dificultades para
+              acceder a tu cuenta, por favor proporciona los siguientes detalles cuando nos
+              contactes:
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - Descripción del problema.
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - Pasos previos que realizaste antes de que ocurriera el error.
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - Capturas de pantalla (si es posible) que muestren el error.
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              5. Tiempos de Soporte
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Nuestro equipo de soporte está disponible de lunes a viernes, de 9:00 a 18:00 (hora
+              local). Si tu solicitud es recibida fuera de estos horarios, nos pondremos en contacto
+              contigo tan pronto como sea posible.
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              6. Políticas de Soporte
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Al utilizar nuestros servicios de soporte, aceptas nuestras políticas de servicio al
+              cliente. Nos reservamos el derecho de priorizar los casos según su urgencia y la
+              gravedad de los problemas técnicos. Apreciamos tu comprensión y paciencia.
+            </Typography>
+          </Box>
+
+          <Box mt={3} display="flex" justifyContent="flex-end">
+            <Typography variant="body1" paragraph>
+              Si tienes alguna pregunta adicional o necesitas asistencia, no dudes en ponerte en
+              contacto con nuestro equipo de soporte. ¡Estamos aquí para ayudarte!
+            </Typography>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
 
 function About() {
   return (
-    <Container maxWidth="md">
-      <Paper elevation={3} sx={{ padding: 4, marginTop: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Acerca de
-        </Typography>
-        <Typography variant="body1" paragraph>
-          Somos una empresa que se dedica a...
-        </Typography>
-      </Paper>
-    </Container>
+    <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 4, ml: { xs: 4, md: 18 } }}>
+      <Container maxWidth="lg">
+        <Paper elevation={6} sx={{ padding: 4 }}>
+          <Typography variant="h4" fontWeight="bold" gutterBottom>
+            Acerca de
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
+
+          <Typography variant="body1" paragraph>
+            Bienvenido a nuestra plataforma. En esta sección, te compartimos quiénes somos, nuestra
+            misión, visión y los valores que guían el desarrollo de nuestra aplicación.
+          </Typography>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              1. Nuestra Misión
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Nuestra misión es ofrecer soluciones tecnológicas avanzadas para la detección de
+              anomalías en tiempo real en transacciones financieras, mejorando la seguridad y
+              eficiencia de las plataformas bancarias y financieras en todo el mundo.
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              2. Nuestra Visión
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Queremos convertirnos en un líder global en la protección de transacciones
+              financieras, utilizando las mejores herramientas de machine learning y big data para
+              garantizar la integridad de los procesos bancarios y ofrecer un entorno seguro para
+              todos los usuarios.
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              3. Nuestro Equipo
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Somos un equipo de profesionales apasionados por la tecnología, la seguridad
+              informática y el desarrollo de soluciones innovadoras. Nuestro equipo está compuesto
+              por ingenieros, científicos de datos y expertos en finanzas, trabajando de manera
+              colaborativa para llevar a cabo nuestra misión.
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              4. Nuestros Valores
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Innovación**: Estamos comprometidos con la mejora continua y la implementación de
+              las últimas tecnologías en nuestros productos.
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Seguridad**: La protección de los datos de nuestros usuarios es nuestra máxima
+              prioridad.
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Transparencia**: Operamos con honestidad y claridad, proporcionando a nuestros
+              usuarios acceso completo a la información relevante sobre nuestros servicios.
+            </Typography>
+            <Typography variant="body1" paragraph>
+              - **Compromiso**: Nos dedicamos a ofrecer un servicio de calidad excepcional, siempre
+              buscando la satisfacción del cliente.
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              5. ¿Por Qué Elegirnos?
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Nuestro software utiliza algoritmos avanzados de machine learning y big data para
+              detectar anomalías en tiempo real, lo que garantiza que las transacciones financieras
+              sean seguras y legítimas. Estamos comprometidos con la mejora constante, y nuestra
+              solución está diseñada para adaptarse a las necesidades cambiantes de la industria
+              financiera.
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="h6" fontWeight="medium" gutterBottom>
+              6. Contacto
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Si deseas obtener más información sobre nuestra empresa, nuestros servicios, o
+              colaborar con nosotros, no dudes en{" "}
+              <Link href="mailto:novatracksupport@gmail.com">contactarnos</Link>.
+            </Typography>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
 
