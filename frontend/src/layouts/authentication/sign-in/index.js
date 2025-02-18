@@ -50,35 +50,35 @@ function SignIn() {
   };
 
   return (
-    <Grid container style={{ height: "100vh" }}>
-      {/* Columna izquierda: Fondo azul marino con eslogan */}
-      <Grid
-        item
-        xs={12}
-        sm={6}
-        style={{
-          backgroundColor: "#2c3e50", // Azul marino
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <MDTypography variant="h4" color="white" textAlign="center">
-          Transforma tus transacciones, con seguridad y precisión.
-        </MDTypography>
-      </Grid>
+    <BasicLayout>
+      <Grid container style={{ height: "100vh" }}>
+        {/* Columna izquierda: Fondo azul marino con eslogan */}
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          style={{
+            backgroundColor: "#2c3e50", // Azul marino
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <MDTypography variant="h4" color="white" textAlign="center">
+            Transforma tus transacciones, con seguridad y precisión.
+          </MDTypography>
+        </Grid>
 
-      {/* Columna derecha: Formulario de inicio de sesión */}
-      <Grid
-        item
-        xs={12}
-        sm={6}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        style={{ backgroundColor: "#2c3e50" }}
-      >
-        <BasicLayout>
+        {/* Columna derecha: Formulario de inicio de sesión */}
+        <Grid
+          item
+          xs={12}
+          sm={6}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          style={{ backgroundColor: "#2c3e50" }}
+        >
           <Card
             style={{
               width: "100%",
@@ -164,9 +164,9 @@ function SignIn() {
               </MDBox>
             </MDBox>
           </Card>
-        </BasicLayout>
+        </Grid>
       </Grid>
-    </Grid>
+    </BasicLayout>
   );
 }
 
