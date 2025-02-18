@@ -134,7 +134,7 @@ function GeneralDashboard() {
                 color="success"
                 icon="warning"
                 title="Cantidad total transferida"
-                count={summary.totalAmount.toLocaleString("es-ES") || 0}
+                count={`${summary.totalAmount.toLocaleString("es-ES") || 0}€`}
                 percentage={{
                   color: "success",
                   amount: "+3%",

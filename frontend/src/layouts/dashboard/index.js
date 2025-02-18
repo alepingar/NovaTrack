@@ -160,7 +160,7 @@ function Dashboard() {
                 color="success"
                 icon="attach_money"
                 title="Cantitad total transferida"
-                count={`$${summary.totalAmount.toLocaleString("es-ES")}`}
+                count={`${summary.totalAmount.toLocaleString("es-ES")}€`}
                 percentage={{
                   color: "success",
                   amount: "+3%",
