@@ -85,7 +85,6 @@ import dialogContentText from "assets/theme/components/dialog/dialogContentText"
 import dialogActions from "assets/theme/components/dialog/dialogActions";
 
 export default createTheme({
-  direction: "rtl",
   breakpoints: { ...breakpoints },
   palette: { ...colors },
   typography: { ...typography },

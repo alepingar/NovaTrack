@@ -1,20 +1,27 @@
-import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 
-async def actualizar_categorias():
-    client = AsyncIOMotorClient("mongodb://localhost:27017/")
-    db = client["nova_track"]
-    collection = db["transfers"]
+client = AsyncIOMotorClient("mongodb://localhost:27017/")
+db = client["nova_track"]
+collection = db["transfers"]
 
-    cambios = {
-        "entertainment": "entretenimiento",
-        "groceries": "comestibles",
-        "utilities": "servicios"
-    }
+# Diccionario de valores correctos de ubicación para revertir los cambios
+correct_locations = {
+    "origin_location": [ "Los Ángeles, EE.UU."],
+    "destination_location": [ "Madrid, España"]
+}
 
-    for ingles, espanol in cambios.items():
-        await collection.update_many({"category": ingles}, {"$set": {"category": espanol}})
+# Revertir la ubicación_origen y ubicacion_destino a los valores correctos
+async def revert_locations():
+    # Revertimos los valores de ubicacion_origen
 
-    print("Categorías actualizadas correctamente.")
+    # Revertimos los valores de ubicacion_destino
+    for correct_value in correct_locations["destination_location"]:
+        await collection.update_many(
+            {"destination_location": "transferencia_bancaria"},  # Reemplazamos "tarjeta_de_crédito"
+            {"$set": {"destination_location": correct_value}}
+        )
 
-asyncio.run(actualizar_categorias())
+    print("Ubicaciones revertidas correctamente.")
+
+import asyncio
+asyncio.run(revert_locations())
