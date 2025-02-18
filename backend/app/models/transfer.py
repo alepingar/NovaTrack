@@ -17,7 +17,7 @@ class Transfer(BaseModel):
     origin_location: Optional[str] = Field(None, max_length=100)  # Ubicación de origen (ciudad, país)
     destination_location: Optional[str] = Field(None, max_length=100)  # Ubicación de destino
     payment_method: Optional[str] = Field(None, max_length=50)  # Método de pago (e.g., tarjeta, transferencia)
-    status: str = Field(..., pattern=r"^(pending|completed|failed)$", description="Estado: pending, completed o failed")
+    status: str = Field(..., pattern=r"^(pendiente|completeda|fallida)$", description="Estado: pending, completed o failed")
     user_identifier: Optional[str] = Field(None, description="Identificador del usuario que realiza la transacción (e.g., email, ID externo)")
     is_recurring: Optional[bool] = False  # Indica si es una transferencia recurrente
     device_fingerprint: Optional[str] = Field(None, max_length=500, description="Identificador único del dispositivo usado")

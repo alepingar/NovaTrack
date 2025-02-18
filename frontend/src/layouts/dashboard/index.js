@@ -130,7 +130,7 @@ function Dashboard() {
               <ComplexStatisticsCard
                 color="dark"
                 icon="sync_alt"
-                title="Transfers"
+                title="Transferencias"
                 count={summary.totalTransactions}
                 percentage={{
                   color: "success",
@@ -144,7 +144,7 @@ function Dashboard() {
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
                 icon="warning"
-                title="Anomalies Detected"
+                title="Anomalías detectadas"
                 count={summary.totalAnomalies}
                 percentage={{
                   color: "error",
@@ -159,7 +159,7 @@ function Dashboard() {
               <ComplexStatisticsCard
                 color="success"
                 icon="attach_money"
-                title="Total Amount Transferred"
+                title="Cantitad total transferida"
                 count={`$${summary.totalAmount.toLocaleString("es-ES")}`}
                 percentage={{
                   color: "success",
