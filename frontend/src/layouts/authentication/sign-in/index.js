@@ -62,6 +62,7 @@ function SignIn() {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            paddingLeft: "0",
           }}
         >
           <MDTypography variant="h4" color="white" textAlign="center">

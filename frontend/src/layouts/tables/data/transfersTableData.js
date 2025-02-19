@@ -37,6 +37,7 @@ export default function data() {
             Authorization: `Bearer ${token}`,
           },
         });
+        console.log(response.data);
         setTransfers(response.data);
       } catch (error) {
         console.error("Error al obtener las transferencias:", error);
@@ -80,16 +81,16 @@ export default function data() {
       <MDBox ml={-1}>
         <MDBadge
           badgeContent={
-            transfer.status === "completed"
+            transfer.status === "completeda"
               ? "Completada"
-              : transfer.status === "pending"
+              : transfer.status === "pendiente"
               ? "Pendiente"
               : "Fallida"
           }
           color={
-            transfer.status === "completed"
+            transfer.status === "completeda"
               ? "success"
-              : transfer.status === "pending"
+              : transfer.status === "pendiente"
               ? "warning"
               : "error"
           }

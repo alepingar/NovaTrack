@@ -36,3 +36,4 @@ class TransferResponse(BaseModel):
     status: str
     is_anomalous: Optional[bool] = False
     description: Optional[str] = None
+    currency: Optional[str] = "EUR"

@@ -119,7 +119,7 @@ function TermsOfService() {
 
 function PrivacyPolicy() {
   return (
-    <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 4, ml: { xs: 4, md: 8 } }}>
+    <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 4, ml: { xs: 4, md: 18 } }}>
       <Container maxWidth="lg">
         <Paper elevation={6} sx={{ padding: 4 }}>
           <Typography variant="h4" fontWeight="bold" gutterBottom>

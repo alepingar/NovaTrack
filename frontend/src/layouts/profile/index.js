@@ -97,37 +97,37 @@ function CompanyProfile() {
       <DashboardNavbar />
       <MDBox mb={2}>
         {/* Header */}
-        <MDBox
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          p={3}
+        <Card
           sx={{
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3)), url("https://source.unsplash.com/random/1600x900")`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            borderRadius: "lg",
-            color: "white",
-            height: "200px",
+            p: 3,
+            backgroundColor: "background.paper", // Se adapta al fondo automáticamente
+            boxShadow: "none",
           }}
         >
           <MDBox>
             <MDTypography
-              variant="h3"
+              variant="h4"
               fontWeight="bold"
-              sx={{ color: (theme) => theme.palette.text.primary }}
+              sx={{
+                color: "text.primary", // Se adapta automáticamente
+                fontSize: "2rem",
+                marginBottom: 1,
+              }}
             >
               {company.name}
             </MDTypography>
             <MDTypography
               variant="h6"
               fontWeight="regular"
-              sx={{ color: (theme) => theme.palette.text.secondary }}
+              sx={{
+                color: "text.secondary", // Se adapta automáticamente
+                fontSize: "1.25rem",
+              }}
             >
               {company.industry || "Industria no especificada"}
             </MDTypography>
           </MDBox>
-        </MDBox>
+        </Card>
 
         {/* Content */}
         <Grid container spacing={3} mt={2}>
@@ -136,57 +136,66 @@ function CompanyProfile() {
           </Grid>
 
           <Grid item xs={12} md={6} xl={4}>
-            <Card sx={{ p: 3, borderRadius: "lg", boxShadow: 3 }}>
-              <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <MDTypography variant="h5" fontWeight="bold">
+            <Card sx={{ boxShadow: "none" }}>
+              <MDBox p={2}>
+                <MDTypography variant="h6" fontWeight="medium" textTransform="capitalize">
                   Información de la Empresa
                 </MDTypography>
-                <IconButton color="info" onClick={handleEditToggle}>
-                  <EditIcon />
-                </IconButton>
               </MDBox>
-              <Grid container spacing={2}>
-                {[
-                  "name",
-                  "email",
-                  "industry",
-                  "address",
-                  "phone_number",
-                  "website",
-                  "country",
-                  "tax_id",
-                  "description",
-                  "founded_date",
-                ].map((field) => (
-                  <Grid item xs={12} sm={6} key={field}>
-                    <MDTypography variant="subtitle2" color="text">
-                      {field.replace("_", " ").toUpperCase()}
-                    </MDTypography>
-                    {isEditing ? (
-                      <MDInput
-                        fullWidth
-                        name={field}
-                        value={formData[field] || ""}
-                        onChange={handleChange}
-                      />
-                    ) : (
-                      <MDTypography variant="body1" fontWeight="light">
-                        {company[field] || "No especificado"}
-                      </MDTypography>
-                    )}
-                  </Grid>
-                ))}
-              </Grid>
-              {isEditing && (
-                <MDBox mt={2} display="flex" justifyContent="flex-end" gap={2}>
-                  <MDButton variant="outlined" color="secondary" onClick={handleEditToggle}>
-                    Cancelar
-                  </MDButton>
-                  <MDButton variant="gradient" color="info" onClick={handleSubmit}>
-                    Guardar Cambios
-                  </MDButton>
+              <MDBox pt={1} pb={2} px={2} lineHeight={1.25}>
+                <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <IconButton color="info" onClick={handleEditToggle}>
+                    <EditIcon />
+                  </IconButton>
                 </MDBox>
-              )}
+                <Grid container spacing={2}>
+                  {[
+                    "name",
+                    "email",
+                    "industry",
+                    "address",
+                    "phone_number",
+                    "website",
+                    "country",
+                    "tax_id",
+                    "description",
+                    "founded_date",
+                  ].map((field) => (
+                    <Grid item xs={12} sm={6} key={field}>
+                      <MDTypography
+                        variant="caption"
+                        fontWeight="bold"
+                        color="text"
+                        textTransform="uppercase"
+                      >
+                        {field.replace("_", " ").toUpperCase()}
+                      </MDTypography>
+                      {isEditing ? (
+                        <MDInput
+                          fullWidth
+                          name={field}
+                          value={formData[field] || ""}
+                          onChange={handleChange}
+                        />
+                      ) : (
+                        <MDTypography variant="body1" fontWeight="light">
+                          {company[field] || "No especificado"}
+                        </MDTypography>
+                      )}
+                    </Grid>
+                  ))}
+                </Grid>
+                {isEditing && (
+                  <MDBox mt={2} display="flex" justifyContent="flex-end" gap={2}>
+                    <MDButton variant="outlined" color="secondary" onClick={handleEditToggle}>
+                      Cancelar
+                    </MDButton>
+                    <MDButton variant="gradient" color="info" onClick={handleSubmit}>
+                      Guardar Cambios
+                    </MDButton>
+                  </MDBox>
+                )}
+              </MDBox>
             </Card>
           </Grid>
         </Grid>
