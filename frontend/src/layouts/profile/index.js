@@ -33,6 +33,7 @@ function CompanyProfile() {
   const [company, setCompany] = useState(null);
   const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -57,6 +58,29 @@ function CompanyProfile() {
     setIsEditing(!isEditing);
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    const phoneRegex = /^[0-9]{9}$/; // A simple regex for 10-digit phone number validation
+    const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/; // Regex for valid email format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // Simple date format YYYY-MM-DD
+
+    if (!formData.phone_number || !phoneRegex.test(formData.phone_number)) {
+      newErrors.phone_number = "Número de teléfono inválido. Debe tener 10 dígitos.";
+    }
+
+    if (formData.email && !emailRegex.test(formData.email)) {
+      newErrors.email = "Correo electrónico inválido.";
+    }
+
+    if (formData.founded_date && !dateRegex.test(formData.founded_date)) {
+      newErrors.founded_date = "Fecha de fundación inválida. Debe ser en formato YYYY-MM-DD.";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -66,6 +90,11 @@ function CompanyProfile() {
   };
 
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      alert("Por favor, corrija los errores antes de guardar.");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       await axios.put("http://127.0.0.1:8000/companies/profile", formData, {
@@ -171,12 +200,16 @@ function CompanyProfile() {
                         {field.replace("_", " ").toUpperCase()}
                       </MDTypography>
                       {isEditing ? (
-                        <MDInput
-                          fullWidth
-                          name={field}
-                          value={formData[field] || ""}
-                          onChange={handleChange}
-                        />
+                        <>
+                          <MDInput
+                            fullWidth
+                            name={field}
+                            value={formData[field] || ""}
+                            onChange={handleChange}
+                            error={Boolean(errors[field])}
+                            helperText={errors[field]}
+                          />
+                        </>
                       ) : (
                         <MDTypography variant="body1" fontWeight="light">
                           {company[field] || "No especificado"}
