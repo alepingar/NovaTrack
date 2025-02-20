@@ -8,7 +8,7 @@ cd /d C:\kafka_2.13-3.9.0
 start cmd /k ".\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties"
 
 :: Espera 10 segundos para que Zookeeper esté completamente en ejecución
-timeout /t 10 > nul
+timeout /t 15 > nul
 
 :: Ejecuta Kafka
 cd /d C:\kafka_2.13-3.9.0
@@ -20,7 +20,7 @@ start cmd /k "venv\Scripts\activate && cd backend && uvicorn app.main:app --relo
 
 :: Inicia el frontend
 cd /d C:\Users\alexander\Desktop\NovaTrack
-start cmd /k "venv\Scripts\activate && cd frontend && npm start"
+start cmd /k "cd frontend && npm start"
 
 :: Ejecuta el consumidor de Kafka
 cd /d C:\Users\alexander\Desktop\NovaTrack

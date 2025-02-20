@@ -14,7 +14,7 @@ from app.models.transfer import TransferResponse, Transfer
 from typing import List
 from typing import Dict, Union
 from app.database import db
-
+from uuid import UUID
 
 router = APIRouter()
 
@@ -95,7 +95,7 @@ async def get_top_origin_locations(current_user: dict = Depends(get_current_user
 
 
 @router.get("/{transfer_id}", response_model=Transfer)
-async def get_transfer_details(transfer_id: int, current_user: dict = Depends(get_current_user)):
+async def get_transfer_details(transfer_id: UUID, current_user: dict = Depends(get_current_user)):
     """
     Obtiene los detalles de una transferencia específica por su ID.
     """

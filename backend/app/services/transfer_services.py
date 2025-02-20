@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List
 from fastapi import HTTPException
 from typing import Dict, Union
-
+from uuid import UUID
 
 async def fetch_transfers(company_id: str) -> List[TransferResponse]:
     """
@@ -13,10 +13,12 @@ async def fetch_transfers(company_id: str) -> List[TransferResponse]:
     transfers = await db.transfers.find({"company_id": company_id}).to_list(length=100)
     return transfers
 
-async def fetch_transfer_details(company_id: str, transfer_id: int) -> Transfer:
+async def fetch_transfer_details(company_id: str, transfer_id: UUID) -> Transfer:
     """
     Fetch details of a specific transfer by ID.
     """
+    transfer_id = str(transfer_id)
+    
     transfer_doc = await db.transfers.find_one({
         "id": transfer_id,
         "company_id": company_id

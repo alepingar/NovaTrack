@@ -65,8 +65,8 @@ function TransferDetails() {
           <Table>
             <TableBody>
               {Object.entries({
-                ID: transfer.id,
-                Monto: `${transfer.amount} ${transfer.currency}`,
+                ID: transfer.id.slice(0, 8),
+                Monto: `${transfer.amount} €`,
                 "Cuenta Origen": transfer.from_account,
                 "Cuenta Destino": transfer.to_account,
                 "Fecha/Hora": new Date(transfer.timestamp).toLocaleString(),

@@ -37,7 +37,6 @@ export default function data() {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log(response.data);
         setTransfers(response.data);
       } catch (error) {
         console.error("Error al obtener las transferencias:", error);
@@ -50,12 +49,12 @@ export default function data() {
   }, []);
 
   const rows = transfers.map((transfer) => ({
-    id: transfer.id,
+    id: transfer.id.slice(0, 8),
     amount: (
       <MDTypography variant="caption" fontWeight="medium">
         {transfer.amount.toLocaleString("es-ES", {
           style: "currency",
-          currency: transfer.currency || "EUR",
+          currency: "EUR",
         })}
       </MDTypography>
     ),

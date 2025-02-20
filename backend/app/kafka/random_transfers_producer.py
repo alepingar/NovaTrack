@@ -1,5 +1,6 @@
 import time
 import random
+import uuid
 import json
 from datetime import datetime
 from confluent_kafka import Producer
@@ -21,30 +22,78 @@ def get_companies():
 
 def generate_random_transfer(company_id):
     """
-    Genera una transferencia aleatoria asociada a una empresa.
-    Ajustada para reflejar los campos del modelo Transfer.
+    Genera una transferencia aleatoria para una empresa española con transferencias nacionales e internacionales,
+    considerando que la empresa ve todas las transferencias en EUR.
     """
+
+    # Listado de ciudades españolas
+    spanish_cities = ["Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza", "Bilbao", "Málaga", "Murcia", "Palma", "Valladolid"]
+    
+    # Listado de ciudades internacionales
+    international_cities = ["New York, USA", "London, UK", "Paris, France", "Berlin, Germany", "Tokyo, Japan",
+                            "Shanghai, China", "Dubai, UAE", "São Paulo, Brazil", "Delhi, India", "Sydney, Australia"]
+
+    # Mayor probabilidad de ciudades españolas en origen y destino
+    if random.random() < 0.7:
+        origin_location = random.choice(spanish_cities) + ", Spain"
+    else:
+        origin_location = random.choice(international_cities)
+
+    if random.random() < 0.7:
+        destination_location = random.choice(spanish_cities) + ", Spain"
+    else:
+        destination_location = random.choice(international_cities)
+
+    # Métodos de pago
+    payment_methods = [
+        "tarjeta de crédito", "tarjeta de débito", "transferencia bancaria",
+        "Bizum", "PayPal", "Stripe", "efectivo", "cripto (Bitcoin, Ethereum)"
+    ]
+
+    # Descripciones variadas
+    descriptions = [
+        "Pago de nómina", "Compra de mercancía", "Pago de factura", "Devolución de cliente",
+        "Pago de alquiler", "Pago a proveedores", "Inversión financiera", "Gastos de viaje",
+        "Reembolso de cliente", "Pago de impuestos", "Compra de software"
+    ]
+
+    # Categorías bancarias reales
+    categories = [
+        "alimentación", "ocio", "servicios", "ropa", "tecnología",
+        "transporte", "salud", "hostelería", "educación", "inversión",
+        "seguros", "hipoteca", "alquiler", "préstamos", "impuestos"
+    ]
+
+    # IBANs aleatorios
+    def generate_iban():
+        country_codes = ["ES", "US", "GB", "FR", "DE", "IT", "NL", "JP", "CN", "BR", "AE", "IN"]
+        return f"{random.choice(country_codes)}{random.randint(10, 99)}{random.randint(1000, 9999)}{random.randint(1000000000, 9999999999)}"
+
+    # Generación de IPs aleatorias simulando conexiones reales
+    def generate_ip():
+        return f"{random.randint(1, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(1, 255)}"
+
     return {
-        "id": random.randint(1, 10000),
-        "amount": round(random.uniform(10, 5000), 2),  # 'monto' a 'amount'
-        "currency": random.choice(["USD", "EUR", "GBP"]),  # 'moneda' a 'currency'
-        "from_account": f"Cuenta_{random.randint(1000000000, 9999999999)}",  # 'cuenta_origen' a 'from_account'
-        "to_account": f"Cuenta_{random.randint(1000000000, 9999999999)}",  # 'cuenta_destino' a 'to_account'
-        "timestamp": datetime.utcnow().isoformat(),  # 'fecha_hora' a 'timestamp'
-        "description": random.choice(["Compra", "Pago de servicios", "Transferencia interna"]),  # 'descripcion' a 'description'
-        "category": random.choice(["servicios", "supermercado", "entretenimiento"]),  # 'categoria' a 'category'
-        "origin_location": random.choice(["New York, USA", "Los Angeles, USA", "London, UK"]),  # 'ubicacion_origen' a 'origin_location'
-        "destination_location": random.choice(["Paris, France", "Berlin, Germany", "Madrid, Spain"]),  # 'ubicacion_destino' a 'destination_location'
-        "payment_method": random.choice(["credit_card", "bank_transfer", "cash"]),  # 'metodo_pago' a 'payment_method'
-        "status": random.choice(["completed", "pending", "failed"]),  # 'estado' a 'status'
-        "user_identifier": f"user_{random.randint(1, 100)}",  # 'identificador_usuario' a 'user_identifier'
-        "is_recurring": random.choice([True, False]),  # 'es_recurrente' a 'is_recurring'
-        "device_fingerprint": f"device_{random.randint(1000, 9999)}",  # 'huella_dispositivo' a 'device_fingerprint'
-        "client_ip": f"192.168.1.{random.randint(1, 255)}",  # 'ip_cliente' a 'client_ip'
-        "company_id": str(company_id),  # 'id_empresa' a 'company_id'
-        "transaction_fee": round(random.uniform(0, 20), 2),  # 'tarifa_transaccion' a 'transaction_fee'
-        "is_anomalous": random.choice([True, False]),  # 'es_anomala' a 'is_anomalous'
-        "linked_order_id": (f"order_{random.randint(1, 500)}" if random.random() > 0.5 else None)  # 'id_pedido_relacionado' a 'linked_order_id'
+        "id": str(uuid.uuid4()),  # ID único con UUID
+        "amount": round(random.uniform(5, 50000), 2),  # Monto en EUR ya convertido
+        "currency": "EUR",  # Siempre en euros
+        "from_account": generate_iban(),  # IBAN origen
+        "to_account": generate_iban(),  # IBAN destino
+        "timestamp": datetime.utcnow().isoformat(),  # Fecha y hora en UTC
+        "description": random.choice(descriptions),
+        "category": random.choice(categories),
+        "origin_location": origin_location,  # Mayor probabilidad de ser España
+        "destination_location": destination_location,  # Mayor probabilidad de ser España
+        "payment_method": random.choice(payment_methods),
+        "status": random.choice(["completeda", "pendiente", "fallida"]),
+        "user_identifier": f"user_{random.randint(1, 10000)}",
+        "is_recurring": random.choice([True, False]),
+        "device_fingerprint": f"device_{random.randint(1000, 9999)}",
+        "client_ip": generate_ip(),  # IP más variada
+        "company_id": str(company_id),
+        "transaction_fee": round(random.uniform(0, 50), 2),  # Comisiones variadas
+        "is_anomalous": False,  # Siempre False hasta que el modelo lo determine
+        "linked_order_id": f"order_{random.randint(1, 5000)}"  # Más variedad de órdenes
     }
 
 def produce_continuous_transfers():

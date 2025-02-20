@@ -1,12 +1,12 @@
 from pydantic import BaseModel,  Field
 from typing import Optional
 from datetime import datetime
-
+from uuid import UUID
 
 
 # Transfer Schemas
-class Transfer(BaseModel):
-    id: int  # ID único de la transferencia
+class Transfer(BaseModel): 
+    id: UUID  # ID único de la transferencia
     amount: float = Field(..., gt=0, description="El monto debe ser mayor a 0")
     currency: str = Field(..., min_length=3, max_length=3, description="El código de moneda debe cumplir ISO 4217")
     from_account: str = Field(..., min_length=10, max_length=20, description="Número de cuenta del remitente (10-20 caracteres)")
@@ -28,7 +28,7 @@ class Transfer(BaseModel):
     linked_order_id: Optional[str] = Field(None, description="ID de la orden asociada (si aplica)")
 
 class TransferResponse(BaseModel):
-    id: int
+    id: UUID
     amount: float
     from_account: str
     to_account: str
