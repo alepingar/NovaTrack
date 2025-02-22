@@ -70,7 +70,6 @@ export default function App() {
 
     if (!isAuthenticated) {
       localStorage.removeItem("token"); // Limpiar token
-      Navigate("/general-dashboard"); // Redirigir a la página de inicio de sesión
     }
   }, [pathname, isAuthenticated]);
 

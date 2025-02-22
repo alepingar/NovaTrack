@@ -29,6 +29,11 @@ function GeneralDashboard() {
     fetchData();
   }, []);
 
+  const reportsGrowthChartData = {
+    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+    datasets: { label: "Transferencias", data: [10, 25, 37, 52, 60, 54, 65, 71, 79, 86, 92, 102] },
+  };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
