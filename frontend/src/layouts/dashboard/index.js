@@ -105,8 +105,6 @@ function Dashboard() {
     return acc;
   }, []);
 
-  console.log("Normalized Status Distribution:", normalizedStatusDistribution);
-
   const reportsVolumeByDayChartData = {
     labels: volumeByDay.map((item) => item.date),
     datasets: {
@@ -130,7 +128,6 @@ function Dashboard() {
       label: "Monto total transferido",
     },
   };
-  console.log("Status Distribution:", statusDistribution);
 
   const reportsStatusChartData = {
     labels: normalizedStatusDistribution.map((item) => item.status),

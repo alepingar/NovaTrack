@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 
 // react-router components
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 
 // @mui material components
 import { ThemeProvider } from "@mui/material/styles";
@@ -34,6 +34,7 @@ import { useAuth } from "context/AuthContext"; // Importar el contexto de autent
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
   const { isAuthenticated } = useAuth(); // Estado de autenticación
+  const Navigate = useNavigate();
 
   const {
     miniSidenav,
@@ -66,7 +67,12 @@ export default function App() {
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
-  }, [pathname]);
+
+    if (!isAuthenticated) {
+      localStorage.removeItem("token"); // Limpiar token
+      Navigate("/general-dashboard"); // Redirigir a la página de inicio de sesión
+    }
+  }, [pathname, isAuthenticated]);
 
   const getRoutes = (allRoutes) =>
     allRoutes
