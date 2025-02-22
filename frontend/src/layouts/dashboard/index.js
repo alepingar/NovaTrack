@@ -88,6 +88,25 @@ function Dashboard() {
     fetchData();
   }, []);
 
+  const normalizeStatus = (status) =>
+    status.trim().toLowerCase() === "completeda" ? "completada" : status.trim().toLowerCase();
+
+  const normalizedStatusDistribution = statusDistribution.reduce((acc, item) => {
+    const normalizedStatus = normalizeStatus(item.status);
+
+    const existingIndex = acc.findIndex((entry) => entry.status === normalizedStatus);
+
+    if (existingIndex !== -1) {
+      acc[existingIndex].count += item.count;
+    } else {
+      acc.push({ status: normalizedStatus, count: item.count });
+    }
+
+    return acc;
+  }, []);
+
+  console.log("Normalized Status Distribution:", normalizedStatusDistribution);
+
   const reportsVolumeByDayChartData = {
     labels: volumeByDay.map((item) => item.date),
     datasets: {
@@ -111,11 +130,12 @@ function Dashboard() {
       label: "Monto total transferido",
     },
   };
+  console.log("Status Distribution:", statusDistribution);
 
   const reportsStatusChartData = {
-    labels: statusDistribution.map((item) => item.status),
+    labels: normalizedStatusDistribution.map((item) => item.status),
     datasets: {
-      data: statusDistribution.map((item) => item.count),
+      data: normalizedStatusDistribution.map((item) => item.count),
       label: "Distribución del estado de las Transacciones",
     },
   };
