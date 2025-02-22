@@ -23,10 +23,11 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDBadge from "components/MDBadge";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function data() {
   const [transfers, setTransfers] = useState([]);
+  const transfersRef = useRef([]);
 
   useEffect(() => {
     const fetchTransfers = async () => {
@@ -37,7 +38,10 @@ export default function data() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setTransfers(response.data);
+        if (JSON.stringify(response.data) !== JSON.stringify(transfersRef.current)) {
+          transfersRef.current = response.data; // Solo actualiza si hay cambios
+          setTransfers(response.data);
+        }
       } catch (error) {
         console.error("Error al obtener las transferencias:", error);
       }
