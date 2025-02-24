@@ -5,32 +5,36 @@ import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatist
 import MDBox from "components/MDBox";
 import Grid from "@mui/material/Grid";
 import axios from "axios";
+import Footer from "examples/Footer";
 import reportsGrowthChartData from "./data/reportsGrowthChartData";
 import reportsAnomaliesChartData from "./data/reportsAnomaliesChartData";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import MDTypography from "components/MDTypography";
 function GeneralDashboard() {
   const [transfers, setTransfers] = useState(0);
-
+  const [anomaly, setAnomaly] = useState(0);
+  const [amount, setAmount] = useState(0);
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
 
-  const [summary, setSummary] = useState({
-    totalTransactions: 0,
-    totalAnomalies: 0,
-    totalAmount: 0,
-  });
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const summaryRes = await axios.get("http://127.0.0.1:8000/transfers/public/summary-data");
-        setSummary(summaryRes.data);
         const transfersRes = await axios.get(
           `http://127.0.0.1:8000/transfers/per-month/${year}/${month}`
         );
         setTransfers(transfersRes.data);
+
+        const anomalyRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month}`
+        );
+        setAnomaly(anomalyRes.data);
+
+        const amountRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/amount/per-month/${year}/${month}`
+        );
+        setAmount(amountRes.data);
       } catch (error) {
         console.log("Error fetching data", error);
       }
@@ -112,13 +116,21 @@ function GeneralDashboard() {
         </Grid>
       </MDBox>
       <MDBox py={3}>
+        <MDBox mb={6} textAlign="center">
+          <MDTypography variant="h4" fontWeight="bold">
+            Estadísticas del mes
+          </MDTypography>
+          <MDTypography variant="body1" color="secondary">
+            Resumen de las transferencias y anomalías detectadas durante el mes
+          </MDTypography>
+        </MDBox>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} lg={3}>
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
                 color="dark"
                 icon="sync_alt"
-                title="Transferencias totales analizadas este mes"
+                title="Transferencias totales analizadas"
                 count={transfers || 0}
                 percentage={{
                   color: "success",
@@ -133,7 +145,7 @@ function GeneralDashboard() {
               <ComplexStatisticsCard
                 icon="warning"
                 title="Anomalías detectadas"
-                count={summary.totalAnomalies || 0}
+                count={anomaly || 0}
                 percentage={{
                   color: "error",
                   amount: "+8%",
@@ -148,7 +160,7 @@ function GeneralDashboard() {
                 color="success"
                 icon="warning"
                 title="Cantidad total transferida"
-                count={`${summary.totalAmount.toLocaleString("es-ES") || 0}€`}
+                count={`${amount.toLocaleString("es-ES") || 0}€`}
                 percentage={{
                   color: "success",
                   amount: "+3%",
@@ -191,6 +203,7 @@ function GeneralDashboard() {
           </Grid>
         </MDBox>
       </MDBox>
+      <Footer />
     </DashboardLayout>
   );
 }

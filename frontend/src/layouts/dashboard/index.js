@@ -24,19 +24,6 @@ import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatist
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
 import MDTypography from "components/MDTypography";
-import {
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-} from "recharts";
 
 function Dashboard() {
   const [summary, setSummary] = useState({

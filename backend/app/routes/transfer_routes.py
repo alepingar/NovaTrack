@@ -9,7 +9,9 @@ from app.services.transfer_services import (
     fetch_top_origin_locations,
     fetch_volume_by_day,
     fetch_public_summary_data,
-    fetch_number_transfers_per_month
+    fetch_number_transfers_per_month,
+    fetch_number_anomaly_transfers_per_month,
+    fetch_total_amount_per_month
 )
 from app.models.transfer import TransferResponse, Transfer
 from typing import List
@@ -35,6 +37,22 @@ async def get_transfers_per_month(year: int, month: int):
     """
     transfer_count = await fetch_number_transfers_per_month(year, month)
     return transfer_count
+
+@router.get("/anomaly/per-month/{year}/{month}", response_model=int)
+async def get_anomaly_transfers_per_month(year: int, month: int):
+    """
+    Obtiene las transferencias asociadas a la empresa actual para un mes específico.
+    """
+    anomaly_count = await fetch_number_anomaly_transfers_per_month(year, month)
+    return anomaly_count
+
+@router.get("/amount/per-month/{year}/{month}", response_model=float)
+async def get_amount_transfers_per_month(year: int, month: int):
+    """
+    Obtiene las transferencias asociadas a la empresa actual para un mes específico.
+    """
+    amount_count = await fetch_total_amount_per_month(year, month)
+    return amount_count
 
 @router.get("/public/summary-data", response_model=Dict[str, Union[int, float]])
 async def get_public_summary_data():

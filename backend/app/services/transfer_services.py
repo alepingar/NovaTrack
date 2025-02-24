@@ -32,6 +32,53 @@ async def fetch_number_transfers_per_month(year: int, month: int) -> int:
     counte = await db.transfers.count_documents({"timestamp": {"$gte": start_date, "$lt": end_date}})
     return counte
 
+async def fetch_number_anomaly_transfers_per_month(year: int, month: int) -> int:
+    """
+    Cuenta las anomalías de un mes específico.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+    end_date = end_date - timedelta(seconds=1)
+
+    counte = await db.transfers.count_documents({"is_anomalous": True, "timestamp": {"$gte": start_date, "$lt": end_date}})
+    return counte
+
+async def fetch_total_amount_per_month(year: int, month: int) -> float:
+    """
+    Obtiene el total de las transferencias de un mes específico.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    
+    end_date = end_date - timedelta(seconds=1)
+
+    try:
+        total_amount = await db.transfers.aggregate([
+            {
+                "$match": {
+                    "timestamp": {"$gte": start_date, "$lt": end_date}  # Filtrar por fecha
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,  # No agrupar por ningún campo, solo sumar
+                    "total": {"$sum": "$amount"}  # Sumar los amounts
+                }
+            }
+        ]).to_list(length=1)
+
+        return round(total_amount[0]["total"], 2) if total_amount else 0.0
+    except Exception as e:
+        print(f"Error al procesar el total amount por mes: {e}")
+        raise
 
 async def fetch_transfer_details(company_id: str, transfer_id: UUID) -> Transfer:
     """

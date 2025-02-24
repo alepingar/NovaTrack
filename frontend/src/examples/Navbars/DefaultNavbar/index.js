@@ -114,7 +114,12 @@ function DefaultNavbar({ transparent, light, action }) {
           </MDTypography>
         </MDBox>
         <MDBox color="inherit" display={{ xs: "none", lg: "flex" }} m={0} p={0}>
-          <DefaultNavbarLink icon="donut_large" name="Dashboard" route="/dashboard" light={light} />
+          <DefaultNavbarLink
+            icon="donut_large"
+            name="Dashboard"
+            route="/general-dashboard"
+            light={light}
+          />
           <DefaultNavbarLink
             icon="account_circle"
             name="Registrarse como empresa"
