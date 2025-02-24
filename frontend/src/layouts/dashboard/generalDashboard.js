@@ -12,8 +12,11 @@ import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import MDTypography from "components/MDTypography";
 function GeneralDashboard() {
   const [transfers, setTransfers] = useState(0);
+  const [transfersLastMonth, setTransfersLastMonth] = useState(0);
   const [anomaly, setAnomaly] = useState(0);
+  const [anomalyLastMonth, setAnomalyLastMonth] = useState(0);
   const [amount, setAmount] = useState(0);
+  const [amountLastMonth, setAmountLastMonth] = useState(0);
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -26,15 +29,30 @@ function GeneralDashboard() {
         );
         setTransfers(transfersRes.data);
 
+        const transfersLastMonthRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/per-month/${year}/${month - 1 || 12}`
+        );
+        setTransfersLastMonth(transfersLastMonthRes.data);
+
         const anomalyRes = await axios.get(
           `http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month}`
         );
         setAnomaly(anomalyRes.data);
 
+        const anomalyLastMonthRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month - 1 || 12}`
+        );
+        setAnomalyLastMonth(anomalyLastMonthRes.data);
+
         const amountRes = await axios.get(
           `http://127.0.0.1:8000/transfers/amount/per-month/${year}/${month}`
         );
         setAmount(amountRes.data);
+
+        const amountLastMonthRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/amount/per-month/${year}/${month - 1 || 12}`
+        );
+        setAmountLastMonth(amountLastMonthRes.data);
       } catch (error) {
         console.log("Error fetching data", error);
       }
@@ -47,12 +65,27 @@ function GeneralDashboard() {
     datasets: { label: "Transferencias", data: [10, 25, 37, 52, 60, 54, 65, 71, 79, 86, 92, 102] },
   };
 
+  const calculatePercentage = (previous, current) => {
+    if (previous === 0) return { amount: current, color: "success" };
+    const diff = current - previous;
+    const percentage = ((diff / previous) * 100).toFixed(2);
+    const isPositive = diff > 0;
+    return {
+      amount: isPositive ? `+${percentage}%` : `-${Math.abs(percentage)}%`,
+      color: isPositive ? "success" : "error",
+    };
+  };
+
+  const transfersChange = calculatePercentage(transfersLastMonth, transfers);
+  const anomalyChange = calculatePercentage(anomalyLastMonth, anomaly);
+  const amountChange = calculatePercentage(amountLastMonth, amount);
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox py={3}>
         {/* Título de la sección de beneficios */}
-        <MDBox mb={3} textAlign="center">
+        <MDBox mb={6} textAlign="center">
           <MDTypography variant="h4" fontWeight="bold">
             Beneficios y Características
           </MDTypography>
@@ -64,54 +97,32 @@ function GeneralDashboard() {
         {/* Contenedor de los beneficios */}
         <Grid container spacing={3}>
           <Grid item xs={12} sm={4}>
-            <MDBox
-              p={3}
-              borderRadius="lg"
-              shadow="sm"
-              sx={{ backgroundColor: "#f4f6f8", textAlign: "center" }}
-            >
-              <MDTypography variant="h6" fontWeight="medium">
-                Detección de Anomalías en Tiempo Real
-              </MDTypography>
-              <MDTypography variant="body2" color="secondary">
-                Nuestro sistema detecta anomalías de manera instantánea, asegurando que ninguna
-                transacción sospechosa pase desapercibida.
-              </MDTypography>
-            </MDBox>
+            <MDTypography variant="h6" fontWeight="medium">
+              Detección de Anomalías en Tiempo Real
+            </MDTypography>
+            <MDTypography variant="body2" color="secondary">
+              Nuestro sistema detecta anomalías de manera instantánea, asegurando que ninguna
+              transacción sospechosa pase desapercibida.
+            </MDTypography>
           </Grid>
 
           <Grid item xs={12} sm={4}>
-            <MDBox
-              p={3}
-              borderRadius="lg"
-              shadow="sm"
-              sx={{ backgroundColor: "#f4f6f8", textAlign: "center" }}
-            >
-              <MDTypography variant="h6" fontWeight="medium">
-                Prevención de Fraudes con Algoritmos Avanzados
-              </MDTypography>
-              <MDTypography variant="body2" color="secondary">
-                Utilizamos algoritmos de Machine Learning para prevenir fraudes antes de que
-                ocurran.
-              </MDTypography>
-            </MDBox>
+            <MDTypography variant="h6" fontWeight="medium">
+              Prevención de Fraudes con Algoritmos Avanzados
+            </MDTypography>
+            <MDTypography variant="body2" color="secondary">
+              Utilizamos algoritmos de Machine Learning para prevenir fraudes antes de que ocurran.
+            </MDTypography>
           </Grid>
 
           <Grid item xs={12} sm={4}>
-            <MDBox
-              p={3}
-              borderRadius="lg"
-              shadow="sm"
-              sx={{ backgroundColor: "#f4f6f8", textAlign: "center" }}
-            >
-              <MDTypography variant="h6" fontWeight="medium">
-                Ahorro de Tiempo y Dinero al Automatizar la Seguridad
-              </MDTypography>
-              <MDTypography variant="body2" color="secondary">
-                Al automatizar la detección de anomalías, ahorramos tiempo valioso y reducimos los
-                costos asociados con la seguridad manual.
-              </MDTypography>
-            </MDBox>
+            <MDTypography variant="h6" fontWeight="medium">
+              Ahorro de Tiempo y Dinero al Automatizar la Seguridad
+            </MDTypography>
+            <MDTypography variant="body2" color="secondary">
+              Al automatizar la detección de anomalías, ahorramos tiempo valioso y reducimos los
+              costos asociados con la seguridad manual.
+            </MDTypography>
           </Grid>
         </Grid>
       </MDBox>
@@ -130,12 +141,12 @@ function GeneralDashboard() {
               <ComplexStatisticsCard
                 color="dark"
                 icon="sync_alt"
-                title="Transferencias totales analizadas"
+                title="Transferencias analizadas"
                 count={transfers || 0}
                 percentage={{
-                  color: "success",
-                  amount: "+5%",
-                  label: "Desde la última semana",
+                  color: transfersChange.color,
+                  amount: transfersChange.amount,
+                  label: "Desde el último mes",
                 }}
               />
             </MDBox>
@@ -147,8 +158,8 @@ function GeneralDashboard() {
                 title="Anomalías detectadas"
                 count={anomaly || 0}
                 percentage={{
-                  color: "error",
-                  amount: "+8%",
+                  color: anomalyChange.color,
+                  amount: anomalyChange.amount,
                   label: "Desde la última revisión",
                 }}
               />
@@ -159,11 +170,11 @@ function GeneralDashboard() {
               <ComplexStatisticsCard
                 color="success"
                 icon="warning"
-                title="Cantidad total transferida"
+                title="Cantidad transferida"
                 count={`${amount.toLocaleString("es-ES") || 0}€`}
                 percentage={{
-                  color: "success",
-                  amount: "+3%",
+                  color: amountChange.color,
+                  amount: amountChange.amount,
                   label: "En crecimiento",
                 }}
               />
