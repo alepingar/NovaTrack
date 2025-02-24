@@ -1,10 +1,11 @@
 from app.database import db
 from app.models.transfer import Transfer, TransferResponse
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import List
 from fastapi import HTTPException
 from typing import Dict, Union
 from uuid import UUID
+from pymongo import ASCENDING
 
 async def fetch_transfers(company_id: str) -> List[TransferResponse]:
     """
@@ -12,6 +13,25 @@ async def fetch_transfers(company_id: str) -> List[TransferResponse]:
     """
     transfers = await db.transfers.find({"company_id": company_id}).to_list(length=100)
     return transfers
+
+async def fetch_number_transfers_per_month(year: int, month: int) -> int:
+    """
+    Cuenta las transferencias de un mes específico.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+    end_date = end_date - timedelta(seconds=1)
+
+    print(f"Start Date: {start_date}")
+    print(f"End Date: {end_date}")
+
+    counte = await db.transfers.count_documents({"timestamp": {"$gte": start_date, "$lt": end_date}})
+    return counte
+
 
 async def fetch_transfer_details(company_id: str, transfer_id: UUID) -> Transfer:
     """

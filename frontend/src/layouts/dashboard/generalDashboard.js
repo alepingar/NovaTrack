@@ -10,6 +10,12 @@ import reportsAnomaliesChartData from "./data/reportsAnomaliesChartData";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import MDTypography from "components/MDTypography";
 function GeneralDashboard() {
+  const [transfers, setTransfers] = useState(0);
+
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth() + 1);
+
   const [summary, setSummary] = useState({
     totalTransactions: 0,
     totalAnomalies: 0,
@@ -21,13 +27,16 @@ function GeneralDashboard() {
       try {
         const summaryRes = await axios.get("http://127.0.0.1:8000/transfers/public/summary-data");
         setSummary(summaryRes.data);
+        const transfersRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/per-month/${year}/${month}`
+        );
+        setTransfers(transfersRes.data);
       } catch (error) {
         console.log("Error fetching data", error);
       }
     };
-
     fetchData();
-  }, []);
+  }, [year, month]);
 
   const reportsGrowthChartData = {
     labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
@@ -109,8 +118,8 @@ function GeneralDashboard() {
               <ComplexStatisticsCard
                 color="dark"
                 icon="sync_alt"
-                title="Transferencias totales analizadas"
-                count={summary.totalTransactions || 0}
+                title="Transferencias totales analizadas este mes"
+                count={transfers || 0}
                 percentage={{
                   color: "success",
                   amount: "+5%",

@@ -8,7 +8,8 @@ from app.services.transfer_services import (
     fetch_status_distribution,
     fetch_top_origin_locations,
     fetch_volume_by_day,
-    fetch_public_summary_data
+    fetch_public_summary_data,
+    fetch_number_transfers_per_month
 )
 from app.models.transfer import TransferResponse, Transfer
 from typing import List
@@ -27,6 +28,13 @@ async def get_transfers(current_user: dict = Depends(get_current_user)):
     return await fetch_transfers(company_id)
 
 
+@router.get("/per-month/{year}/{month}", response_model=int)
+async def get_transfers_per_month(year: int, month: int):
+    """
+    Obtiene las transferencias asociadas a la empresa actual para un mes específico.
+    """
+    transfer_count = await fetch_number_transfers_per_month(year, month)
+    return transfer_count
 
 @router.get("/public/summary-data", response_model=Dict[str, Union[int, float]])
 async def get_public_summary_data():

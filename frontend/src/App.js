@@ -34,7 +34,6 @@ import { useAuth } from "context/AuthContext"; // Importar el contexto de autent
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
   const { isAuthenticated } = useAuth(); // Estado de autenticación
-  const Navigate = useNavigate();
 
   const {
     miniSidenav,
