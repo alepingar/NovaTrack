@@ -6,8 +6,6 @@ import MDBox from "components/MDBox";
 import Grid from "@mui/material/Grid";
 import axios from "axios";
 import Footer from "examples/Footer";
-import reportsGrowthChartData from "./data/reportsGrowthChartData";
-import reportsAnomaliesChartData from "./data/reportsAnomaliesChartData";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import MDTypography from "components/MDTypography";
 function GeneralDashboard() {
@@ -20,7 +18,8 @@ function GeneralDashboard() {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
-
+  const [transfersData, setTransfersData] = useState([]);
+  const [anomaliesData, setAnomaliesData] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -53,6 +52,24 @@ function GeneralDashboard() {
           `http://127.0.0.1:8000/transfers/amount/per-month/${year}/${month - 1 || 12}`
         );
         setAmountLastMonth(amountLastMonthRes.data);
+
+        const promises = [];
+        for (let month = 1; month <= 12; month++) {
+          promises.push(axios.get(`http://127.0.0.1:8000/transfers/per-month/${year}/${month}`));
+        }
+        const responses = await Promise.all(promises);
+        const transfers = responses.map((response) => response.data);
+        setTransfersData(transfers);
+
+        const promisesA = [];
+        for (let month = 1; month <= 12; month++) {
+          promisesA.push(
+            axios.get(`http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month}`)
+          );
+        }
+        const responses1 = await Promise.all(promisesA);
+        const anomalies = responses1.map((response) => response.data);
+        setAnomaliesData(anomalies);
       } catch (error) {
         console.log("Error fetching data", error);
       }
@@ -62,7 +79,22 @@ function GeneralDashboard() {
 
   const reportsGrowthChartData = {
     labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-    datasets: { label: "Transferencias", data: [10, 25, 37, 52, 60, 54, 65, 71, 79, 86, 92, 102] },
+    datasets: {
+      label: "Transferencias",
+      data: transfersData,
+      fill: true,
+      tension: 0.4,
+    },
+  };
+
+  const reportsAnomaliesChartData = {
+    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+    datasets: {
+      label: "Anomalías",
+      data: anomaliesData,
+      fill: true,
+      tension: 0.4,
+    },
   };
 
   const calculatePercentage = (previous, current) => {
@@ -193,7 +225,7 @@ function GeneralDashboard() {
                   color="info"
                   title="Crecimiento de transferencias"
                   description="Cantidad de transferencias analizadas a lo largo del año"
-                  date="Actualizado hace 2 días"
+                  date="Actualizado automáticamente"
                   chart={reportsGrowthChartData}
                 />
               </MDBox>
@@ -205,8 +237,8 @@ function GeneralDashboard() {
                 <ReportsLineChart
                   color="error"
                   title="Anomalías detectadas"
-                  description="Cantidad de anomalías detectadas a lo largo de la semana"
-                  date="Actualizado hace 5 días"
+                  description="Cantidad de anomalías detectadas a lo largo del año"
+                  date="Actualizado automáticamente"
                   chart={reportsAnomaliesChartData}
                 />
               </MDBox>
