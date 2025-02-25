@@ -10,7 +10,6 @@ class Transfer(BaseModel):
     amount: float = Field(..., gt=0, description="El monto debe ser mayor a 0")
     currency: str = Field(..., min_length=3, max_length=3, description="El código de moneda debe cumplir ISO 4217")
     from_account: str = Field(..., min_length=10, max_length=20, description="Número de cuenta del remitente (10-20 caracteres)")
-    to_account: str = Field(..., min_length=10, max_length=20, description="Número de cuenta del receptor (10-20 caracteres)")
     timestamp: datetime  # Marca de tiempo de la transferencia
     description: Optional[str] = Field(None, max_length=500)  # Descripción de la transferencia
     category: Optional[str] = Field(None, max_length=50)  # Categoría de la transacción (e.g., compras, servicios)
@@ -31,7 +30,6 @@ class TransferResponse(BaseModel):
     id: UUID
     amount: float
     from_account: str
-    to_account: str
     timestamp: datetime
     status: str
     is_anomalous: Optional[bool] = False

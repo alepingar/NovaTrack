@@ -72,11 +72,6 @@ export default function data() {
         {transfer.from_account}
       </MDTypography>
     ),
-    to_account: (
-      <MDTypography variant="caption" fontWeight="medium">
-        {transfer.to_account}
-      </MDTypography>
-    ),
     timestamp: (
       <MDTypography variant="caption">{new Date(transfer.timestamp).toLocaleString()}</MDTypography>
     ),
@@ -129,7 +124,6 @@ export default function data() {
       { Header: "Monto", accessor: "amount", align: "left" },
       { Header: "Moneda", accessor: "currency", align: "center" },
       { Header: "De", accessor: "from_account", align: "left" },
-      { Header: "Para", accessor: "to_account", align: "left" },
       { Header: "Fecha", accessor: "timestamp", align: "center" },
       { Header: "Estado", accessor: "status", align: "center" },
       { Header: "Anómala", accessor: "is_anomalous", align: "center" },

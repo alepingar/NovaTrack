@@ -68,7 +68,6 @@ function TransferDetails() {
                 ID: transfer.id.slice(0, 8),
                 Monto: `${transfer.amount} €`,
                 "Cuenta Origen": transfer.from_account,
-                "Cuenta Destino": transfer.to_account,
                 "Fecha/Hora": new Date(transfer.timestamp).toLocaleString(),
                 Descripción: transfer.description || "N/A",
                 Categoría: transfer.category || "N/A",

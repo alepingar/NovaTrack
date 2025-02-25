@@ -78,7 +78,6 @@ def generate_random_transfer(company_id):
         "amount": round(random.uniform(5, 50000), 2),  # Monto en EUR ya convertido
         "currency": "EUR",  # Siempre en euros
         "from_account": generate_iban(),  # IBAN origen
-        "to_account": generate_iban(),  # IBAN destino
         "timestamp": datetime.utcnow().isoformat(),  # Fecha y hora en UTC
         "description": random.choice(descriptions),
         "category": random.choice(categories),

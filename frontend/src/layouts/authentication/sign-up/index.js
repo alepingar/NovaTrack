@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Card from "@mui/material/Card";
@@ -7,7 +7,10 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import CoverLayout from "layouts/authentication/components/CoverLayout";
+import { Select, MenuItem, InputLabel, FormControl } from "@mui/material";
 
 function Cover() {
   const [formData, setFormData] = useState({
@@ -23,12 +26,33 @@ function Cover() {
     tax_id: "",
     description: "",
     founded_date: "",
+    billing_account_number: "",
+    entity_type: "",
+    accept_terms: false,
   });
 
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState(null);
+  const [entityTypes, setEntityTypes] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchEntityTypes = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://127.0.0.1:8000/companies/get-types", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setEntityTypes(response.data);
+      } catch (error) {
+        console.error("Error al obtener los tipos de entidad:", error);
+      }
+    };
+    fetchEntityTypes();
+  }, []);
 
   const steps = [
     {
@@ -56,6 +80,18 @@ function Cover() {
         { id: "tax_id", label: "ID Fiscal" },
         { id: "description", label: "Descripción", type: "textarea" },
         { id: "founded_date", label: "Fecha de Fundación", type: "date" },
+      ],
+    },
+    {
+      title: "Información Fiscal y Términos",
+      fields: [
+        { id: "billing_account_number", label: "Número de Cuenta de Facturación" },
+        {
+          id: "entity_type",
+          label: "Tipo de Entidad",
+          required: true,
+          type: "select",
+        },
       ],
     },
   ];
@@ -103,6 +139,11 @@ function Cover() {
           error = "El país debe tener entre 2 y 50 caracteres.";
         }
         break;
+      case "billing_account_number":
+        if (value && !/^ES\d{2}\d{20}$/.test(value)) {
+          error = "El número de cuenta debe ser un IBAN español válido.";
+        }
+        break;
       default:
         break;
     }
@@ -137,17 +178,24 @@ function Cover() {
       return;
     }
 
+    if (!formData.accept_terms) {
+      setErrors({ ...newErrors, accept_terms: "Debes aceptar los términos de servicio." });
+      return;
+    }
+
     try {
       setErrorMessage(null);
       const payload = Object.fromEntries(
-        Object.entries(formData).filter(([_, value]) => value.trim() !== "")
+        Object.entries(formData).filter(([_, value]) => {
+          return typeof value === "string" && value.trim() !== "";
+        })
       );
       if (payload.founded_date) {
         payload.founded_date = new Date(payload.founded_date).toISOString();
       }
       await axios.post("http://127.0.0.1:8000/companies/register", payload);
       alert("Registro exitoso");
-      navigate("/login");
+      navigate("/sign-in");
     } catch (error) {
       console.error("Error del servidor:", error.response?.data || error.message);
       setErrorMessage("No se pudo conectar con el servidor.");
@@ -201,7 +249,29 @@ function Cover() {
             <MDBox component="form" role="form" onSubmit={handleSubmit}>
               {steps[currentStep].fields.map(({ id, label, required, type = "text" }) => (
                 <MDBox mb={2} key={id}>
-                  {type === "textarea" ? (
+                  {type === "select" ? (
+                    <FormControl fullWidth error={Boolean(errors[id])}>
+                      <InputLabel>{label}</InputLabel>
+                      <Select
+                        value={formData[id]}
+                        onChange={handleChange}
+                        label={label}
+                        name={id}
+                        required={required}
+                      >
+                        {entityTypes.map((type) => (
+                          <MenuItem key={type} value={type}>
+                            {type}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {errors[id] && (
+                        <MDTypography variant="button" color="error">
+                          {errors[id]}
+                        </MDTypography>
+                      )}
+                    </FormControl>
+                  ) : type === "textarea" ? (
                     <MDInput
                       multiline
                       rows={4}
@@ -233,6 +303,28 @@ function Cover() {
                   )}
                 </MDBox>
               ))}
+              {currentStep === steps.length - 1 && (
+                <MDBox mb={2}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.accept_terms}
+                        onChange={(e) =>
+                          setFormData({ ...formData, accept_terms: e.target.checked })
+                        }
+                        name="accept_terms"
+                        color="primary"
+                      />
+                    }
+                    label="Acepto los términos y condiciones"
+                  />
+                  {errors.accept_terms && (
+                    <MDTypography variant="button" color="error" textAlign="center">
+                      {errors.accept_terms}
+                    </MDTypography>
+                  )}
+                </MDBox>
+              )}
               <MDBox mt={4} mb={1} display="flex" justifyContent="space-between">
                 {currentStep > 0 && (
                   <MDButton variant="outlined" color="dark" onClick={prevStep}>
@@ -256,4 +348,5 @@ function Cover() {
     </Grid>
   );
 }
+
 export default Cover;

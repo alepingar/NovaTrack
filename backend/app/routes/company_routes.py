@@ -4,9 +4,10 @@ from app.services.company_services import (
     fetch_companies,
     register_new_company,
     fetch_company_profile,
-    update_company_profile
+    update_company_profile,
+    get_entity_types1
 )
-from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile
+from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile, EntityType
 from typing import List
 from app.database import db
 from bson import ObjectId
@@ -79,7 +80,13 @@ async def update_company_profile(
         updated_at=updated_company.get("updated_at")
     )
 
-   
+
+@router.get("/get-types", response_model=List[EntityType])
+async def get_entity_types():
+    """
+    Devuelve la lista de tipos de entidad legal.
+    """
+    return await get_entity_types1()
 
 
 

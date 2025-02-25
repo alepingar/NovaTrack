@@ -1,5 +1,5 @@
 from app.database import db
-from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile
+from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile, EntityType
 from bson import ObjectId
 from fastapi import HTTPException
 from app.utils.security import hash_password
@@ -58,7 +58,8 @@ async def register_new_company(company: CompanyCreate) -> CompanyResponse:
         address=company.address,
         founded_date=company.founded_date,
         created_at=company_data["created_at"],
-        updated_at=company_data["updated_at"]
+        updated_at=company_data["updated_at"],
+        billing_account_number=company.billing_account_number
     )
 
 async def fetch_company_profile(company_id: str) -> CompanyResponse:
@@ -124,3 +125,7 @@ async def update_company_profile(company_id: str, company_data: UpdateCompanyPro
         created_at=updated_company.get("created_at"),
         updated_at=updated_company.get("updated_at")
     )
+
+
+async def get_entity_types1() -> List[EntityType]:
+    return [entity for entity in EntityType]
