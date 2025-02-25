@@ -120,7 +120,6 @@ const routes = [
     route: "/terms",
     component: <TermsOfService />,
     protected: false,
-    onlyGuest: true,
   },
   {
     type: "invisible",
@@ -130,7 +129,6 @@ const routes = [
     route: "/privacy-policy",
     component: <PrivacyPolicy />,
     protected: false,
-    onlyGuest: true,
   },
   {
     type: "invisible",
@@ -140,7 +138,6 @@ const routes = [
     route: "/support",
     component: <Support />,
     protected: false,
-    onlyGuest: true,
   },
   {
     type: "invisible",
@@ -150,7 +147,6 @@ const routes = [
     route: "/about",
     component: <About />,
     protected: false,
-    onlyGuest: true,
   },
   {
     type: "collapse",

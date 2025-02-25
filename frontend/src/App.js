@@ -66,11 +66,7 @@ export default function App() {
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
-
-    if (!isAuthenticated) {
-      localStorage.removeItem("token"); // Limpiar token
-    }
-  }, [pathname, isAuthenticated]);
+  }, [pathname]);
 
   const getRoutes = (allRoutes) =>
     allRoutes
