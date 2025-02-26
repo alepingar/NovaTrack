@@ -10,6 +10,9 @@ import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
+import Footer from "examples/Footer";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 function TransferDetails() {
   const { id } = useParams();
@@ -56,50 +59,54 @@ function TransferDetails() {
   }
 
   return (
-    <MDBox pt={3} px={3}>
-      <Card sx={{ marginLeft: "auto", marginRight: "auto", maxWidth: "70%", boxShadow: 3 }}>
-        <CardContent>
-          <MDTypography variant="h4" fontWeight="bold" mb={3}>
-            Detalles de la Transferencia
-          </MDTypography>
-          <Table>
-            <TableBody>
-              {Object.entries({
-                ID: transfer.id.slice(0, 8),
-                Monto: `${transfer.amount} €`,
-                "Cuenta Origen": transfer.from_account,
-                "Fecha/Hora": new Date(transfer.timestamp).toLocaleString(),
-                Descripción: transfer.description || "N/A",
-                "Ubicación Origen": transfer.origin_location || "N/A",
-                "Método de Pago": transfer.payment_method || "N/A",
-                Estado: transfer.status,
-                Usuario: transfer.user_identifier || "N/A",
-                Recurrente: transfer.is_recurring ? "Sí" : "No",
-                "IP Cliente": transfer.client_ip || "N/A",
-                Anómala: transfer.is_anomalous ? "Sí" : "No",
-                "Orden Vinculada": transfer.linked_order_id || "N/A",
-              }).map(([key, value]) => (
-                <TableRow key={key}>
-                  <TableCell>
-                    <MDTypography variant="subtitle2" fontWeight="medium">
-                      {key}
-                    </MDTypography>
-                  </TableCell>
-                  <TableCell>
-                    <MDTypography variant="body2">{value}</MDTypography>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <MDBox mt={3} display="flex" justifyContent="flex-end">
-            <MDButton variant="outlined" color="secondary" onClick={() => navigate(-1)}>
-              Volver
-            </MDButton>
-          </MDBox>
-        </CardContent>
-      </Card>
-    </MDBox>
+    <DashboardLayout>
+      <DashboardNavbar />
+      <MDBox pt={3} px={3}>
+        <Card sx={{ marginLeft: "auto", marginRight: "auto", maxWidth: "70%", boxShadow: 3 }}>
+          <CardContent>
+            <MDTypography variant="h4" fontWeight="bold" mb={3}>
+              Detalles de la Transferencia
+            </MDTypography>
+            <Table>
+              <TableBody>
+                {Object.entries({
+                  ID: transfer.id.slice(0, 8),
+                  Monto: `${transfer.amount} €`,
+                  "Cuenta Origen": transfer.from_account,
+                  "Fecha/Hora": new Date(transfer.timestamp).toLocaleString(),
+                  Descripción: transfer.description || "N/A",
+                  "Ubicación Origen": transfer.origin_location || "N/A",
+                  "Método de Pago": transfer.payment_method || "N/A",
+                  Estado: transfer.status,
+                  Usuario: transfer.user_identifier || "N/A",
+                  Recurrente: transfer.is_recurring ? "Sí" : "No",
+                  "IP Cliente": transfer.client_ip || "N/A",
+                  Anómala: transfer.is_anomalous ? "Sí" : "No",
+                  "Orden Vinculada": transfer.linked_order_id || "N/A",
+                }).map(([key, value]) => (
+                  <TableRow key={key}>
+                    <TableCell>
+                      <MDTypography variant="subtitle2" fontWeight="medium">
+                        {key}
+                      </MDTypography>
+                    </TableCell>
+                    <TableCell>
+                      <MDTypography variant="body2">{value}</MDTypography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <MDBox mt={3} display="flex" justifyContent="flex-end">
+              <MDButton variant="outlined" color="secondary" onClick={() => navigate(-1)}>
+                Volver
+              </MDButton>
+            </MDBox>
+          </CardContent>
+        </Card>
+      </MDBox>
+      <Footer />
+    </DashboardLayout>
   );
 }
 
