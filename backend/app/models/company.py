@@ -42,6 +42,16 @@ class CompanyCreate(BaseModel):
     description: Optional[str] = Field(None, max_length=500, description="La descripción no debe superar los 500 caracteres")
     address: Optional[str] = Field(None, max_length=200, description="La dirección no debe superar los 200 caracteres")
     founded_date: Optional[datetime]
+    @validator('founded_date')
+    def validate_founded_date(cls, value):
+        today = datetime.today()
+        if value > today:
+            raise ValueError("La fecha de fundación no puede ser futura.")
+        
+        if value.year < 1800:
+            raise ValueError("La fecha de fundación no puede ser anterior a 1800.")
+        
+        return value
     billing_account_number: str = Field(..., description="Número de cuenta bancaria de la empresa para recibir pagos")
     entity_type: EntityType = Field(..., description="Tipo de entidad legal de la empresa")
 

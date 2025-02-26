@@ -114,6 +114,15 @@ function Cover() {
           error = "La contraseña debe tener entre 8 y 50 caracteres.";
         }
         break;
+      case "founded_date":
+        const foundedDate = new Date(value);
+        const currentDate = new Date();
+        if (foundedDate > currentDate) {
+          error = "La fecha de fundación no puede ser futura.";
+        } else if (foundedDate.getFullYear() < 1800) {
+          error = "La fecha de fundación no puede ser anterior a 1800.";
+        }
+        break;
       case "confirm_password":
         if (value !== formData.password) {
           error = "Las contraseñas no coinciden.";
@@ -195,7 +204,7 @@ function Cover() {
       }
       await axios.post("http://127.0.0.1:8000/companies/register", payload);
       alert("Registro exitoso");
-      navigate("/sign-in");
+      navigate("/authentication/sign-in");
     } catch (error) {
       console.error("Error del servidor:", error.response?.data || error.message);
       setErrorMessage("No se pudo conectar con el servidor.");
