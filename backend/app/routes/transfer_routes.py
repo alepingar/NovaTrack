@@ -11,7 +11,8 @@ from app.services.transfer_services import (
     fetch_public_summary_data,
     fetch_number_transfers_per_month,
     fetch_number_anomaly_transfers_per_month,
-    fetch_total_amount_per_month
+    fetch_total_amount_per_month,
+    fetch_summary_data_per_month_for_company
 )
 from app.models.transfer import TransferResponse, Transfer
 from typing import List
@@ -53,6 +54,19 @@ async def get_amount_transfers_per_month(year: int, month: int):
     """
     amount_count = await fetch_total_amount_per_month(year, month)
     return amount_count
+
+@router.get("/summary/per-month/{year}/{month}", response_model=dict)
+async def get_summary_for_company(
+    year: int,
+    month: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obtiene un resumen de las transferencias para la empresa actual en un mes y año determinados.
+    """
+    company_id = current_user["company_id"]
+    summary_data = await fetch_summary_data_per_month_for_company(company_id, year, month)
+    return summary_data
 
 @router.get("/public/summary-data", response_model=Dict[str, Union[int, float]])
 async def get_public_summary_data():

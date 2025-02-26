@@ -121,7 +121,7 @@ export default function data() {
   return {
     columns: [
       { Header: "ID", accessor: "id", align: "left" },
-      { Header: "Monto", accessor: "amount", align: "left" },
+      { Header: "Monto convertido", accessor: "amount", align: "left" },
       { Header: "Moneda", accessor: "currency", align: "center" },
       { Header: "De", accessor: "from_account", align: "left" },
       { Header: "Fecha", accessor: "timestamp", align: "center" },

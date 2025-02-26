@@ -31,6 +31,15 @@ function Dashboard() {
     totalAnomalies: 0,
     totalAmount: 0,
   });
+
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth() + 1);
+  const [summaryP, setSummaryP] = useState({
+    totalTransfers: 0,
+    totalAnomalies: 0,
+    totalAmount: 0,
+  });
   const [volumeByDay, setVolumeByDay] = useState([]);
   const [amountByCategory, setAmountByCategory] = useState([]);
   const [statusDistribution, setStatusDistribution] = useState([]);
@@ -46,6 +55,14 @@ function Dashboard() {
           headers,
         });
         setSummary(summaryRes.data);
+
+        const summaryPRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/summary/per-month/${year}/${month}`,
+          {
+            headers,
+          }
+        );
+        setSummaryP(summaryPRes.data);
 
         const volumeRes = await axios.get("http://127.0.0.1:8000/transfers/volume-by-day", {
           headers,
@@ -73,7 +90,7 @@ function Dashboard() {
     };
 
     fetchData();
-  }, []);
+  }, [month, year]);
 
   const normalizeStatus = (status) =>
     status.trim().toLowerCase() === "completeda" ? "completada" : status.trim().toLowerCase();
@@ -124,6 +141,21 @@ function Dashboard() {
     },
   };
 
+  const calculatePercentage = (previous, current) => {
+    if (previous === 0) return { amount: current, color: "success" };
+    const diff = current - previous;
+    const percentage = ((diff / previous) * 100).toFixed(2);
+    const isPositive = diff > 0;
+    return {
+      amount: isPositive ? `+${percentage}%` : `-${Math.abs(percentage)}%`,
+      color: isPositive ? "success" : "error",
+    };
+  };
+
+  const transfersChange = calculatePercentage(summaryP.totalTransfers, summary.totalTransactions);
+  const anomalyChange = calculatePercentage(summaryP.totalAnomalies, summary.totalAnomalies);
+  const amountChange = calculatePercentage(summaryP.totalAmount, summary.totalAmount);
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -137,9 +169,9 @@ function Dashboard() {
                 title="Transferencias"
                 count={summary.totalTransactions}
                 percentage={{
-                  color: "success",
-                  amount: "+5%",
-                  label: "since last week",
+                  color: transfersChange.color,
+                  amount: transfersChange.amount,
+                  label: "Desde el último mes",
                 }}
               />
             </MDBox>
@@ -151,9 +183,9 @@ function Dashboard() {
                 title="Anomalías detectadas"
                 count={summary.totalAnomalies}
                 percentage={{
-                  color: "error",
-                  amount: "+8%",
-                  label: "since last check",
+                  color: anomalyChange.color,
+                  amount: anomalyChange.amount,
+                  label: "Desde la última revisión",
                 }}
               />
             </MDBox>
@@ -166,9 +198,9 @@ function Dashboard() {
                 title="Cantitad total transferida"
                 count={`${summary.totalAmount.toLocaleString("es-ES")}€`}
                 percentage={{
-                  color: "success",
-                  amount: "+3%",
-                  label: "growth rate",
+                  color: amountChange.color,
+                  amount: amountChange.amount,
+                  label: "En crecimiento",
                 }}
               />
             </MDBox>

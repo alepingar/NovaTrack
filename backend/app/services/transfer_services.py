@@ -126,6 +126,69 @@ async def fetch_public_summary_data() -> Dict[str, Union[int, float]]:
         print(f"Error al procesar el resumen: {e}")
         raise
 
+async def fetch_summary_data_per_month_for_company(company_id: str, year: int, month: int) -> dict:
+    """
+    Obtiene un resumen de las transferencias para una empresa específica en un mes y año determinados.
+    Incluye:
+    - Número de transferencias.
+    - Número de transferencias anómalas.
+    - Monto total de las transferencias.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+    end_date = end_date - timedelta(seconds=1)
+
+    # Número de transferencias
+    transfer_count = await db.transfers.count_documents({
+        "company_id": company_id,
+        "timestamp": {"$gte": start_date, "$lt": end_date}
+    })
+
+    # Número de transferencias anómalas
+    anomaly_count = await db.transfers.count_documents({
+        "company_id": company_id,
+        "is_anomalous": True,
+        "timestamp": {"$gte": start_date, "$lt": end_date}
+    })
+
+    # Monto total de las transferencias
+    try:
+        total_amount = await db.transfers.aggregate([
+            {
+                "$match": {
+                    "company_id": company_id,
+                    "timestamp": {"$gte": start_date, "$lt": end_date}
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total": {"$sum": "$amount"}
+                }
+            }
+        ]).to_list(length=1)
+
+        total_amount = round(total_amount[0]["total"], 2) if total_amount else 0.0
+    except Exception as e:
+        print(f"Error al procesar el total amount por mes: {e}")
+        total_amount = 0.0
+
+    # Resumen
+    summary_data = {
+        "company_id": company_id,
+        "year": year,
+        "month": month,
+        "totalTransfers": transfer_count,
+        "totalAnomalies": anomaly_count,
+        "totalAmount": total_amount
+    }
+
+    return summary_data
+
 async def fetch_summary(company_id: str) -> Dict[str, Union[int, float]]:
     """
     Obtiene un resumen de las transferencias para una empresa específica.
