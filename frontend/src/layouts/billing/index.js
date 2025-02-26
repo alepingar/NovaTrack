@@ -25,14 +25,35 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import MasterCard from "examples/Cards/MasterCard";
 import DefaultInfoCard from "examples/Cards/InfoCards/DefaultInfoCard";
-
+import axios from "axios";
 // Billing page components
 import PaymentMethod from "layouts/billing/components/PaymentMethod";
 import Invoices from "layouts/billing/components/Invoices";
 import BillingInformation from "layouts/billing/components/BillingInformation";
 import Transactions from "layouts/billing/components/Transactions";
+import React, { useEffect, useState } from "react";
 
 function Billing() {
+  const [company, setCompany] = useState(null);
+
+  useEffect(() => {
+    const fetchCompanyData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://127.0.0.1:8000/companies/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setCompany(response.data);
+      } catch (error) {
+        console.error("Error al obtener los datos de la empresa:", error);
+      }
+    };
+
+    fetchCompanyData();
+  }, []);
+
   return (
     <DashboardLayout>
       <DashboardNavbar absolute isMini />
@@ -42,14 +63,18 @@ function Billing() {
             <Grid item xs={12} lg={8}>
               <Grid container spacing={3}>
                 <Grid item xs={12} xl={6}>
-                  <MasterCard number={4562112245947852} holder="jack peterson" expires="11/22" />
+                  <MasterCard
+                    number={4562112245947852}
+                    holder={company ? company.name : "Cargando..."}
+                    expires="11/22"
+                  />
                 </Grid>
                 <Grid item xs={12} md={6} xl={3}>
                   <DefaultInfoCard
                     icon="account_balance"
-                    title="salary"
-                    description="Belong Interactive"
-                    value="+$2000"
+                    title="Balance"
+                    description="De los últimos 30 días"
+                    value="+2000€"
                   />
                 </Grid>
                 <Grid item xs={12} md={6} xl={3}>

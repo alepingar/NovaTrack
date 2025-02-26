@@ -39,7 +39,7 @@ export default function data() {
           },
         });
         if (JSON.stringify(response.data) !== JSON.stringify(transfersRef.current)) {
-          transfersRef.current = response.data; // Solo actualiza si hay cambios
+          transfersRef.current = response.data;
           setTransfers(response.data);
         }
       } catch (error) {
