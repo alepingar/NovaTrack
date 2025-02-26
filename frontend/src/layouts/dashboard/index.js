@@ -41,7 +41,7 @@ function Dashboard() {
     totalAmount: 0,
   });
   const [volumeByDay, setVolumeByDay] = useState([]);
-  const [amountByCategory, setAmountByCategory] = useState([]);
+  const [volumeAByDay, setVolumeAByDay] = useState([]);
   const [statusDistribution, setStatusDistribution] = useState([]);
   const [topOriginLocations, setTopOriginLocations] = useState([]);
 
@@ -69,10 +69,13 @@ function Dashboard() {
         });
         setVolumeByDay(volumeRes.data);
 
-        const categoryRes = await axios.get("http://127.0.0.1:8000/transfers/amount-by-category", {
-          headers,
-        });
-        setAmountByCategory(categoryRes.data);
+        const volumeARes = await axios.get(
+          "http://127.0.0.1:8000/transfers/anomalous/volume-by-day",
+          {
+            headers,
+          }
+        );
+        setVolumeAByDay(volumeARes.data);
 
         const statusRes = await axios.get("http://127.0.0.1:8000/transfers/status-distribution", {
           headers,
@@ -125,11 +128,11 @@ function Dashboard() {
     },
   };
 
-  const reportsAmountByCategoryChartData = {
-    labels: amountByCategory.map((item) => item.category),
+  const reportsVolumeAByDayChartData = {
+    labels: volumeAByDay.map((item) => item.date),
     datasets: {
-      data: amountByCategory.map((item) => item.amount),
-      label: "Monto total transferido",
+      label: "Anomalías",
+      data: volumeAByDay.map((item) => item.count),
     },
   };
 
@@ -228,7 +231,7 @@ function Dashboard() {
                   title="Cantidad de monto por categorías"
                   description="Distribución de los montos transferidos por categoría"
                   date="Actualizado hace 4 días"
-                  chart={reportsAmountByCategoryChartData}
+                  chart={reportsVolumeAByDayChartData}
                 />
               </MDBox>
             </Grid>

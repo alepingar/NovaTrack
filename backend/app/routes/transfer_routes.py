@@ -4,7 +4,7 @@ from app.services.transfer_services import (
     fetch_transfers,
     fetch_transfer_details,
     fetch_summary,
-    fetch_amount_by_category,
+    fetch_anomalous_volume_by_day,
     fetch_status_distribution,
     fetch_top_origin_locations,
     fetch_volume_by_day,
@@ -102,14 +102,14 @@ async def get_volume_by_day(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Error al procesar el volumen por día")
 
 
-@router.get("/amount-by-category")
-async def get_amount_by_category(current_user: dict = Depends(get_current_user)):
+@router.get("/anomalous/volume-by-day")
+async def get_anomaous_volume_by_day(current_user: dict = Depends(get_current_user)):
     try:
         company_id = current_user["company_id"]
-        return await fetch_amount_by_category(company_id)
+        return await fetch_anomalous_volume_by_day(company_id)
     except Exception as e:
-        print(f"Error al obtener los montos por categoría: {e}")
-        raise HTTPException(status_code=500, detail="Error al procesar los montos por categoría")
+        print(f"Error al obtener el volumen anomalo por día: {e}")
+        raise HTTPException(status_code=500, detail="Error al procesar el volumen anomalo por día")
 
 
 @router.get("/status-distribution")

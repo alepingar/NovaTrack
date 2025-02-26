@@ -226,14 +226,13 @@ async def fetch_volume_by_day(company_id: str):
     ]).to_list(length=100)
     return [{"date": r["_id"], "count": r["count"]} for r in result]
 
-
-async def fetch_amount_by_category(company_id: str):
+async def fetch_anomalous_volume_by_day(company_id: str):
     result = await db.transfers.aggregate([
-        {"$match": {"company_id": company_id}},
-        {"$group": {"_id": "$category", "totalAmount": {"$sum": "$amount"}}},
-        {"$sort": {"totalAmount": -1}}
-    ]).to_list(length=10)
-    return [{"category": r["_id"], "amount": r["totalAmount"]} for r in result if r["_id"]]
+        {"$match": {"company_id": company_id, "is_anomalous": True}},
+        {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}}, "count": {"$sum": 1}}},
+        {"$sort": {"_id": 1}}
+    ]).to_list(length=100)
+    return [{"date": r["_id"], "count": r["count"]} for r in result]
 
 
 async def fetch_status_distribution(company_id: str):
