@@ -26,9 +26,6 @@ async def fetch_number_transfers_per_month(year: int, month: int) -> int:
 
     end_date = end_date - timedelta(seconds=1)
 
-    print(f"Start Date: {start_date}")
-    print(f"End Date: {end_date}")
-
     counte = await db.transfers.count_documents({"timestamp": {"$gte": start_date, "$lt": end_date}})
     return counte
 
@@ -64,13 +61,13 @@ async def fetch_total_amount_per_month(year: int, month: int) -> float:
         total_amount = await db.transfers.aggregate([
             {
                 "$match": {
-                    "timestamp": {"$gte": start_date, "$lt": end_date}  # Filtrar por fecha
+                    "timestamp": {"$gte": start_date, "$lt": end_date} 
                 }
             },
             {
                 "$group": {
-                    "_id": None,  # No agrupar por ningún campo, solo sumar
-                    "total": {"$sum": "$amount"}  # Sumar los amounts
+                    "_id": None, 
+                    "total": {"$sum": "$amount"} 
                 }
             }
         ]).to_list(length=1)
@@ -234,7 +231,6 @@ async def fetch_anomalous_volume_by_day(company_id: str):
     ]).to_list(length=100)
     return [{"date": r["_id"], "count": r["count"]} for r in result]
 
-
 async def fetch_status_distribution(company_id: str):
     result = await db.transfers.aggregate([
         {"$match": {"company_id": company_id}},
@@ -242,12 +238,3 @@ async def fetch_status_distribution(company_id: str):
     ]).to_list(length=10)
     return [{"status": r["_id"], "count": r["count"]} for r in result]
 
-
-async def fetch_top_origin_locations(company_id: str):
-    result = await db.transfers.aggregate([
-        {"$match": {"company_id": company_id}},
-        {"$group": {"_id": "$origin_location", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 5}
-    ]).to_list(length=5)
-    return [{"location": r["_id"], "count": r["count"]} for r in result if r["_id"]]

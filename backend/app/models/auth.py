@@ -15,12 +15,10 @@ class PasswordResetConfirm(BaseModel):
     token: str
     password: str = Field(..., min_length=8, max_length=50, description="La nueva contraseña debe tener entre 8 y 50 caracteres")
 
-
 # Token Schema
 class Token(BaseModel):
     access_token: str
     token_type: str
-
 
 class Settings(BaseSettings):
     email_host: str

@@ -26,7 +26,7 @@ async def analyze_transaction(transfer: dict):
     Analiza una transferencia en tiempo real y la marca como anómala si es necesario.
     """
     try:
-        features = ["amount", "transaction_fee"]
+        features = ["amount"]
 
         # Si hay datos nulos, la transacción no se analiza
         if any(key not in transfer or transfer[key] is None for key in features):

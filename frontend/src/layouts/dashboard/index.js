@@ -43,7 +43,6 @@ function Dashboard() {
   const [volumeByDay, setVolumeByDay] = useState([]);
   const [volumeAByDay, setVolumeAByDay] = useState([]);
   const [statusDistribution, setStatusDistribution] = useState([]);
-  const [topOriginLocations, setTopOriginLocations] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,12 +80,6 @@ function Dashboard() {
           headers,
         });
         setStatusDistribution(statusRes.data);
-
-        const locationRes = await axios.get(
-          "http://127.0.0.1:8000/transfers/top-origin-locations",
-          { headers }
-        );
-        setTopOriginLocations(locationRes.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -117,14 +110,6 @@ function Dashboard() {
     datasets: {
       label: "Transferencias",
       data: volumeByDay.map((item) => item.count),
-    },
-  };
-
-  const reportsTopOriginChartData = {
-    labels: topOriginLocations.map((item) => item.location),
-    datasets: {
-      data: topOriginLocations.map((item) => item.count),
-      label: "Ubicaciones más comunes",
     },
   };
 
@@ -228,8 +213,8 @@ function Dashboard() {
               <MDBox mb={3}>
                 <ReportsBarChart
                   color="primary"
-                  title="Cantidad de monto por categorías"
-                  description="Distribución de los montos transferidos por categoría"
+                  title="Procesamiento de anomalías"
+                  description="Distribución de anomalías por días"
                   date="Actualizado hace 4 días"
                   chart={reportsVolumeAByDayChartData}
                 />
@@ -253,18 +238,6 @@ function Dashboard() {
                     No hay datos disponibles
                   </MDTypography>
                 )}
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} sm={6} md={6}>
-              {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
-              <MDBox mt={4.5}>
-                <ReportsBarChart
-                  color="success"
-                  title="Mejores ubicaciones de origen"
-                  description="Ubicaciones más comunes de los remitentes"
-                  date="Actualizado hace 3 días"
-                  chart={reportsTopOriginChartData}
-                />
               </MDBox>
             </Grid>
           </Grid>

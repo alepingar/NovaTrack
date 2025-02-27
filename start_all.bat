@@ -8,7 +8,7 @@ cd /d C:\kafka_2.13-3.9.0
 start cmd /k ".\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties"
 
 :: Espera 10 segundos para que Zookeeper esté completamente en ejecución
-timeout /t 15 > nul
+timeout /t 12 > nul
 
 :: Ejecuta Kafka
 cd /d C:\kafka_2.13-3.9.0

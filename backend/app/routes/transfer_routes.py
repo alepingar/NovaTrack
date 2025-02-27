@@ -6,7 +6,6 @@ from app.services.transfer_services import (
     fetch_summary,
     fetch_anomalous_volume_by_day,
     fetch_status_distribution,
-    fetch_top_origin_locations,
     fetch_volume_by_day,
     fetch_public_summary_data,
     fetch_number_transfers_per_month,
@@ -120,19 +119,6 @@ async def get_status_distribution(current_user: dict = Depends(get_current_user)
     except Exception as e:
         print(f"Error al obtener la distribución de estados: {e}")
         raise HTTPException(status_code=500, detail="Error al procesar la distribución de estados")
-
-
-@router.get("/top-origin-locations")
-async def get_top_origin_locations(current_user: dict = Depends(get_current_user)):
-    try:
-        company_id = current_user["company_id"]
-        return await fetch_top_origin_locations(company_id)
-    except Exception as e:
-        print(f"Error al obtener las ubicaciones de origen más comunes: {e}")
-        raise HTTPException(status_code=500, detail="Error al procesar las ubicaciones de origen")
-
-
-
 
 @router.get("/{transfer_id}", response_model=Transfer)
 async def get_transfer_details(transfer_id: UUID, current_user: dict = Depends(get_current_user)):

@@ -74,15 +74,8 @@ function TransferDetails() {
                   Monto: `${transfer.amount} €`,
                   "Cuenta Origen": transfer.from_account,
                   "Fecha/Hora": new Date(transfer.timestamp).toLocaleString(),
-                  Descripción: transfer.description || "N/A",
-                  "Ubicación Origen": transfer.origin_location || "N/A",
-                  "Método de Pago": transfer.payment_method || "N/A",
                   Estado: transfer.status,
-                  Usuario: transfer.user_identifier || "N/A",
-                  Recurrente: transfer.is_recurring ? "Sí" : "No",
-                  "IP Cliente": transfer.client_ip || "N/A",
                   Anómala: transfer.is_anomalous ? "Sí" : "No",
-                  "Orden Vinculada": transfer.linked_order_id || "N/A",
                 }).map(([key, value]) => (
                   <TableRow key={key}>
                     <TableCell>
