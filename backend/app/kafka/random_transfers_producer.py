@@ -32,7 +32,7 @@ def generate_random_transfer(company_id):
 
     return {
         "id": str(uuid.uuid4()),  # ID único con UUID
-        "amount": round(random.uniform(5, 50000), 2),  # Monto en EUR ya convertido
+        "amount": round(random.uniform(5, 10000), 2),  # Monto en EUR ya convertido
         "currency": "EUR",  # Siempre en euros
         "from_account": generate_iban(),
         "to_account": generate_iban(), # IBAN origen
