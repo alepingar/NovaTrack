@@ -14,34 +14,27 @@ currency_by_country = {
 }
 
 # Genera IBAN español válido
-def generate_iban_es():
-    return f"ES{random.randint(10,99)} {random.randint(1000000000, 9999999999)}"
+BANCOS_ESP = [
+    "0049",  # Santander
+    "0075",  # Banco Popular
+    "0081",  # Banco Sabadell
+    "2100",  # CaixaBank
+    "0182",  # BBVA
+    "1465",  # ING
+    "0128",  # Bankinter
+    "2038",  # Bankia (fusionado con CaixaBank)
+]
 
-# Genera IBAN internacional válido (Ejemplo simple)
-def generate_international_iban():
-    # Diccionario de países y el número de dígitos del número de cuenta
-    iban_format = {
-        "FR": (2, 11),  # Francia: 2 dígitos de control + 11 dígitos de cuenta
-        "DE": (2, 10),  # Alemania: 2 dígitos de control + 10 dígitos de cuenta
-        "GB": (2, 8),   # Reino Unido: 2 dígitos de control + 8 dígitos de cuenta
-        "IT": (2, 10),  # Italia: 2 dígitos de control + 10 dígitos de cuenta
-        "US": (2, 10)   # Estados Unidos: 2 dígitos de control + 10 dígitos de cuenta
-    }
-    
-    # Elegir un país al azar
-    country_code = random.choice(list(iban_format.keys()))
-    
-    # Obtener el número de dígitos del número de cuenta según el país
-    control_digits, account_digits = iban_format[country_code]
-    
-    # Generar el IBAN
-    control_code = random.randint(10, 99)  # Generar el código de control
-    account_number = random.randint(10**(account_digits-1), 10**account_digits - 1)  # Generar el número de cuenta
-    
-    # Formar el IBAN
-    iban = f"{country_code}{control_digits}{control_code:02d}{account_number}"
-    
-    return iban
+def generate_iban_es():
+    country_code = "ES"
+    check_digits = f"{random.randint(10, 99)}"  # Dos dígitos de control
+    bank_code = random.choice(BANCOS_ESP)  # Selecciona un banco real
+    branch_code = f"{random.randint(1000, 9999)}"  # Código de sucursal (4 dígitos)
+    control_digits = f"{random.randint(10, 99)}"  # Dos dígitos de control
+    account_number = f"{random.randint(1000000000, 9999999999)}"  # 10 dígitos
+
+    return f"{country_code}{check_digits}{bank_code}{branch_code}{account_number}"
+
 
 # Función para seleccionar el estado de la transferencia
 def generate_status(is_anomalous):
@@ -59,10 +52,25 @@ def generate_random_transfer(company_id, avg_amount, is_anomalous=False):
     
     # Generar fecha de transferencia aleatoria (más frecuente en las anomalías)
     days_ago = random.randint(1, 60)  # Aleatorio entre 1 y 60 días atrás
-    hours_ago = random.randint(0, 23)  # Aleatorio entre 0 y 23 horas
     minutes_ago = random.randint(0, 59)  # Aleatorio entre 0 y 59 minutos
     seconds_ago = random.randint(0, 59)  # Aleatorio entre 0 y 59 segundos
     
+    # Crear el timestamp final con la variabilidad en días, horas, minutos y segundos
+    if is_anomalous:
+    # Mayor probabilidad de horarios fuera del horario bancario (22:00 - 08:00)
+        hours_ago = random.choices(
+            population=list(range(0, 8)) + list(range(22, 24)),  # Horas anómalas
+            weights=[0.4] * 8 + [0.6] * 2,  # Probabilidad mayor entre 22:00 y 08:00
+            k=1
+        )[0]
+    else:
+    # Mayor probabilidad de horarios bancarios (08:00 - 22:00)
+        hours_ago = random.choices(
+            population=list(range(8, 22)),  # Horas normales
+            weights=[1] * 14,  # Probabilidad uniforme entre 08:00 y 22:00
+            k=1
+        )[0]
+
     # Crear el timestamp final con la variabilidad en días, horas, minutos y segundos
     timestamp = datetime.utcnow() - timedelta(days=days_ago, hours=hours_ago, minutes=minutes_ago, seconds=seconds_ago)
     
@@ -79,7 +87,7 @@ def generate_random_transfer(company_id, avg_amount, is_anomalous=False):
             amount = round(random.uniform(0, avg_amount * 0.3), 2)
     
     # Decidir IBAN de destino: puede ser español o internacional (con probabilidad ajustada)
-    from_account = generate_international_iban() if random.random() > 0.8 else generate_iban_es()
+    from_account = generate_iban_es()
     to_account = "ES2071549200121562384309"  # 80% de probabilidad de ser un IBAN español
     
     # Obtener la moneda del país de destino
@@ -121,8 +129,8 @@ db = client["nova_track"]
 transfers_collection = db["transfers"]
 
 # Ejemplo de generación de datos
-company_id = "678e8959a2f4f54c5d481ba1"  # Aquí colocarías el ID de una empresa de tu base de datos
-avg_amount = 37  # Definir un monto promedio para las transferencias
+company_id = "67befa35ae11f54339bbf2a1"  # Aquí colocarías el ID de una empresa de tu base de datos
+avg_amount = 12.3 # Definir un monto promedio para las transferencias
 transactions = generate_transactions_for_company(company_id, avg_amount)
 
 # Insertar las transferencias en la base de datos

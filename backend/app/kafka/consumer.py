@@ -1,11 +1,15 @@
 from confluent_kafka import Consumer
 import json
 from datetime import datetime
-from app.database import db
 import asyncio
-from app.services.ml_anomaly_detector import analyze_transaction  
+import pandas as pd
+import joblib
+from app.database import db
 
-# Configuración del consumidor
+# Cargar el modelo Isolation Forest
+model = joblib.load("isolation_forest.pkl")
+
+# Configuración del consumidor Kafka
 consumer_config = {
     'bootstrap.servers': 'localhost:9092',
     'group.id': 'transfer_group',
@@ -14,9 +18,12 @@ consumer_config = {
 }
 consumer = Consumer(consumer_config)
 
+# Mapeo de estado de transferencias
+status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
+
 async def process_message(msg):
     """
-    Procesa un mensaje del consumidor, lo analiza con ML y lo guarda en la base de datos.
+    Procesa un mensaje del consumidor, lo analiza con Isolation Forest y lo guarda en la base de datos.
     """
     try:
         transfer = json.loads(msg.value().decode('utf-8'))
@@ -29,14 +36,26 @@ async def process_message(msg):
             elif not isinstance(transfer["timestamp"], datetime):
                 raise ValueError(f"Formato de timestamp no soportado: {transfer['timestamp']}")
 
+        # Convertir timestamp a segundos desde el inicio del año
+        timestamp_sec = (transfer["timestamp"] - datetime(2025, 1, 1)).total_seconds()
+
+        # Convertir estado a número
+        status_numeric = status_mapping.get(transfer["status"], -1)
+
+        # Crear DataFrame con la transacción para el modelo
+        data = pd.DataFrame([[transfer["amount"], timestamp_sec, status_numeric]], 
+                            columns=["amount", "timestamp", "status"])
+
+        # Predecir anomalía (Isolation Forest devuelve -1 para anomalías)
+        prediction = model.predict(data)
+        is_anomalous = prediction[0] == -1
+
+        # Agregar flag de anomalía en la transferencia
+        transfer["is_anomalous"] = is_anomalous
+
         # Insertar en la base de datos
         inserted = await db.transfers.insert_one(transfer)
-
-        # Agregar ID a la transacción
         transfer["_id"] = inserted.inserted_id
-
-        # Analizar con el modelo de Machine Learning
-        is_anomalous = await analyze_transaction(transfer)
 
         if is_anomalous:
             print(f"⚠️ ALERTA: Transacción anómala detectada: {transfer}")
