@@ -52,7 +52,11 @@ export default function data() {
     return () => clearInterval(interval);
   }, []);
 
-  const rows = transfers.map((transfer) => ({
+  const sortedTransfers = [...transfers].sort(
+    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+  );
+
+  const rows = sortedTransfers.map((transfer) => ({
     id: transfer.id.slice(0, 8),
     amount: (
       <MDTypography variant="caption" fontWeight="medium">
@@ -79,14 +83,14 @@ export default function data() {
       <MDBox ml={-1}>
         <MDBadge
           badgeContent={
-            transfer.status === "completeda"
+            transfer.status === "completada"
               ? "Completada"
               : transfer.status === "pendiente"
               ? "Pendiente"
               : "Fallida"
           }
           color={
-            transfer.status === "completeda"
+            transfer.status === "completada"
               ? "success"
               : transfer.status === "pendiente"
               ? "warning"
