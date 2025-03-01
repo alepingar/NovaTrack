@@ -95,7 +95,7 @@ def generate_random_transfer(company_id, avg_amount, is_anomalous=False):
         "currency": currency,  # Moneda según el IBAN de destino
         "from_account": from_account,
         "to_account": to_account, 
-        "timestamp": timestamp.isoformat(),  # Fecha aleatoria dentro del mes pasado
+        "timestamp": timestamp,  # Fecha aleatoria dentro del mes pasado
         "status": status,
         "company_id": str(company_id),
         "is_anomalous": is_anomalous,

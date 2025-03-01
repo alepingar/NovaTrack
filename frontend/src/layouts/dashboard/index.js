@@ -66,6 +66,7 @@ function Dashboard() {
         const volumeRes = await axios.get("http://127.0.0.1:8000/transfers/volume-by-day", {
           headers,
         });
+        console.log(volumeRes.data);
         setVolumeByDay(volumeRes.data);
 
         const volumeARes = await axios.get(

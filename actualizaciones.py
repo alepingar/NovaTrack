@@ -1,5 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 import random
+from datetime import datetime, timedelta
+import asyncio
 
 client = AsyncIOMotorClient("mongodb://localhost:27017/")
 db = client["nova_track"]
@@ -15,18 +17,20 @@ def generate_random_iban():
     account_number = f"{random.randint(1000000000, 9999999999)}" 
     return f"{country_code}{check_digits}{bank_code}{branch_code}{control_digits}{account_number}"
 
-async def update_to_account():
-    cursor = transfers_collection.find({"from_account": {"$exists": False}})
+async def update_timestamps():
+    cursor = transfers_collection.find({"timestamp": {"$type": "string"}})
 
     async for transfer in cursor:
-        iban = generate_random_iban()  # Generar un nuevo IBAN aleatorio
-        await transfers_collection.update_one(
-            {"_id": transfer["_id"]},
-            {"$set": {"from_account": iban}}
-        )
-    
-    print("Transferencias actualizadas con IBAN.")
+        try:
+            new_timestamp = datetime.fromisoformat(transfer["timestamp"])  # Convertir String a datetime
+            await transfers_collection.update_one(
+                {"_id": transfer["_id"]},
+                {"$set": {"timestamp": new_timestamp}}
+            )
+        except ValueError:
+            print(f"Error al convertir timestamp para la transferencia {transfer['_id']}")
+
+    print("Timestamps actualizados correctamente.")
 
 # Ejecutamos la actualización
-import asyncio
-asyncio.run(update_to_account())
+asyncio.run(update_timestamps())
