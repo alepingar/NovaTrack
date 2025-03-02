@@ -11,7 +11,7 @@ async def fetch_transfers(company_id: str) -> List[TransferResponse]:
     """
     Fetch all transfers for a given company.
     """
-    transfers = await db.transfers.find({"company_id": company_id}).to_list(length=100)
+    transfers = await db.transfers.find({"company_id": company_id}).to_list()
     return transfers
 
 async def fetch_number_transfers_per_month(year: int, month: int) -> int:

@@ -1,13 +1,20 @@
 from confluent_kafka import Consumer
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 import pandas as pd
 import joblib
 from app.database import db
+import os
 
-# Cargar el modelo Isolation Forest
-model = joblib.load("isolation_forest.pkl")
+# Obtener la ruta absoluta del directorio actual donde está el script
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Definir la ruta del modelo dentro de la misma carpeta
+MODEL_PATH = os.path.join(CURRENT_DIR, "isolation_forest.pkl")
+
+# Cargar el modelo con la ruta absoluta
+model = joblib.load(MODEL_PATH)
 
 # Configuración del consumidor Kafka
 consumer_config = {
@@ -37,7 +44,7 @@ async def process_message(msg):
                 raise ValueError(f"Formato de timestamp no soportado: {transfer['timestamp']}")
 
         # Convertir timestamp a segundos desde el inicio del año
-        timestamp_sec = (transfer["timestamp"] - datetime(2025, 1, 1)).total_seconds()
+        timestamp_sec = (transfer["timestamp"] - datetime(2025, 1, 1, tzinfo=timezone.utc)).total_seconds()
 
         # Convertir estado a número
         status_numeric = status_mapping.get(transfer["status"], -1)
@@ -48,7 +55,7 @@ async def process_message(msg):
 
         # Predecir anomalía (Isolation Forest devuelve -1 para anomalías)
         prediction = model.predict(data)
-        is_anomalous = prediction[0] == -1
+        is_anomalous = bool(prediction[0] == -1)  # Convertir explícitamente a bool de Python
 
         # Agregar flag de anomalía en la transferencia
         transfer["is_anomalous"] = is_anomalous
