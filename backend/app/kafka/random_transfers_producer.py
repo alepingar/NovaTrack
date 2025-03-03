@@ -23,10 +23,11 @@ BANCOS_ESP = ["0049", "0075", "0081", "2100", "0182", "1465", "0128", "2038"]
 
 def generate_iban_es():
     country_code = "ES"
-    check_digits = f"{random.randint(10, 99)}"
-    bank_code = random.choice(BANCOS_ESP)
-    branch_code = f"{random.randint(1000, 9999)}"
-    account_number = f"{random.randint(1000000000, 9999999999)}"
+    check_digits = f"{random.randint(10, 99)}"  # Dos dígitos de control
+    bank_code = random.choice(BANCOS_ESP)  # Selecciona un banco real
+    branch_code = f"{random.randint(1000, 9999)}"  # Código de sucursal (4 dígitos)
+    account_number = f"{random.randint(100000000000, 999999999999)}"  # 12 dígitos
+
     return f"{country_code}{check_digits}{bank_code}{branch_code}{account_number}"
 
 def generate_status():

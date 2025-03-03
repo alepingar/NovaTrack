@@ -10,7 +10,7 @@ transfers_collection = db["transfers"]
 
 async def fetch_data():
     cursor = transfers_collection.find({})
-    data = await cursor.to_list(length=1200)  # Limitar a 1200 transferencias
+    data = await cursor.to_list() 
     return pd.DataFrame(data)
 
 # Ejecutar la carga de datos
