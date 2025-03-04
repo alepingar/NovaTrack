@@ -71,7 +71,7 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
     amount = round(random.uniform(avg_amount * 0.5, avg_amount * 1.5), 2)
     
     # Generar fecha de transferencia aleatoria (más frecuente en las anomalías)
-    days_ago = random.randint(1, 60)  # Aleatorio entre 1 y 60 días atrás
+    days_ago = random.randint(3, 63)  # Aleatorio entre 3 y 63 días atrás
     minutes_ago = random.randint(0, 59)  # Aleatorio entre 0 y 59 minutos
     seconds_ago = random.randint(0, 59)  # Aleatorio entre 0 y 59 segundos
     

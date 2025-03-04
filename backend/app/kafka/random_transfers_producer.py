@@ -3,7 +3,7 @@ import random
 import uuid
 import json
 import asyncio
-from datetime import datetime, timezone  # Corrección aquí
+from datetime import datetime, timedelta, timezone
 from confluent_kafka import Producer
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
@@ -15,9 +15,6 @@ producer = Producer(producer_config)
 client = AsyncIOMotorClient("mongodb://localhost:27017/")
 db = client["nova_track"]
 
-# Diccionario de monedas por país
-currency_by_country = {"ES": "EUR", "FR": "EUR", "DE": "EUR", "GB": "GBP", "US": "USD"}
-
 # Bancos españoles para IBAN
 BANCOS_ESP = ["0049", "0075", "0081", "2100", "0182", "1465", "0128", "2038"]
 
@@ -27,34 +24,40 @@ def generate_iban_es():
     bank_code = random.choice(BANCOS_ESP)  # Selecciona un banco real
     branch_code = f"{random.randint(1000, 9999)}"  # Código de sucursal (4 dígitos)
     account_number = f"{random.randint(100000000000, 999999999999)}"  # 12 dígitos
-
     return f"{country_code}{check_digits}{bank_code}{branch_code}{account_number}"
 
-def generate_status():
-    return random.choices(["completada", "pendiente", "fallida"], weights=[80, 10, 10], k=1)[0]
-
-def generate_random_transfer(company_id, avg_amount):
-    amount = round(random.uniform(avg_amount * 0.5, avg_amount * 1.5), 2)
-    timestamp = datetime.now(timezone.utc)
-    from_account = generate_iban_es()
-    to_account = "ES2071549200121562384309"
-    to_country_code = from_account[:2]
-    currency = currency_by_country.get(to_country_code, "EUR")
-    status = generate_status()
+def generate_status(is_anomalous):
+    if is_anomalous:
+        # Para las anomalías, más probabilidad de "fallida"
+        return random.choices(["fallida", "completada", "pendiente"], weights=[70, 20, 10], k=1)[0]
+    else:
+        # Para las normales, más probabilidad de "completada"
+        return random.choices(["completada", "pendiente", "fallida"], weights=[80, 10, 10], k=1)[0]
     
-    return {
-        "id": str(uuid.uuid4()),
-        "amount": amount,
-        "currency": currency,
-        "from_account": from_account,
-        "to_account": to_account,
-        "timestamp": timestamp.isoformat(),
-        "status": status,
-        "company_id": str(company_id)
-    }
-
 async def get_companies():
     return await db.companies.find({}, {"_id": 1, "name": 1}).to_list(None)
+
+async def get_billing_account_company(company_id: str):
+    try:
+        company_id_object = ObjectId(company_id)  # Convertir la cadena a ObjectId
+        company = await db.companies.find_one({"_id": company_id_object}, {"_id": 1, "billing_account_number": 1})
+        if company:
+            billing_account = company.get("billing_account_number")
+            if billing_account:
+                return billing_account
+            else:
+                print(f"No se encontró el número de cuenta de facturación para la empresa {company_id}")
+                return None
+        else:
+            print(f"No se encontró la empresa con el ID {company_id}")
+            return None
+    except Exception as e:
+        print(f"Error al convertir el ID de empresa: {e}")
+        return None
+
+# Generar clientes recurrentes para cada empresa
+def generate_recurrent_clients(num_clients=10):
+    return [generate_iban_es() for _ in range(num_clients)]
 
 async def calculate_avg_amount(company_id):
     try:
@@ -76,25 +79,106 @@ async def calculate_avg_amount(company_id):
         print(f"Error calculando avg_amount: {e}")
         return 10 
 
+async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is_anomalous=False):
+    # Definir el rango de los montos, con una distribución alrededor del promedio
+    amount = round(random.uniform(avg_amount * 0.5, avg_amount * 1.5), 2)
+
+    # Generar fecha de transferencia aleatoria (más frecuente en las anomalías)
+    days_ago = random.randint(0, 1)  # Solo hoy o ayer
+    minutes_ago = random.randint(0, 59)
+    seconds_ago = random.randint(0, 59)
+
+    if is_anomalous:
+        # Horas fuera del horario bancario (22:00 - 08:00)
+        hours_ago = random.choices(
+            population=list(range(0, 8)) + list(range(22, 24)),  
+            weights=[0.4] * 8 + [0.6] * 2,  
+            k=1
+        )[0]
+    else:
+        # Horario bancario normal (08:00 - 22:00)
+        hours_ago = random.choices(
+            population=list(range(8, 22)),  
+            weights=[1] * 14,  
+            k=1
+        )[0]
+
+    # Generar timestamp basado en la configuración
+    timestamp = datetime.now(timezone.utc) - timedelta(days=days_ago, hours=hours_ago, minutes=minutes_ago, seconds=seconds_ago)
+    timestamp_str = timestamp.isoformat()
+    if is_anomalous:
+        # Monto exageradamente alto o bajo
+        anomaly_type = random.choice(["high", "low"])
+
+        if anomaly_type == "high":
+            # Monto exageradamente alto
+            amount = round(random.lognormvariate(avg_amount * 5, 0.5), 2)
+            amount = min(amount, 1000)
+        else:
+            # Monto exageradamente bajo
+            amount = round(random.lognormvariate(avg_amount * 0.05, 0.5), 2)
+            amount = max(amount, 0.5)
+
+    # Selección de cuenta de destino (recurrente o nueva)
+    use_recurrent = random.choices([True, False], weights=[80, 20])[0]  # 80% recurrente
+    from_account = random.choice(recurrent_clients) if use_recurrent else generate_iban_es()
+
+    to_account = await get_billing_account_company(company_id)
+    currency = "EUR"
+
+    status = generate_status(is_anomalous)
+
+    return {
+        "id": str(uuid.uuid4()),
+        "amount": amount,
+        "currency": currency,
+        "from_account": from_account,
+        "to_account": to_account,
+        "timestamp": timestamp_str,
+        "status": status,
+        "company_id": str(company_id)
+    }
+
+async def generate_transactions_for_company(company_id, avg_amount, num_transactions):
+    transactions = []
+    
+    # Determinar cuántas transferencias serán anómalas (entre 1 y 10% de las transferencias)
+    num_anomalous = random.randint(num_transactions // 100, num_transactions // 10) 
+    recurrent_clients = generate_recurrent_clients(4)
+    
+    for i in range(num_transactions):
+        is_anomalous = i < num_anomalous
+        
+        # Generar y agregar transferencia
+        transaction = await generate_random_transfer(company_id, recurrent_clients, avg_amount, is_anomalous)
+        transactions.append(transaction)
+    
+    return transactions
+
 async def produce_continuous_transfers():
     companies = await get_companies()
     if not companies:
         print("No hay empresas en la base de datos.")
         return
     print(f"Empresas encontradas: {[company['name'] for company in companies]}")
+
     try:
         while True:
             company = random.choice(companies)
             avg_amount = await calculate_avg_amount(company["_id"])
-            transfer = generate_random_transfer(company["_id"], avg_amount)
-            producer.produce(
-                'transfers',
-                key=str(transfer["id"]),
-                value=json.dumps(transfer, ensure_ascii=False)
-            )
+            num_transactions = random.randint(5, 20)  # Generar entre 5 a 20 transferencias a la vez
+            transactions = await generate_transactions_for_company(company["_id"], avg_amount, num_transactions)
+
+            for transfer in transactions:
+                producer.produce(
+                    'transfers',
+                    key=str(transfer["id"]),
+                    value=json.dumps(transfer, ensure_ascii=False)
+                )
+                print(f"Transferencia enviada para {company['name']}: {transfer}")
             producer.flush()
-            print(f"Transferencia enviada para {company['name']}: {transfer}")
-            await asyncio.sleep(random.uniform(40, 120))
+            await asyncio.sleep(random.uniform(40, 120))  # Intervalo entre lotes de transferencias
+
     except KeyboardInterrupt:
         print("\nGeneración de transferencias interrumpida.")
     finally:
@@ -102,3 +186,4 @@ async def produce_continuous_transfers():
 
 if __name__ == "__main__":
     asyncio.run(produce_continuous_transfers())
+

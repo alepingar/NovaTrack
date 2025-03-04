@@ -15,7 +15,7 @@ scaler = StandardScaler()
 X_scaled = scaler.fit_transform(df)
 
 # Entrenar Isolation Forest con hiperparámetros optimizados
-model = IsolationForest(n_estimators=200, contamination=0.1, random_state=42, n_jobs=-1)
+model = IsolationForest(n_estimators=200, contamination=0.06, random_state=42, n_jobs=-1)
 model.fit(X_scaled)
 
 # Guardar el modelo entrenado y el scaler

@@ -28,22 +28,19 @@ df["day_of_week"] = df["timestamp"].dt.dayofweek
 # Nueva feature: Tiempo desde la última transferencia de la empresa
 df = df.sort_values(by=["company_id", "timestamp"])  # Ordenar por empresa y tiempo
 df["time_since_last"] = df.groupby("company_id")["timestamp"].diff().dt.total_seconds()
-df["time_since_last"] = df["time_since_last"].fillna(df["time_since_last"].median())
-
+df["time_since_last"] = df["time_since_last"].fillna(0)
 
 df["timestamp"] = pd.to_datetime(df["timestamp"])
-
 # ✅ Ordenar por empresa y tiempo
 df = df.sort_values(by=["company_id", "timestamp"])
-
 # ✅ Calcular el número de transferencias en los últimos 7 días por empresa
 df["7d_transfer_count"] = df.groupby("company_id", group_keys=False).apply(
     lambda x: x.set_index("timestamp").rolling("7D", min_periods=1).count()["amount"]
-)
+).reset_index(level=0, drop=True)
 
 # Nueva feature: Estadísticas de monto por empresa
 df["mean_amount"] = df.groupby("company_id")["amount"].transform("mean")
-df["std_amount"] = df.groupby("company_id")["amount"].transform("std")
+df["std_amount"] = df.groupby("company_id")["amount"].transform("std").fillna(1)
 df["amount_zscore"] = (df["amount"] - df["mean_amount"]) / df["std_amount"]
 
 # Convertir estado de la transferencia a valores numéricos

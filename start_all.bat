@@ -29,3 +29,5 @@ start cmd /k "venv\Scripts\activate && cd backend && python -m app.kafka.consume
 :: Ejecuta el script de transferencias aleatorias
 cd /d C:\Users\alexander\Desktop\NovaTrack
 start cmd /k "venv\Scripts\activate && python backend/app/kafka/random_transfers_producer.py"
+
+: : cd C:\Users\alexander\Desktop\NovaTrack
