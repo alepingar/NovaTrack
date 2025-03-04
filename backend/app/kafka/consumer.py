@@ -11,7 +11,7 @@ import os
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Definir la ruta del modelo dentro de la misma carpeta
-MODEL_PATH = os.path.join(CURRENT_DIR, "isolation_forest.pkl")
+MODEL_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/isolation_forest.pkl")
 
 # Cargar el modelo con la ruta absoluta
 model = joblib.load(MODEL_PATH)
