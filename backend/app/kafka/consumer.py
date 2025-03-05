@@ -7,7 +7,8 @@ import joblib
 from app.database import db
 import os
 import numpy as np
-# Obtener la ruta absoluta del directorio actual donde está el script
+
+# Obtener la ruta absoluta del directorio actual
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Definir la ruta del modelo dentro de la misma carpeta
@@ -15,6 +16,15 @@ MODEL_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/isolation_forest.pkl
 
 # Cargar el modelo con la ruta absoluta
 model = joblib.load(MODEL_PATH)
+
+# Ruta del archivo con los valores de min y max para normalización
+SCALER_PARAMS_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/scaler_params.json")
+
+# Cargar los valores de min y max desde el preprocesamiento
+with open(SCALER_PARAMS_PATH, "r") as f:
+    scaler_params = json.load(f)
+amount_log_min = scaler_params["amount_log_min"]
+amount_log_max = scaler_params["amount_log_max"]
 
 # Configuración del consumidor Kafka
 consumer_config = {
@@ -36,8 +46,6 @@ async def process_message(msg):
         transfer = json.loads(msg.value().decode('utf-8'))
         print(f"Valor de timestamp recibido: {transfer.get('timestamp')}")
 
-        company_id = transfer["company_id"]
-
         # Validar y convertir timestamp de la transferencia
         if "timestamp" in transfer:
             if isinstance(transfer["timestamp"], str):
@@ -50,68 +58,19 @@ async def process_message(msg):
             transfer["timestamp"] = transfer["timestamp"].replace(tzinfo=timezone.utc)
 
         # Convertir estado a número
-        status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
         status_numeric = status_mapping.get(transfer["status"], -1)
 
-        # Recuperar las transferencias previas de la misma empresa desde la base de datos
-        current_timestamp = transfer["timestamp"]  # Este es el timestamp de la transferencia que estás procesando
+        # Aplicar log1p a amount (como en preprocesamiento)
+        amount_log = np.log1p(transfer["amount"])
 
-        # Obtener las transferencias anteriores a la transferencia actual
-        prev_transfers = await db.transfers.find({
-            "company_id": company_id,
-            "timestamp": {"$lt": current_timestamp}  # Filtrar por timestamp anterior a la transferencia que estás procesando
-        }).sort("timestamp", -1).to_list(None)  # Ordenar por timestamp descendente
+        # Aplicar MinMaxScaler manualmente con los valores guardados
+        amount_scaled = (amount_log - amount_log_min) / (amount_log_max - amount_log_min)
 
-        # Asegurarse de que los timestamps en las transferencias previas sean offset-aware
-        for t in prev_transfers:
-            # Si es una cadena, conviértela
-            if isinstance(t["timestamp"], str):
-                t["timestamp"] = datetime.fromisoformat(t["timestamp"])
-            # Si es naive, asigna la zona horaria UTC
-            if t["timestamp"].tzinfo is None:
-                t["timestamp"] = t["timestamp"].replace(tzinfo=timezone.utc)
+        print(f"🔹 Amount original: {transfer['amount']}, Log: {amount_log}, Scaled: {amount_scaled}")
 
-        # Calcular la hora del día y el día de la semana de la transferencia actual
-        hour = transfer["timestamp"].hour
-        day_of_week = transfer["timestamp"].weekday()
-
-        # Calcular el tiempo desde la última transferencia de la misma empresa
-        if prev_transfers:
-            last_transfer_time = prev_transfers[0]["timestamp"]
-            print(f"Última transferencia: {last_transfer_time}")
-            print(f"Tiempo actual: {transfer['timestamp']}")
-            time_since_last = (transfer["timestamp"] - last_transfer_time).total_seconds()
-        else:
-            time_since_last = 10000
-
-        # Calcular el número de transferencias en los últimos 7 días
-        transfers_in_last_7d = [t for t in prev_transfers if (transfer["timestamp"] - t["timestamp"]).total_seconds() <= 7 * 24 * 3600]
-        transfer_count_7d = len(transfers_in_last_7d)
-
-        # Calcular la desviación estándar de los montos (Z-score)
-        all_transfers = await db.transfers.find({"company_id": company_id}).to_list(length=None)  # No poner límite
-
-        # Verificar si hay transferencias para esa empresa
-        if all_transfers:
-            # Extraer los montos de todas las transferencias
-            amounts = [t["amount"] for t in all_transfers]
-            
-            # Calcular la media y desviación estándar de todos los montos de esa empresa
-            mean_amount = np.mean(amounts) if amounts else 0
-            std_amount = np.std(amounts) if amounts else 1
-            
-            # Calcular Z-score
-            amount_zscore = (transfer["amount"] - mean_amount) / std_amount if std_amount != 0 else 0
-        else:
-            # Si no hay transferencias para esa empresa, asignar valores por defecto
-            mean_amount = 0
-            std_amount = 1
-            amount_zscore = 0
-
-        print("Valores de características calculados:" + "Ultimo tiempo:" + str(time_since_last) +"media de 7 dais:" + str(transfer_count_7d) + "zAmount:"+ str(amount_zscore))
-        # Crear DataFrame con las 7 características necesarias para el modelo
-        data = pd.DataFrame([[transfer["amount"], hour, day_of_week, time_since_last, transfer_count_7d, amount_zscore, status_numeric]], 
-                            columns=["amount", "hour", "day_of_week", "time_since_last", "7d_transfer_count", "amount_zscore", "status"])
+        # Crear DataFrame con las características necesarias para el modelo
+        data = pd.DataFrame([[amount_scaled, status_numeric]], 
+                            columns=["amount_scaled", "status"])
 
         # Predecir anomalía (Isolation Forest devuelve -1 para anomalías)
         prediction = model.predict(data)

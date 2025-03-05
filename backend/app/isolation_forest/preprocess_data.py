@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
+import json
+import os
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
+from sklearn.preprocessing import MinMaxScaler
 
 # Conexión a MongoDB
 client = AsyncIOMotorClient("mongodb://localhost:27017/")
@@ -15,6 +18,30 @@ async def fetch_data():
 
 # Ejecutar la carga de datos
 df = asyncio.run(fetch_data())
+
+df["amount_log"] = np.log1p(df["amount"])
+
+# Guardar min y max antes de escalar
+amount_log_min = df["amount_log"].min()
+amount_log_max = df["amount_log"].max()
+
+scaler = MinMaxScaler()
+df["amount_scaled"] = scaler.fit_transform(df[["amount_log"]])
+
+# Guardar min y max en un JSON
+scaler_params = {
+    "amount_log_min": float(amount_log_min),
+    "amount_log_max": float(amount_log_max)
+}
+
+# Ruta del archivo JSON
+SCALER_PARAMS_PATH = os.path.join(os.getcwd(), "scaler_params.json")
+
+# Guardar los valores en el archivo JSON
+with open(SCALER_PARAMS_PATH, "w") as f:
+    json.dump(scaler_params, f)
+
+print(f"🚀 Parámetros de escalado guardados en {SCALER_PARAMS_PATH}")
 
 # Convertir timestamp a datetime
 df["timestamp"] = pd.to_datetime(df["timestamp"])
@@ -48,7 +75,7 @@ status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 df["status"] = df["status"].map(status_mapping)
 
 # Seleccionar columnas finales
-features = ["amount", "hour", "day_of_week", "time_since_last", "7d_transfer_count", "amount_zscore", "status"]
+features = ["amount_scaled","status"]
 X = df[features]
 
 # Guardar los datos preprocesados en CSV para entrenar el modelo

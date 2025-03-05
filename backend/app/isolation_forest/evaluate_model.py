@@ -57,7 +57,7 @@ status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 df["status"] = df["status"].map(status_mapping)
 
 # Seleccionar las características correctas
-features = ["amount", "hour", "day_of_week", "time_since_last", "7d_transfer_count", "amount_zscore", "status"]
+features = [ "status"]
 X = df[features]
 
 # Cargar el modelo entrenado y el scaler guardado
