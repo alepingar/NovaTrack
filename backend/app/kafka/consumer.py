@@ -79,10 +79,6 @@ async def process_message(msg):
         # Agregar flag de anomalía en la transferencia
         transfer["is_anomalous"] = is_anomalous
 
-        # Insertar en la base de datos
-        inserted = await db.transfers.insert_one(transfer)
-        transfer["_id"] = inserted.inserted_id
-
         if is_anomalous:
             print(f"⚠️ ALERTA: Transacción anómala detectada: {transfer}")
         else:
