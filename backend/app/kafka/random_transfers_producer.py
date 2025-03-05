@@ -89,17 +89,17 @@ async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is
     seconds_ago = random.randint(0, 59)
 
     if is_anomalous:
-        # Horas fuera del horario bancario (22:00 - 08:00)
+    # Incluir horas dentro y fuera del horario bancario (08:00 - 22:00 y fuera de este rango)
         hours_ago = random.choices(
-            population=list(range(0, 8)) + list(range(22, 24)),  
-            weights=[0.4] * 8 + [0.6] * 2,  
+            population=list(range(0, 8)) + list(range(8, 22)) + list(range(22, 24)),  # Incluye todas las horas
+            weights=[0.5] * 8 + [0.1] * 14 + [0.4] * 2,  # Mayor probabilidad fuera del horario normal
             k=1
         )[0]
     else:
-        # Horario bancario normal (08:00 - 22:00)
+        # Horarios bancarios mayoritarios (08:00 - 22:00) con un pequeño porcentaje de fuera de horario
         hours_ago = random.choices(
-            population=list(range(8, 22)),  
-            weights=[1] * 14,  
+            population=list(range(8, 22)) + list(range(0, 8)) + list(range(22, 24)),  # Horas normales + raras
+            weights=[0.9] * 14 + [0.05] * 8 + [0.05] * 2,  # Mayor probabilidad de horas normales (08:00 - 22:00)
             k=1
         )[0]
 

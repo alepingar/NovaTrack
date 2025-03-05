@@ -3,15 +3,6 @@ import random
 import uuid
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
-# Diccionario de monedas por país
-currency_by_country = {
-    "ES": "EUR",  # España -> Euro
-    "FR": "EUR",  # Francia -> Euro
-    "DE": "EUR",  # Alemania -> Euro
-    "GB": "GBP",  # Reino Unido -> Libra
-    "US": "USD",  # Estados Unidos -> Dólar
-    # Puedes agregar más países y monedas según sea necesario
-}
 
 # Genera IBAN español válido
 BANCOS_ESP = [
@@ -77,17 +68,17 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
     
     # Crear el timestamp final con la variabilidad en días, horas, minutos y segundos
     if is_anomalous:
-    # Mayor probabilidad de horarios fuera del horario bancario (22:00 - 08:00)
+    # Incluir horas dentro y fuera del horario bancario (08:00 - 22:00 y fuera de este rango)
         hours_ago = random.choices(
-            population=list(range(0, 8)) + list(range(22, 24)),  # Horas anómalas
-            weights=[0.4] * 8 + [0.6] * 2,  # Probabilidad mayor entre 22:00 y 08:00
+            population=list(range(0, 8)) + list(range(8, 22)) + list(range(22, 24)),  # Incluye todas las horas
+            weights=[0.5] * 8 + [0.1] * 14 + [0.4] * 2,  # Mayor probabilidad fuera del horario normal
             k=1
         )[0]
     else:
-    # Mayor probabilidad de horarios bancarios (08:00 - 22:00)
+        # Horarios bancarios mayoritarios (08:00 - 22:00) con un pequeño porcentaje de fuera de horario
         hours_ago = random.choices(
-            population=list(range(8, 22)),  # Horas normales
-            weights=[1] * 14,  # Probabilidad uniforme entre 08:00 y 22:00
+            population=list(range(8, 22)) + list(range(0, 8)) + list(range(22, 24)),  # Horas normales + raras
+            weights=[0.9] * 14 + [0.05] * 8 + [0.05] * 2,  # Mayor probabilidad de horas normales (08:00 - 22:00)
             k=1
         )[0]
 
@@ -118,8 +109,7 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
     
     to_account = await get_billing_account_company(company_id)  # 80% de probabilidad de ser un IBAN español
     # Obtener la moneda del país de destino
-    to_country_code = from_account[:2]  # Los primeros dos caracteres del IBAN son el código del país
-    currency = currency_by_country.get(to_country_code, "EUR")  # Si no está en el diccionario, por defecto EUR
+    currency =  "EUR" # Si no está en el diccionario, por defecto EUR
     
     # Determinar el estado de la transferencia
     status = generate_status(is_anomalous)
