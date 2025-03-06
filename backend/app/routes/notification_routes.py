@@ -1,15 +1,18 @@
-from fastapi import APIRouter, WebSocket
-from typing import List
-
+from fastapi import APIRouter, Depends
+from app.services.notification_services import fetch_notifications, delete_notification
+from app.utils.security import get_current_user
 router = APIRouter()
-active_connections: List[WebSocket] = []
 
-@router.websocket("/ws/anomalies")
-async def websocket_anomalies(websocket: WebSocket):
-    await websocket.accept()
-    active_connections.append(websocket)
-    try:
-        while True:
-            await websocket.receive_text()  # Mantiene la conexión activa
-    except:
-        active_connections.remove(websocket)
+
+
+@router.get("/")
+async def get_notifications(current_user: dict = Depends(get_current_user)):
+    """Obtiene todas las notificaciones de la empresa."""
+    notifications = await fetch_notifications(current_user["company_id"])
+    return notifications
+
+@router.delete("/{notification_id}")
+async def delete_notification_by_id(notification_id: str, current_user: dict = Depends(get_current_user)):
+    """Eliminar una notificación por su ID"""
+    await delete_notification(notification_id, current_user["company_id"])
+    return {"message": "Notificación eliminada"}

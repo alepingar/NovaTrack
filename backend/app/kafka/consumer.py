@@ -4,9 +4,10 @@ from datetime import datetime, timezone
 import asyncio
 import pandas as pd
 import joblib
-from app.database import db
 import os
 import numpy as np
+
+from app.services.notification_services import save_notification
 
 # Obtener la ruta absoluta del directorio actual
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -81,6 +82,8 @@ async def process_message(msg):
 
         if is_anomalous:
             print(f"⚠️ ALERTA: Transacción anómala detectada: {transfer}")
+            message = f"⚠️ Alerta: Se detectó una transferencia anómala con ID: {transfer['id']}"
+            await save_notification(message, "Anomalía",company_id=transfer["company_id"])
         else:
             print(f"✅ Transacción normal: {transfer}")
 

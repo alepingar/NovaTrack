@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime
 import re
 from enum import Enum
 
