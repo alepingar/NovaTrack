@@ -44,6 +44,11 @@ function CompanyProfile() {
             Authorization: `Bearer ${token}`,
           },
         });
+        const companyData = response.data;
+
+        if (companyData.founded_date) {
+          companyData.founded_date = companyData.founded_date.split("T")[0];
+        }
         setCompany(response.data);
         setFormData(response.data);
       } catch (error) {

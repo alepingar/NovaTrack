@@ -52,6 +52,7 @@ class CompanyCreate(BaseModel):
         if not re.match(iban_pattern, value):
             raise ValueError("El número de cuenta debe ser un IBAN español válido")
         return value
+
 class CompanyResponse(BaseModel):
     id: str
     name: str
