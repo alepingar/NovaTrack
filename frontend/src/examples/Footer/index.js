@@ -28,14 +28,14 @@ function Footer({ companyName }) {
       px={2}
       py={2}
       sx={{
-        position: "relative", // Ahora se coloca después del contenido
+        position: "relative",
         backgroundColor: "#f6f8fa",
         borderTop: "1px solid #e1e4e8",
         fontFamily: `"Segoe UI", "Helvetica Neue", Arial, sans-serif`,
         fontSize: size.sm,
         color: "#57606a",
         height: "50px",
-        marginTop: "auto", // Se empuja al final cuando hay poco contenido
+        marginTop: "auto",
       }}
     >
       {/* Sección de derechos reservados */}

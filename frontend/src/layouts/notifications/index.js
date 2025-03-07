@@ -49,60 +49,69 @@ function Notifications() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox mt={6} mb={3}>
-        <Grid container spacing={3} justifyContent="center">
-          <Grid item xs={12} lg={8}>
-            <Card>
-              <MDBox p={2}>
-                <MDTypography variant="h5">Alertas</MDTypography>
-              </MDBox>
-              <MDBox pt={2} px={2}>
-                {notifications.length === 0 ? (
-                  <MDTypography variant="body2" color="text">
-                    No hay notificaciones nuevas ahora mismo.
-                  </MDTypography>
-                ) : (
-                  notifications.map((notif) => (
-                    <div
-                      key={notif._id}
-                      style={{
-                        marginBottom: "10px",
-                        padding: "10px",
-                        backgroundColor: "#f44336",
-                        color: "white",
-                        position: "relative",
-                      }}
-                    >
-                      <MDTypography variant="body2" color="white">
-                        {notif.message}
-                      </MDTypography>
-                      <MDTypography variant="body2" color="white">
-                        {format(new Date(notif.timestamp), "dd/MM/yyyy HH:mm")}
-                      </MDTypography>
-                      <button
-                        onClick={() => {
-                          console.log("Cerrando la alerta para la notificación ID:", notif._id);
-                          handleDeleteNotification(notif._id);
-                        }}
+      <MDBox
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1, // Expande el contenido para empujar el footer
+          minHeight: "calc(100vh - 64px)", // Ajusta al 100% menos la navbar
+        }}
+      >
+        <MDBox mt={6} mb={3} sx={{ flexGrow: 1 }}>
+          <Grid container spacing={3} justifyContent="center">
+            <Grid item xs={12} lg={8}>
+              <Card>
+                <MDBox p={2}>
+                  <MDTypography variant="h5">Alertas</MDTypography>
+                </MDBox>
+                <MDBox pt={2} px={2}>
+                  {notifications.length === 0 ? (
+                    <MDTypography variant="body2" color="text">
+                      No hay notificaciones nuevas ahora mismo.
+                    </MDTypography>
+                  ) : (
+                    notifications.map((notif) => (
+                      <div
+                        key={notif._id}
                         style={{
-                          position: "absolute",
-                          top: "5px",
-                          right: "5px",
-                          backgroundColor: "transparent",
-                          border: "none",
+                          marginBottom: "10px",
+                          padding: "10px",
+                          backgroundColor: "#f44336",
                           color: "white",
-                          cursor: "pointer",
+                          position: "relative",
                         }}
                       >
-                        X
-                      </button>
-                    </div>
-                  ))
-                )}
-              </MDBox>
-            </Card>
+                        <MDTypography variant="body2" color="white">
+                          {notif.message}
+                        </MDTypography>
+                        <MDTypography variant="body2" color="white">
+                          {format(new Date(notif.timestamp), "dd/MM/yyyy HH:mm")}
+                        </MDTypography>
+                        <button
+                          onClick={() => {
+                            console.log("Cerrando la alerta para la notificación ID:", notif._id);
+                            handleDeleteNotification(notif._id);
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: "5px",
+                            right: "5px",
+                            backgroundColor: "transparent",
+                            border: "none",
+                            color: "white",
+                            cursor: "pointer",
+                          }}
+                        >
+                          X
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </MDBox>
+              </Card>
+            </Grid>
           </Grid>
-        </Grid>
+        </MDBox>
       </MDBox>
       <Footer />
     </DashboardLayout>
