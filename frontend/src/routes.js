@@ -47,6 +47,7 @@ import Logout from "layouts/authentication/log-out";
 import TransferDetails from "layouts/tables/data/transfersDetails";
 import GeneralDashboard from "layouts/dashboard/generalDashboard";
 import { TermsOfService, PrivacyPolicy, Support, About } from "examples/Footer/legalPages";
+import SubscriptionUpgrade from "layouts/suscriptions";
 // @mui icons
 import Icon from "@mui/material/Icon";
 
@@ -110,6 +111,12 @@ const routes = [
     type: "invisible",
     route: "/transfers/:id",
     component: <TransferDetails />,
+    protected: true,
+  },
+  {
+    type: "invisible",
+    route: "/subscriptions",
+    component: <SubscriptionUpgrade />,
     protected: true,
   },
   {
