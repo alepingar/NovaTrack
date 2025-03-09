@@ -214,6 +214,34 @@ async def fetch_summary(company_id: str) -> Dict[str, Union[int, float]]:
         print(f"Error al procesar el resumen: {e}")
         raise
 
+async def fetch_new_users_per_month(company_id: str, year: int, month: int) -> int:
+    """
+    Obtiene los nuevos IBAN (from_account) de un mes específico que no estaban en el mes anterior.
+    """
+    start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    
+    prev_start_date = (start_date - timedelta(days=1)).replace(day=1)
+    prev_end_date = start_date - timedelta(seconds=1)
+    
+    current_month_ibans = await db.transfers.distinct("from_account", {
+        "company_id": company_id,
+        "timestamp": {"$gte": start_date, "$lt": end_date}
+    })
+    
+    previous_month_ibans = await db.transfers.distinct("from_account", {
+        "company_id": company_id,
+        "timestamp": {"$gte": prev_start_date, "$lt": prev_end_date}
+    })
+
+    new_users = len(set(current_month_ibans) - set(previous_month_ibans))
+ 
+    return new_users
+
+
 
 async def fetch_volume_by_day(company_id: str):
     result = await db.transfers.aggregate([

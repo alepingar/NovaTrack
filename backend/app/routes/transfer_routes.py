@@ -11,7 +11,8 @@ from app.services.transfer_services import (
     fetch_number_transfers_per_month,
     fetch_number_anomaly_transfers_per_month,
     fetch_total_amount_per_month,
-    fetch_summary_data_per_month_for_company
+    fetch_summary_data_per_month_for_company,
+    fetch_new_users_per_month
 )
 from app.models.transfer import TransferResponse, Transfer
 from typing import List
@@ -128,4 +129,12 @@ async def get_transfer_details(transfer_id: UUID, current_user: dict = Depends(g
     company_id = current_user["company_id"]
     return await fetch_transfer_details(company_id, transfer_id)
 
+
+@router.get("/new-users/per-month/{year}/{month}", response_model=int)
+async def get_new_users_per_month(year: int, month: int,  current_user: dict = Depends(get_current_user)):
+    """
+    Obtiene la cantidad de usuarios nuevos del mes que nos encontramos.
+    """
+    company_id = current_user["company_id"]
+    return await fetch_new_users_per_month(company_id, year, month)
 

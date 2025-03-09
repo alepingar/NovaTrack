@@ -24,6 +24,7 @@ import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatist
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
 import MDTypography from "components/MDTypography";
+import { set } from "date-fns";
 
 function Dashboard() {
   const [summary, setSummary] = useState({
@@ -43,6 +44,8 @@ function Dashboard() {
   const [volumeByDay, setVolumeByDay] = useState([]);
   const [volumeAByDay, setVolumeAByDay] = useState([]);
   const [statusDistribution, setStatusDistribution] = useState([]);
+  const [newUsers, setNewUsers] = useState([]);
+  const [pastUsers, setPastUsers] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,7 +69,6 @@ function Dashboard() {
         const volumeRes = await axios.get("http://127.0.0.1:8000/transfers/volume-by-day", {
           headers,
         });
-        console.log(volumeRes.data);
         setVolumeByDay(volumeRes.data);
 
         const volumeARes = await axios.get(
@@ -81,6 +83,22 @@ function Dashboard() {
           headers,
         });
         setStatusDistribution(statusRes.data);
+
+        const newUsersRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/new-users/per-month/${year}/${month}`,
+          {
+            headers,
+          }
+        );
+        setNewUsers(newUsersRes.data);
+
+        const pastUsersRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/new-users/per-month/${year}/${month - 1}`,
+          {
+            headers,
+          }
+        );
+        setPastUsers(pastUsersRes.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -144,7 +162,7 @@ function Dashboard() {
   const transfersChange = calculatePercentage(summaryP.totalTransfers, summary.totalTransactions);
   const anomalyChange = calculatePercentage(summaryP.totalAnomalies, summary.totalAnomalies);
   const amountChange = calculatePercentage(summaryP.totalAmount, summary.totalAmount);
-
+  const usersChange = calculatePercentage(pastUsers, newUsers);
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -189,7 +207,22 @@ function Dashboard() {
                 percentage={{
                   color: amountChange.color,
                   amount: amountChange.amount,
-                  label: "En crecimiento",
+                  label: amountChange.color === "success" ? "En crecimiento" : "En decrecimiento",
+                }}
+              />
+            </MDBox>
+          </Grid>
+          <Grid item xs={12} md={6} lg={3}>
+            <MDBox mb={1.5}>
+              <ComplexStatisticsCard
+                color="success"
+                icon="person"
+                title="Nuevos remitentes de este mes"
+                count={newUsers | 0}
+                percentage={{
+                  color: usersChange.color,
+                  amount: usersChange.amount,
+                  label: usersChange.color === "success" ? "En crecimiento" : "En decrecimiento",
                 }}
               />
             </MDBox>
