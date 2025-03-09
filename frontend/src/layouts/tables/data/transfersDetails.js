@@ -25,9 +25,7 @@ function TransferDetails() {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(`http://127.0.0.1:8000/transfers/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         setTransfer(response.data);
         setLoading(false);
@@ -61,8 +59,18 @@ function TransferDetails() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox pt={3} px={3}>
-        <Card sx={{ marginLeft: "auto", marginRight: "auto", maxWidth: "70%", boxShadow: 3 }}>
+      <MDBox
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1, // Expande el contenido para empujar el footer
+          minHeight: "calc(100vh - 64px)", // Ajusta al 100% menos la navbar
+          alignItems: "center", // Centra el contenido
+          justifyContent: "center",
+          p: 3,
+        }}
+      >
+        <Card sx={{ maxWidth: "60%", boxShadow: 3 }}>
           <CardContent>
             <MDTypography variant="h4" fontWeight="bold" mb={3}>
               Detalles de la Transferencia
