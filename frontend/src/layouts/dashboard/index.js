@@ -215,7 +215,7 @@ function Dashboard() {
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
-                color="success"
+                color="primary"
                 icon="person"
                 title="Nuevos remitentes de este mes"
                 count={newUsers | 0}
@@ -228,7 +228,7 @@ function Dashboard() {
             </MDBox>
           </Grid>
         </Grid>
-        <MDBox mt={4.5}>
+        <MDBox mt={7}>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6} md={6}>
               {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
@@ -237,7 +237,7 @@ function Dashboard() {
                   color="info"
                   title="Crecimiento de transferencias"
                   description="Cantidad de transferencias analizadas a lo largo del año"
-                  date="Actualizado hace 2 días"
+                  date="Actualización automática"
                   chart={reportsVolumeByDayChartData}
                 />
               </MDBox>
@@ -249,7 +249,7 @@ function Dashboard() {
                   color="primary"
                   title="Procesamiento de anomalías"
                   description="Distribución de anomalías por días"
-                  date="Actualizado hace 4 días"
+                  date="Actualización automática"
                   chart={reportsVolumeAByDayChartData}
                 />
               </MDBox>
@@ -264,7 +264,7 @@ function Dashboard() {
                     color="error"
                     title="Distribución de estados de transacción"
                     description="Desglose de los diferentes estados de las transacciones"
-                    date="Actualizado hace 5 días"
+                    date="Actualización automática"
                     chart={reportsStatusChartData}
                   />
                 ) : (
