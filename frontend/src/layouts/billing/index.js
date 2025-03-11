@@ -35,7 +35,14 @@ import React, { useEffect, useState } from "react";
 
 function Billing() {
   const [company, setCompany] = useState(null);
-
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth() + 1);
+  const [summaryP, setSummaryP] = useState({
+    totalTransfers: 0,
+    totalAnomalies: 0,
+    totalAmount: 0,
+  });
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
@@ -46,6 +53,16 @@ function Billing() {
           },
         });
         setCompany(response.data);
+
+        const summaryPRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/summary/per-month/${year}/${month}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setSummaryP(summaryPRes.data);
       } catch (error) {
         console.error("Error al obtener los datos de la empresa:", error);
       }
@@ -64,7 +81,7 @@ function Billing() {
               <Grid container spacing={3}>
                 <Grid item xs={12} xl={6}>
                   <MasterCard
-                    number={4562112245947852}
+                    number={company ? company.billing_account_number : "Cargando..."}
                     holder={company ? company.name : "Cargando..."}
                     expires="11/22"
                   />
@@ -72,9 +89,9 @@ function Billing() {
                 <Grid item xs={12} md={6} xl={3}>
                   <DefaultInfoCard
                     icon="account_balance"
-                    title="Balance"
+                    title="Ingresos"
                     description="De los últimos 30 días"
-                    value="+2000€"
+                    value={`${summaryP.totalAmount}€`}
                   />
                 </Grid>
                 <Grid item xs={12} md={6} xl={3}>

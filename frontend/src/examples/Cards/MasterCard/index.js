@@ -31,16 +31,11 @@ import masterCardLogo from "assets/images/logos/mastercard.png";
 function MasterCard({ color, number, holder, expires }) {
   const numbers = [...`${number}`];
 
-  if (numbers.length < 16 || numbers.length > 16) {
-    throw new Error(
-      "Invalid value for the prop number, the value for the number prop shouldn't be greater than or less than 16 digits"
-    );
-  }
-
   const num1 = numbers.slice(0, 4).join("");
   const num2 = numbers.slice(4, 8).join("");
   const num3 = numbers.slice(8, 12).join("");
   const num4 = numbers.slice(12, 16).join("");
+  const num5 = numbers.slice(16, 20).join("");
 
   return (
     <Card
@@ -70,6 +65,7 @@ function MasterCard({ color, number, holder, expires }) {
         </MDBox>
         <MDTypography variant="h5" color="white" fontWeight="medium" sx={{ mt: 3, mb: 5, pb: 1 }}>
           {num1}&nbsp;&nbsp;&nbsp;{num2}&nbsp;&nbsp;&nbsp;{num3}&nbsp;&nbsp;&nbsp;{num4}
+          &nbsp;&nbsp;&nbsp;{num5}
         </MDTypography>
         <MDBox display="flex" justifyContent="space-between" alignItems="center">
           <MDBox display="flex" alignItems="center">
@@ -112,7 +108,7 @@ MasterCard.defaultProps = {
 // Typechecking props for the MasterCard
 MasterCard.propTypes = {
   color: PropTypes.oneOf(["primary", "secondary", "info", "success", "warning", "error", "dark"]),
-  number: PropTypes.number.isRequired,
+  number: PropTypes.string.isRequired,
   holder: PropTypes.string.isRequired,
   expires: PropTypes.string.isRequired,
 };

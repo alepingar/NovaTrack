@@ -48,7 +48,7 @@ class CompanyCreate(BaseModel):
     @validator("billing_account_number")
     def validate_billing_account_number(cls, value):
         # Expresión regular para validar un IBAN español
-        iban_pattern = r"^ES\d{2}\d{4}\d{4}\d{2}\d{10}$"
+        iban_pattern = r"^ES\d{2}\d{4}\d{4}\d{12}$"
         if not re.match(iban_pattern, value):
             raise ValueError("El número de cuenta debe ser un IBAN español válido")
         return value

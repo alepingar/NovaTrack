@@ -84,7 +84,8 @@ async def fetch_company_profile(company_id: str) -> CompanyResponse:
         address=company.get("address"),
         founded_date=company.get("founded_date"),
         created_at=company.get("created_at"),
-        updated_at=company.get("updated_at")
+        updated_at=company.get("updated_at"),
+        billing_account_number=company.get("billing_account_number")
     )
 
 async def update_company_profile(company_id: str, company_data: UpdateCompanyProfile) -> CompanyResponse:
