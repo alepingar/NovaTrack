@@ -207,7 +207,7 @@ function GeneralDashboard() {
                 percentage={{
                   color: amountChange.color,
                   amount: amountChange.amount,
-                  label: "En crecimiento",
+                  label: amountChange.amount > 0 ? "En crecimiento" : "En decrecimiento",
                 }}
               />
             </MDBox>
