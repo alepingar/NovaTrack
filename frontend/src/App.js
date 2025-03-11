@@ -122,7 +122,11 @@ export default function App() {
             color={sidenavColor}
             brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
             brandName="NovaTrack"
-            routes={routes.filter((route) => !route.protected || isAuthenticated)} // Filtrar rutas protegidas
+            routes={routes.filter((route) => {
+              if (route.protected && !isAuthenticated) return false;
+              if (route.onlyGuest && isAuthenticated) return false;
+              return true;
+            })} // Filtrar rutas protegidas
             onMouseEnter={handleOnMouseEnter}
             onMouseLeave={handleOnMouseLeave}
           />

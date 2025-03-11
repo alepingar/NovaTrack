@@ -21,15 +21,6 @@ async def authenticate_user(email: str, password: str):
             "company_id": str(company["_id"])
         })
 
-    # Buscar en usuarios
-    user = await db.users.find_one({"email": email})
-    if user and verify_password(password, user["password"]):
-        return create_access_token(data={
-            "sub": user["email"],
-            "role": user["role"],
-            "user_id": str(user["_id"])
-        })
-
     raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
 

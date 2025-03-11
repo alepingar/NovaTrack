@@ -77,21 +77,52 @@ function GeneralDashboard() {
     fetchData();
   }, [year, month]);
 
+  const getFilteredChartData = (data) => {
+    const currentMonthIndex = month;
+    return data.slice(0, currentMonthIndex + 1);
+  };
+
   const reportsGrowthChartData = {
-    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+    labels: getFilteredChartData([
+      "Ene",
+      "Feb",
+      "Mar",
+      "Abr",
+      "May",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dic",
+    ]),
     datasets: {
       label: "Transferencias",
-      data: transfersData,
+      data: getFilteredChartData(transfersData),
       fill: true,
       tension: 0.4,
     },
   };
 
   const reportsAnomaliesChartData = {
-    labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+    labels: getFilteredChartData([
+      "Ene",
+      "Feb",
+      "Mar",
+      "Abr",
+      "May",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dic",
+    ]),
     datasets: {
       label: "Anomalías",
-      data: anomaliesData,
+      data: getFilteredChartData(anomaliesData),
       fill: true,
       tension: 0.4,
     },

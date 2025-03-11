@@ -52,12 +52,6 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
                 detail="Token inválido: Faltan datos de empresa",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        if role != "admin" and not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token inválido: Faltan datos de usuario",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
 
         return {"email": user_email, "role": role, "user_id": user_id, "company_id": company_id}
     except JWTError:
