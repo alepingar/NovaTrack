@@ -1,19 +1,17 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from app.utils.security import get_current_user
 from app.services.company_services import (
     fetch_companies,
     register_new_company,
     fetch_company_profile,
-    update_company_profile,
+    upgrade_subscription,
     get_entity_types1
 )
-from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile, EntityType
+from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile, EntityType, SubscriptionPlan
 from typing import List
 from app.database import db
 from bson import ObjectId
-from fastapi import HTTPException
 from datetime import datetime
-
 
 router = APIRouter()
 
@@ -55,13 +53,11 @@ async def update_company_profile(
     if not existing_company:
         raise HTTPException(status_code=404, detail="Empresa no encontrada")
 
-    # Actualizar datos
     updated_data = company_data.dict(exclude_unset=True)
     updated_data["updated_at"] = datetime.utcnow().isoformat()
 
     await db.companies.update_one({"_id": company_id}, {"$set": updated_data})
 
-    # Retornar los datos actualizados
     updated_company = await db.companies.find_one({"_id": company_id})
     return CompanyResponse(
         id=str(updated_company["_id"]),
@@ -87,6 +83,21 @@ async def get_entity_types():
     Devuelve la lista de tipos de entidad legal.
     """
     return await get_entity_types1()
+
+
+@router.put("/upgrade-plan/{new_plan}", response_model=CompanyResponse)
+async def upgrade_plan(new_plan: str, current_user: dict = Depends(get_current_user)):
+    """
+    Actualiza el plan de suscripción de la empresa y genera una factura.
+    """
+    print(f"🔍 Recibido en el backend: {new_plan}")
+    try:
+        new_plan_enum = SubscriptionPlan(new_plan.upper())  
+    except ValueError:
+        print("❌ Error: Plan de suscripción inválido")
+        raise HTTPException(status_code=422, detail="Plan de suscripción inválido")
+
+    return await upgrade_subscription(current_user["company_id"], new_plan_enum)
 
 
 

@@ -4,6 +4,10 @@ from datetime import datetime
 import re
 from enum import Enum
 
+class SubscriptionPlan(str, Enum):
+    BASICO = "BASICO"
+    NORMAL = "NORMAL"
+    PRO = "PRO"
 class EntityType(str, Enum):
     SA = "Sociedad Anónima"
     SL = "Sociedad Limitada"
@@ -44,10 +48,10 @@ class CompanyCreate(BaseModel):
     founded_date: Optional[datetime]
     billing_account_number: str = Field(..., description="Número de cuenta bancaria de la empresa para recibir pagos")
     entity_type: EntityType = Field(..., description="Tipo de entidad legal de la empresa")
+    subscription_plan: SubscriptionPlan = SubscriptionPlan.BASICO
 
     @validator("billing_account_number")
     def validate_billing_account_number(cls, value):
-        # Expresión regular para validar un IBAN español
         iban_pattern = r"^ES\d{2}\d{4}\d{4}\d{12}$"
         if not re.match(iban_pattern, value):
             raise ValueError("El número de cuenta debe ser un IBAN español válido")
@@ -69,6 +73,7 @@ class CompanyResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     billing_account_number: Optional[str] = None
+    subscription_plan: SubscriptionPlan = SubscriptionPlan.BASICO
 
 class UpdateCompanyProfile(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=40)
@@ -81,3 +86,10 @@ class UpdateCompanyProfile(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     address: Optional[str] = Field(None, max_length=200)
     founded_date: Optional[datetime]
+
+class Invoice(BaseModel):
+    company_id: str
+    plan: SubscriptionPlan
+    amount: float
+    issued_at: datetime
+    status: str = "Pagado"

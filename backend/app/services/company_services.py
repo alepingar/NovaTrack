@@ -1,5 +1,5 @@
 from app.database import db
-from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile, EntityType
+from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile, EntityType, SubscriptionPlan
 from bson import ObjectId
 from fastapi import HTTPException
 from app.utils.security import hash_password
@@ -130,3 +130,54 @@ async def update_company_profile(company_id: str, company_data: UpdateCompanyPro
 
 async def get_entity_types1() -> List[EntityType]:
     return [entity for entity in EntityType]
+
+
+async def upgrade_subscription(company_id: str, new_plan: SubscriptionPlan) -> CompanyResponse:
+    """
+    Actualiza el plan de suscripción de una empresa y genera una factura.
+    """
+    company = await db.companies.find_one({"_id": ObjectId(company_id)})
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+
+    if company.get("subscription_plan") == new_plan:
+        raise HTTPException(status_code=400, detail="Ya estás en este plan")
+
+    plan_prices = {
+        SubscriptionPlan.BASICO: 0,
+        SubscriptionPlan.NORMAL: 19.99,
+        SubscriptionPlan.PRO: 39.99,
+    }
+    invoice_data = {
+        "company_id": company_id,
+        "plan": new_plan.value,
+        "amount": plan_prices[new_plan],
+        "issued_at": datetime.utcnow(),
+        "status": "Pagado"
+    }
+
+    await db.invoices.insert_one(invoice_data)
+
+    await db.companies.update_one(
+        {"_id": ObjectId(company_id)},
+        {"$set": {"subscription_plan": new_plan.value, "updated_at": datetime.utcnow().isoformat()}}
+    )
+
+    updated_company = await db.companies.find_one({"_id": ObjectId(company_id)})
+    return CompanyResponse(
+        id=str(updated_company["_id"]),
+        name=updated_company.get("name"),
+        email=updated_company.get("email"),
+        industry=updated_company.get("industry"),
+        role=updated_company.get("role"),
+        country=updated_company.get("country"),
+        phone_number=updated_company.get("phone_number"),
+        tax_id=updated_company.get("tax_id"),
+        website=updated_company.get("website"),
+        description=updated_company.get("description"),
+        address=updated_company.get("address"),
+        founded_date=updated_company.get("founded_date"),
+        created_at=updated_company.get("created_at"),
+        updated_at=updated_company.get("updated_at"),
+        subscription_plan=updated_company.get("subscription_plan")
+    )
