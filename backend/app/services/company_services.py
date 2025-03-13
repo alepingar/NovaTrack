@@ -181,3 +181,11 @@ async def upgrade_subscription(company_id: str, new_plan: SubscriptionPlan) -> C
         updated_at=updated_company.get("updated_at"),
         subscription_plan=updated_company.get("subscription_plan")
     )
+
+
+async def get_current_plan(company_id: str) -> str:
+    company = await db.companies.find_one({"_id": ObjectId(company_id)})
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+
+    return company.get("subscription_plan", 0)

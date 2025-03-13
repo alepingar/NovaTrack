@@ -1,30 +1,26 @@
-from datetime import datetime
-from uuid import uuid4,UUID
-from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
+from enum import Enum
 import asyncio
 
-class Notification(BaseModel):
-    message: str
-    timestamp: datetime
-    type: str
-    company_id: str
+# Definir el Enum SubscriptionPlan
+class SubscriptionPlan(str, Enum):
+    BASICO = "Básico"
+    NORMAL = "Normal"
+    PRO = "Pro"
 
 # Conectar con MongoDB
 client = AsyncIOMotorClient("mongodb://localhost:27017/")
 db = client["nova_track"]
-notifications_collection = db["notifications"]  # Cambié el nombre a "notifications"
+companies_collection = db["companies"]
 
-async def insert_notification(message: str, notification_type: str, company_id: str):
-    notification = Notification(
-        message=message,
-        timestamp=datetime.utcnow(),  # Usamos la hora actual en UTC
-        type=notification_type,
-        company_id=company_id
-    )
+async def update_companies_without_plan():
+    # Buscar compañías que no tengan el campo 'subscription_plan'
+    query = {"subscription_plan": {"$exists": False}}
+    update = {"$set": {"subscription_plan": SubscriptionPlan.BASICO.value}}
+    
+    # Actualizar todas las compañías que no tienen el campo
+    result = await companies_collection.update_many(query, update)
+    print(f"✅ Compañías actualizadas: {result.modified_count}")
 
-    # Insertar la notificación en la base de datos
-    result = await notifications_collection.insert_one(notification.dict())
-
-# Ejecutar la inserción de notificación
-asyncio.run(insert_notification("Nueva transferencia detectada", "Alerta", "678e8959a2f4f54c5d481ba1"))
+# Ejecutar la actualización
+asyncio.run(update_companies_without_plan())

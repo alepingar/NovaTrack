@@ -5,7 +5,8 @@ from app.services.company_services import (
     register_new_company,
     fetch_company_profile,
     upgrade_subscription,
-    get_entity_types1
+    get_entity_types1,
+    get_current_plan
 )
 from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile, EntityType, SubscriptionPlan
 from typing import List
@@ -100,6 +101,11 @@ async def upgrade_plan(new_plan: str, current_user: dict = Depends(get_current_u
     return await upgrade_subscription(current_user["company_id"], new_plan_enum)
 
 
-
+@router.get("/get-current-plan", response_model=str)
+async def get_plan(current_user: dict = Depends(get_current_user)):
+    """
+    Devuelve el plan de suscripción actual de la empresa.
+    """
+    return await get_current_plan(current_user["company_id"])
 
 
