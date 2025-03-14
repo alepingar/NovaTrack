@@ -122,7 +122,7 @@ function DefaultNavbar({ transparent, light, action }) {
           />
           <DefaultNavbarLink
             icon="account_circle"
-            name="Registrarse como empresa"
+            name="Registrarse"
             route="/authentication/sign-up"
             light={light}
           />

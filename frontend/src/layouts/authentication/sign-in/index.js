@@ -57,20 +57,14 @@ function SignIn() {
           item
           xs={12}
           sm={6}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
           style={{
             backgroundColor: "#2c3e50", // Azul marino
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
             paddingLeft: "0",
           }}
-        >
-          <MDTypography variant="h4" color="white" textAlign="center">
-            Transforma tus transacciones, con seguridad y precisión.
-          </MDTypography>
-        </Grid>
-
-        {/* Columna derecha: Formulario de inicio de sesión */}
+        ></Grid>
         <Grid
           item
           xs={12}
@@ -149,7 +143,6 @@ function SignIn() {
                 </MDBox>
                 <MDBox mt={3} mb={1} textAlign="center">
                   <MDTypography variant="button" color="text">
-                    ¿No tienes una cuenta?{" "}
                     <MDTypography
                       component={Link}
                       to="/authentication/sign-up"
@@ -158,7 +151,17 @@ function SignIn() {
                       fontWeight="medium"
                       textGradient
                     >
-                      Regístrate como empresa
+                      ¿No tienes una cuenta? Regístrate
+                    </MDTypography>
+                    <MDTypography
+                      component={Link}
+                      to="/forgot-password"
+                      variant="button"
+                      color="info"
+                      fontWeight="medium"
+                      textGradient
+                    >
+                      ¿Olvidaste tu contraseña?
                     </MDTypography>
                   </MDTypography>
                 </MDBox>

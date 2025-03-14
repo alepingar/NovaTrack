@@ -1,12 +1,13 @@
 # auth_services.py
+from datetime import datetime, timedelta
+import secrets
 from app.utils.security import hash_password, verify_password, create_access_token
 from app.database import db
 from fastapi import HTTPException
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from app.models.auth import settings  # Asegúrate de tener tus configuraciones cargadas
-
+from app.models.auth import settings
 
 async def authenticate_user(email: str, password: str):
     """
@@ -45,22 +46,27 @@ def send_email(to_email: str, subject: str, content: str):
 
 async def generate_reset_token(email: str):
     """
-    Generate a password reset token and send email.
+    Generate a secure password reset token and send email.
     """
     user = await db.companies.find_one({"email": email})
     if not user:
-        raise HTTPException(status_code=404, detail="Correo no registrado")
+        raise HTTPException(status_code=404, detail="Este correo no existe")  # Mensaje actualizado
 
-    # Crear un token de recuperación (ejemplo: simple hash)
-    reset_token = "TOKEN_GENERADO_AQUI"
+    # Generar un token seguro
+    reset_token = secrets.token_urlsafe(32)
 
-    # Guardar el token en la base de datos (opcional)
-    await db.companies.update_one({"email": email}, {"$set": {"reset_token": reset_token}})
+    # Guardar el token en la base de datos con tiempo de expiración
+    await db.companies.update_one({"email": email}, {
+        "$set": {
+            "reset_token": reset_token,
+            "reset_token_expiration": datetime.utcnow() + timedelta(hours=1)  # Expira en 1 hora
+        }
+    })
 
     # Crear enlace de recuperación
     reset_link = f"http://localhost:3000/reset-password?token={reset_token}"
 
-    # Enviar el correo
+    # Enviar correo
     subject = "Recupera tu contraseña"
     content = f"""
     <h1>Recupera tu contraseña</h1>
@@ -69,7 +75,8 @@ async def generate_reset_token(email: str):
     """
     send_email(email, subject, content)
 
-    return {"message": "Correo de recuperación enviado"}
+    return send_email(email, subject, content)
+
 
 
 async def reset_user_password(token: str, new_password: str):
@@ -77,14 +84,18 @@ async def reset_user_password(token: str, new_password: str):
     Reset the user's password using a valid token.
     """
     user = await db.companies.find_one({"reset_token": token})
-    if not user:
+    if not user or "reset_token_expiration" not in user:
         raise HTTPException(status_code=400, detail="Token inválido o expirado")
+
+    # Verificar si el token ha expirado
+    if datetime.utcnow() > user["reset_token_expiration"]:
+        raise HTTPException(status_code=400, detail="El token ha expirado")
 
     # Actualizar contraseña
     hashed_password = hash_password(new_password)
     await db.companies.update_one({"reset_token": token}, {
         "$set": {"password": hashed_password},
-        "$unset": {"reset_token": ""},
+        "$unset": {"reset_token": "", "reset_token_expiration": ""},
     })
 
     return {"message": "Contraseña restablecida correctamente"}

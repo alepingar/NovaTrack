@@ -46,6 +46,8 @@ import SignUp from "layouts/authentication/sign-up";
 import Logout from "layouts/authentication/log-out";
 import TransferDetails from "layouts/tables/data/transfersDetails";
 import GeneralDashboard from "layouts/dashboard/generalDashboard";
+import ForgotPassword from "layouts/authentication/forgot-password";
+import ResetPassword from "layouts/authentication/reset-password";
 import { TermsOfService, PrivacyPolicy, Support, About } from "examples/Footer/legalPages";
 import SubscriptionUpgrade from "layouts/suscriptions";
 // @mui icons
@@ -106,6 +108,18 @@ const routes = [
     route: "/profile",
     component: <Profile />,
     protected: true,
+  },
+  {
+    type: "invisible",
+    route: "/forgot-password",
+    component: <ForgotPassword />,
+    protected: false,
+  },
+  {
+    type: "invisible",
+    route: "/reset-password",
+    component: <ResetPassword />,
+    protected: false,
   },
   {
     type: "invisible",
