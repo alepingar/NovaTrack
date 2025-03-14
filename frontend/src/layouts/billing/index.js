@@ -32,6 +32,7 @@ import Invoices from "layouts/billing/components/Invoices";
 import BillingInformation from "layouts/billing/components/BillingInformation";
 import Transactions from "layouts/billing/components/Transactions";
 import React, { useEffect, useState } from "react";
+import { set } from "date-fns";
 
 function Billing() {
   const [company, setCompany] = useState(null);
@@ -43,6 +44,7 @@ function Billing() {
     totalAnomalies: 0,
     totalAmount: 0,
   });
+
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {

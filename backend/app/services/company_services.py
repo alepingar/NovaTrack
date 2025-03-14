@@ -140,24 +140,38 @@ async def upgrade_subscription(company_id: str, new_plan: SubscriptionPlan) -> C
     if not company:
         raise HTTPException(status_code=404, detail="Empresa no encontrada")
 
-    if company.get("subscription_plan") == new_plan:
+    current_plan = company.get("subscription_plan")
+
+    # Si el plan actual es igual al nuevo plan, no se hace nada
+    if current_plan == new_plan:
         raise HTTPException(status_code=400, detail="Ya estás en este plan")
 
+    # Lógica de precios de planes
     plan_prices = {
         SubscriptionPlan.BASICO: 0,
         SubscriptionPlan.NORMAL: 19.99,
         SubscriptionPlan.PRO: 39.99,
     }
-    invoice_data = {
-        "company_id": company_id,
-        "plan": new_plan.value,
-        "amount": plan_prices[new_plan],
-        "issued_at": datetime.utcnow(),
-        "status": "Pagado"
-    }
 
-    await db.invoices.insert_one(invoice_data)
+    # Si el usuario está en un plan superior al nuevo plan, no le dejamos hacer el downgrade
+    if (
+        (current_plan == SubscriptionPlan.NORMAL and new_plan == SubscriptionPlan.BASICO) or
+        (current_plan == SubscriptionPlan.PRO and new_plan in [SubscriptionPlan.BASICO, SubscriptionPlan.NORMAL])
+    ):
+        raise HTTPException(status_code=400, detail="No puedes bajar a un plan inferior una vez hayas pagado por uno superior")
 
+    # Si el nuevo plan es diferente y no es un downgrade, generamos la factura si es necesario
+    if new_plan != SubscriptionPlan.BASICO:  # Solo genera factura si el plan es diferente a Básico
+        invoice_data = {
+            "company_id": company_id,
+            "plan": new_plan.value,
+            "amount": plan_prices[new_plan],
+            "issued_at": datetime.utcnow(),
+            "status": "Pagado"
+        }
+        await db.invoices.insert_one(invoice_data)
+
+    # Actualizar el plan de suscripción
     await db.companies.update_one(
         {"_id": ObjectId(company_id)},
         {"$set": {"subscription_plan": new_plan.value, "updated_at": datetime.utcnow().isoformat()}}
@@ -181,7 +195,6 @@ async def upgrade_subscription(company_id: str, new_plan: SubscriptionPlan) -> C
         updated_at=updated_company.get("updated_at"),
         subscription_plan=updated_company.get("subscription_plan")
     )
-
 
 async def get_current_plan(company_id: str) -> str:
     company = await db.companies.find_one({"_id": ObjectId(company_id)})

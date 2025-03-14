@@ -86,10 +86,3 @@ class UpdateCompanyProfile(BaseModel):
     description: Optional[str] = Field(None, max_length=500)
     address: Optional[str] = Field(None, max_length=200)
     founded_date: Optional[datetime]
-
-class Invoice(BaseModel):
-    company_id: str
-    plan: SubscriptionPlan
-    amount: float
-    issued_at: datetime
-    status: str = "Pagado"

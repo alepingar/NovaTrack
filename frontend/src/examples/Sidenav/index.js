@@ -193,15 +193,17 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       />
       <List>{renderRoutes}</List>
       <MDBox p={2} mt="auto">
-        <MDButton
-          component={RouterLink}
-          to="/subscriptions"
-          variant="gradient"
-          color={sidenavColor}
-          fullWidth
-        >
-          Mejora tu suscripción
-        </MDButton>
+        {isAuthenticated ? (
+          <MDButton
+            component={RouterLink}
+            to="/subscriptions"
+            variant="gradient"
+            color={sidenavColor}
+            fullWidth
+          >
+            Mejora tu suscripción
+          </MDButton>
+        ) : null}
       </MDBox>
     </SidenavRoot>
   );

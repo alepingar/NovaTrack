@@ -10,36 +10,39 @@ import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 
-const plans = [
-  {
-    title: "Básico",
-    price: "Gratis",
-    description: "Hasta 100 transferencias analizadas con un modelo básico.",
-    buttonText: "Mantener plan",
-    buttonColor: "secondary",
-    planId: "Basico",
-  },
-  {
-    title: "Normal",
-    price: "19,99€/mes",
-    description: "Hasta 1000 transferencias analizadas con un modelo básico.",
-    buttonText: "Elegir plan",
-    buttonColor: "info",
-    planId: "Normal",
-  },
-  {
-    title: "Pro",
-    price: "39,99€/mes",
-    description: "Modelo avanzado sin límite de transferencias analizadas.",
-    buttonText: "Mejorar a Pro",
-    buttonColor: "success",
-    planId: "Pro",
-  },
-];
-
 function SubscriptionUpgrade() {
   const [loading, setLoading] = useState(false);
   const [currentPlan, setCurrentPlan] = useState("");
+
+  const plans = [
+    {
+      title: "Básico",
+      price: "Gratis",
+      description: "Hasta 100 transferencias analizadas con un modelo básico.",
+      buttonText: "Mantener plan",
+      buttonColor: "secondary",
+      planId: "Basico",
+      disabled: currentPlan === "BASICO" || currentPlan === "NORMAL" || currentPlan === "PRO",
+    },
+    {
+      title: "Normal",
+      price: "19,99€/mes",
+      description: "Hasta 1000 transferencias analizadas con un modelo básico.",
+      buttonText: "Elegir plan",
+      buttonColor: "info",
+      planId: "Normal",
+      disabled: currentPlan === "NORMAL" || currentPlan === "PRO",
+    },
+    {
+      title: "Pro",
+      price: "39,99€/mes",
+      description: "Modelo avanzado sin límite de transferencias analizadas.",
+      buttonText: "Mejorar a Pro",
+      buttonColor: "success",
+      planId: "Pro",
+      disabled: currentPlan === "PRO",
+    },
+  ];
 
   useEffect(() => {
     const fetchCurrentPlan = async () => {
@@ -125,7 +128,7 @@ function SubscriptionUpgrade() {
                         color={plan.buttonColor}
                         variant="contained"
                         onClick={() => handleUpgrade(plan.planId)}
-                        disabled={loading} // Deshabilitar el botón mientras carga
+                        disabled={plan.disabled || loading} // Deshabilitar el botón mientras carga
                       >
                         {loading ? "Cargando..." : buttonText} {/* Mostrar texto de loading */}
                       </MDButton>
