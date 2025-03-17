@@ -3,6 +3,7 @@ import random
 import uuid
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
+import numpy as np
 
 # Genera IBAN español válido
 BANCOS_ESP = [
@@ -59,7 +60,44 @@ async def get_billing_account_company(company_id: str):
 # Genera una transferencia aleatoria
 async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_anomalous=False):
     # Definir el rango de los montos, con una distribución alrededor del promedio
-    amount = round(random.uniform(avg_amount * 0.5, avg_amount * 1.5), 2)
+    if is_anomalous:
+        # 80% de las transferencias anómalas son extremas (mucho más altas o mucho más bajas)
+        random_value = random.random()
+
+        if random_value < 0.80:
+            # Anomalía muy alta o muy baja
+            random_value1 = random.random()
+            if random_value1 > 0.5:
+                amount = round(random.lognormvariate(np.log(avg_amount * 4), 0.5), 2)  # Anomalía muy alta
+            else:
+                amount = round(random.uniform(0.01, avg_amount * 0.25), 2)  # Anomalía muy baja
+
+        # 10% de las anomalías son moderadas (±50% del promedio)
+        elif random_value < 0.90:
+            amount = round(random.uniform(avg_amount * 0.5, avg_amount * 1.5), 2)  # Anomalía moderada
+
+        # 10% de las anomalías son leves (±20% del promedio)
+        else:
+            amount = round(random.gauss(avg_amount, avg_amount * 0.2 ), 2)  # Anomalía leve
+
+    else:
+        # 80% de las transferencias normales son dentro de un rango de +/- 30% del promedio
+        random_value = random.random()
+
+        if random_value < 0.80:
+            # Transferencias normales (dentro de +/- 30% de la media)
+            amount = round(random.gauss(avg_amount, avg_amount * 0.3), 2)
+
+        # 10% de las transferencias normales son dentro de un rango de +/- 50% del promedio
+        elif random_value < 0.90:
+            amount = round(random.uniform(avg_amount * 0.75, avg_amount * 1.5), 2)  # Transferencia más variable
+
+        # 10% de las transferencias normales son un poco más altas o bajas
+        else:
+            amount = round(random.uniform(avg_amount * 0.5, avg_amount * 2), 2)  # Rango más amplio
+
+    # No permitir valores negativos
+    amount = max(amount, round(random.uniform(0.50, 3.00), 2))
     
     # Generar fecha de transferencia aleatoria (más frecuente en las anomalías)
     days_ago = random.randint(3, 63)  # Aleatorio entre 3 y 63 días atrás
@@ -84,20 +122,6 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
 
     # Crear el timestamp final con la variabilidad en días, horas, minutos y segundos
     timestamp = datetime.now(timezone.utc) - timedelta(days=days_ago, hours=hours_ago, minutes=minutes_ago, seconds=seconds_ago)
-    
-    # Si es anómala, podemos cambiar el monto
-    if is_anomalous:
-        # Monto exageradamente alto o bajo
-        anomaly_type = random.choice(["high", "low"])
-        
-        if anomaly_type == "high":
-            # Monto exageradamente alto, con una distribución log-normal (media mucho mayor, desviación moderada)
-            amount = round(random.lognormvariate(avg_amount * 5, 0.5), 2)  # Factor *5 para monto más grande
-            amount = min(amount, 1000)
-        else:
-            # Monto exageradamente bajo, con una distribución log-normal (media pequeña, desviación moderada)
-            amount = round(random.lognormvariate(avg_amount * 0.05, 0.5), 2)
-            amount = max(amount, 0.5)
     
     # Decidir IBAN de destino: puede ser español o internacional (con probabilidad ajustada)
     use_recurrent = random.choices([True, False], weights=[80, 20])[0]  # 80% recurrente, 20% nuevo

@@ -1,11 +1,14 @@
 import pandas as pd
-import joblib
+import numpy as np
+import json
+import os
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
-import os
+from sklearn.preprocessing import MinMaxScaler
+import joblib
 
+# Cargar el modelo
 model_path = "isolation_forest.pkl"
-
 if os.path.exists(model_path):
     model = joblib.load(model_path)
     print("Modelo cargado correctamente.")
@@ -17,66 +20,57 @@ client = AsyncIOMotorClient("mongodb://localhost:27017/")
 db = client["nova_track"]
 transfers_collection = db["transfers"]
 
-# Función para cargar datos desde MongoDB
+# Función para obtener los datos desde MongoDB
 async def fetch_data():
     cursor = transfers_collection.find({})
-    data = await cursor.to_list(None)  # Traer todos los datos
+    data = await cursor.to_list(length=None)
     return pd.DataFrame(data)
 
-# Cargar los datos preprocesados desde MongoDB
+# Cargar los datos
 df = asyncio.run(fetch_data())
 
-# Preprocesar los datos como lo hiciste anteriormente
-df["timestamp"] = pd.to_datetime(df["timestamp"])
+# Preprocesar los datos
+df["amount_log"] = np.log1p(df["amount"])
 
-# Nuevas features necesarias
-df["hour"] = df["timestamp"].dt.hour
-df["day_of_week"] = df["timestamp"].dt.dayofweek
-df = df.sort_values(by=["company_id", "timestamp"])  # Ordenar por empresa y tiempo
-df["time_since_last"] = df.groupby("company_id")["timestamp"].diff().dt.total_seconds()
-df["time_since_last"] = df["time_since_last"].fillna(df["time_since_last"].median())
+# Guardar min y max antes de escalar
+amount_log_min = df["amount_log"].min()
+amount_log_max = df["amount_log"].max()
 
-# Calcular 7d_transfer_count
-df["timestamp"] = pd.to_datetime(df["timestamp"])
+scaler = MinMaxScaler()
+df["amount_scaled"] = scaler.fit_transform(df[["amount_log"]])
 
-# ✅ Ordenar por empresa y tiempo
-df = df.sort_values(by=["company_id", "timestamp"])
+# Guardar min y max en un archivo JSON
+scaler_params = {
+    "amount_log_min": float(amount_log_min),
+    "amount_log_max": float(amount_log_max)
+}
 
-# ✅ Calcular el número de transferencias en los últimos 7 días por empresa
-df["7d_transfer_count"] = df.groupby("company_id", group_keys=False).apply(
-    lambda x: x.set_index("timestamp").rolling("7D", min_periods=1).count()["amount"]
-).reset_index(drop=True)
+SCALER_PARAMS_PATH = os.path.join(os.getcwd(), "scaler_params.json")
+with open(SCALER_PARAMS_PATH, "w") as f:
+    json.dump(scaler_params, f)
 
-# Estadísticas de monto por empresa
-df["mean_amount"] = df.groupby("company_id")["amount"].transform("mean")
-df["std_amount"] = df.groupby("company_id")["amount"].transform("std")
-df["amount_zscore"] = (df["amount"] - df["mean_amount"]) / df["std_amount"]
+print(f"Parámetros de escalado guardados en {SCALER_PARAMS_PATH}")
 
 # Convertir estado de la transferencia en valores numéricos
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 df["status"] = df["status"].map(status_mapping)
 
-# Seleccionar las características correctas
-features = [ "status"]
+# Seleccionar las características para la predicción
+features = ["amount_scaled", "status"]
 X = df[features]
 
-# Cargar el modelo entrenado y el scaler guardado
-scaler = joblib.load("scaler.pkl")
-
-# Normalizar los datos usando el scaler guardado
-X_scaled = scaler.transform(X)
-
 # Hacer las predicciones (1: normal, -1: anómala)
-predictions = model.predict(X_scaled)
+predictions = model.predict(X)
 
 # Convertir las predicciones a formato binario (1: normal, 0: anómala)
 predictions = (predictions == -1).astype(int)
 
 # Obtener las etiquetas reales de anomalías desde la base de datos (campo 'is_anomalous')
-real_labels = df['is_anomalous'].values  # Etiquetas reales de anomalías
+real_labels = df['is_anomalous'].values
 
 # Calcular el porcentaje de aciertos
 correct_predictions = (predictions == real_labels).sum()
 total_predictions = len(df)
 accuracy = correct_predictions / total_predictions * 100
+
 print(f"Porcentaje de aciertos: {accuracy:.2f}%")

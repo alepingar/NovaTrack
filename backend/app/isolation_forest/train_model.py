@@ -25,7 +25,7 @@ model = IsolationForest(n_estimators=200, contamination="auto", random_state=42,
 model.fit(X_scaled)
 
 # Guardar el modelo entrenado y el scaler
-joblib.dump(model, "isolation_forest.pkl")
+joblib.dump(model, "isolation_forest1.pkl")
 joblib.dump(scaler, "scaler.pkl")
 
 print("Modelo Isolation Forest guardado como 'isolation_forest.pkl'")
