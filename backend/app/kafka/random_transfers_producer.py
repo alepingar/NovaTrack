@@ -7,6 +7,8 @@ from datetime import datetime, timedelta, timezone
 from confluent_kafka import Producer
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
+import numpy as np
+
 # Configuración del productor Kafka
 producer_config = {'bootstrap.servers': 'localhost:9092'}
 producer = Producer(producer_config)
@@ -61,9 +63,7 @@ def generate_recurrent_clients(num_clients=10):
 
 async def calculate_avg_amount(company_id):
     try:
-        # Convertimos a ObjectId si no lo es
-        if not isinstance(company_id, ObjectId):
-            company_id = ObjectId(company_id)
+        company_id = str(company_id)
 
         transfers = await db.transfers.find({"company_id": company_id}).to_list(None)
 
@@ -81,7 +81,45 @@ async def calculate_avg_amount(company_id):
 
 async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is_anomalous=False):
     # Definir el rango de los montos, con una distribución alrededor del promedio
-    amount = round(random.uniform(avg_amount * 0.5, avg_amount * 1.5), 2)
+    if is_anomalous:
+        # 80% de las transferencias anómalas son extremas (mucho más altas o mucho más bajas)
+        random_value = random.random()
+
+        if random_value < 0.80:
+            # Anomalía muy alta o muy baja
+            random_value1 = random.random()
+            if random_value1 > 0.5:
+                amount = round(random.lognormvariate(np.log(avg_amount * 4), 0.5), 2)  # Anomalía muy alta
+            else:
+                amount = round(random.uniform(0.01, avg_amount * 0.25), 2)  # Anomalía muy baja
+
+        # 10% de las anomalías son moderadas (±50% del promedio)
+        elif random_value < 0.90:
+            amount = round(random.uniform(avg_amount * 0.5, avg_amount * 1.5), 2)  # Anomalía moderada
+
+        # 10% de las anomalías son leves (±20% del promedio)
+        else:
+            amount = round(random.gauss(avg_amount, avg_amount * 0.2 ), 2)  # Anomalía leve
+
+    else:
+        # 80% de las transferencias normales son dentro de un rango de +/- 30% del promedio
+        random_value = random.random()
+
+        if random_value < 0.80:
+            # Transferencias normales (dentro de +/- 30% de la media)
+            amount = round(random.gauss(avg_amount, avg_amount * 0.3), 2)
+
+        # 10% de las transferencias normales son dentro de un rango de +/- 50% del promedio
+        elif random_value < 0.90:
+            amount = round(random.uniform(avg_amount * 0.75, avg_amount * 1.5), 2)  # Transferencia más variable
+
+        # 10% de las transferencias normales son un poco más altas o bajas
+        else:
+            amount = round(random.uniform(avg_amount * 0.5, avg_amount * 2), 2)  # Rango más amplio
+
+    # No permitir valores negativos
+    amount = max(amount, round(random.uniform(0.50, 3.00), 2))
+    
 
     # Generar fecha de transferencia aleatoria (más frecuente en las anomalías)
     days_ago = random.randint(0, 1)  # Solo hoy o ayer
@@ -106,18 +144,6 @@ async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is
     # Generar timestamp basado en la configuración
     timestamp = datetime.now(timezone.utc) - timedelta(days=days_ago, hours=hours_ago, minutes=minutes_ago, seconds=seconds_ago)
     timestamp_str = timestamp.isoformat()
-    if is_anomalous:
-        # Monto exageradamente alto o bajo
-        anomaly_type = random.choice(["high", "low"])
-
-        if anomaly_type == "high":
-            # Monto exageradamente alto
-            amount = round(random.lognormvariate(avg_amount * 5, 0.5), 2)
-            amount = min(amount, 1000)
-        else:
-            # Monto exageradamente bajo
-            amount = round(random.lognormvariate(avg_amount * 0.05, 0.5), 2)
-            amount = max(amount, 0.5)
 
     # Selección de cuenta de destino (recurrente o nueva)
     use_recurrent = random.choices([True, False], weights=[80, 20])[0]  # 80% recurrente
@@ -143,7 +169,7 @@ async def generate_transactions_for_company(company_id, avg_amount, num_transact
     transactions = []
     
     # Determinar cuántas transferencias serán anómalas (entre 1 y 10% de las transferencias)
-    num_anomalous = random.randint(num_transactions // 100, num_transactions // 10) 
+    num_anomalous = max(random.randint(num_transactions // 100, num_transactions // 10), 1) 
     recurrent_clients = generate_recurrent_clients(4)
     
     for i in range(num_transactions):

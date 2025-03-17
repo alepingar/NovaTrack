@@ -11,7 +11,7 @@ function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:8000/reset-password-confirm", {
+      const response = await axios.post("http://127.0.0.1:8000/auth/reset-password-confirm", {
         token,
         password,
       });

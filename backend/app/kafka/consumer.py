@@ -13,19 +13,10 @@ from app.services.notification_services import save_notification
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Definir la ruta del modelo dentro de la misma carpeta
-MODEL_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/isolation_forest.pkl")
+MODEL_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/isolation_forest1.pkl")
 
 # Cargar el modelo con la ruta absoluta
 model = joblib.load(MODEL_PATH)
-
-# Ruta del archivo con los valores de min y max para normalización
-SCALER_PARAMS_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/scaler_params.json")
-
-# Cargar los valores de min y max desde el preprocesamiento
-with open(SCALER_PARAMS_PATH, "r") as f:
-    scaler_params = json.load(f)
-amount_log_min = scaler_params["amount_log_min"]
-amount_log_max = scaler_params["amount_log_max"]
 
 # Configuración del consumidor Kafka
 consumer_config = {
@@ -39,6 +30,37 @@ consumer = Consumer(consumer_config)
 # Mapeo de estado de transferencias
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 
+# Diccionario para almacenar estadísticas de cada empresa
+company_stats = {}
+
+async def fetch_company_stats():
+    """
+    Obtiene la media y desviación estándar de los montos por cada empresa desde la base de datos.
+    """
+    from motor.motor_asyncio import AsyncIOMotorClient  # Solo se importa aquí para evitar dependencias globales
+
+    client = AsyncIOMotorClient("mongodb://localhost:27017/")
+    db = client["nova_track"]
+    transfers_collection = db["transfers"]
+
+    # Cargar todas las transferencias en un DataFrame
+    cursor = transfers_collection.find({})
+    data = await cursor.to_list(length=None)
+    df = pd.DataFrame(data)
+
+    if df.empty:
+        print("⚠️ No hay datos en la base de datos.")
+        return
+
+    # Calcular media y desviación estándar por empresa
+    company_stats_df = df.groupby("company_id")["amount"].agg(["mean", "std"]).reset_index()
+    
+    # Guardar en un diccionario
+    global company_stats
+    company_stats = company_stats_df.set_index("company_id").to_dict(orient="index")
+    print("📊 Estadísticas de empresas cargadas.")
+    print(company_stats)
+
 async def process_message(msg):
     """
     Procesa un mensaje del consumidor, lo analiza con Isolation Forest y lo guarda en la base de datos.
@@ -46,6 +68,9 @@ async def process_message(msg):
     try:
         transfer = json.loads(msg.value().decode('utf-8'))
         print(f"Valor de timestamp recibido: {transfer.get('timestamp')}")
+
+        company_id = transfer.get("company_id")
+        amount = transfer.get("amount", 0)
 
         # Validar y convertir timestamp de la transferencia
         if "timestamp" in transfer:
@@ -61,17 +86,17 @@ async def process_message(msg):
         # Convertir estado a número
         status_numeric = status_mapping.get(transfer["status"], -1)
 
-        # Aplicar log1p a amount (como en preprocesamiento)
-        amount_log = np.log1p(transfer["amount"])
+        # Obtener media y std de la empresa
+        company_data = company_stats.get(company_id, {"mean": 0, "std": 1})
+        amount_mean = company_data["mean"]
+        amount_std = company_data["std"] if company_data["std"] > 0 else 1  # Evitar división por 0
 
-        # Aplicar MinMaxScaler manualmente con los valores guardados
-        amount_scaled = (amount_log - amount_log_min) / (amount_log_max - amount_log_min)
-
-        print(f"🔹 Amount original: {transfer['amount']}, Log: {amount_log}, Scaled: {amount_scaled}")
+        # Calcular Z-score
+        amount_zscore = (amount - amount_mean) / amount_std
 
         # Crear DataFrame con las características necesarias para el modelo
-        data = pd.DataFrame([[amount_scaled, status_numeric]], 
-                            columns=["amount_scaled", "status"])
+        data = pd.DataFrame([[amount_zscore, status_numeric]], 
+                            columns=["amount_zscore", "status"])
 
         # Predecir anomalía (Isolation Forest devuelve -1 para anomalías)
         prediction = model.predict(data)
@@ -83,7 +108,6 @@ async def process_message(msg):
         if is_anomalous:
             print(f"⚠️ ALERTA: Transacción anómala detectada: {transfer}")
             message = f"⚠️ Alerta: Se detectó una transferencia anómala con ID: {transfer['id']}"
-            await save_notification(message, "Anomalía",company_id=transfer["company_id"])
         else:
             print(f"✅ Transacción normal: {transfer}")
 
@@ -95,6 +119,7 @@ async def consume_transfers():
     Función asíncrona para consumir transferencias desde Kafka y analizar cada una.
     """
     try:
+        await fetch_company_stats()  # Obtener estadísticas antes de empezar
         consumer.subscribe(['transfers'])
         print("Esperando transferencias...")
 
