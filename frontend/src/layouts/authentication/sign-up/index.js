@@ -10,7 +10,16 @@ import MDButton from "components/MDButton";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import CoverLayout from "layouts/authentication/components/CoverLayout";
-import { Select, MenuItem, InputLabel, FormControl } from "@mui/material";
+import {
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  IconButton,
+  InputAdornment,
+} from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility"; // Importa los iconos
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 function Cover() {
   const [formData, setFormData] = useState({
@@ -36,6 +45,8 @@ function Cover() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [entityTypes, setEntityTypes] = useState([]);
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar la contraseña
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Estado para mostrar/ocultar confirmar la contraseña
 
   useEffect(() => {
     const fetchEntityTypes = async () => {
@@ -199,22 +210,6 @@ function Cover() {
       return;
     }
 
-    if (!formData.accept_terms) {
-      setErrors({ ...newErrors, accept_terms: "Debes aceptar los términos de servicio." });
-    }
-    if (!formData.accept_privacy_policy) {
-      setErrors({
-        ...newErrors,
-        accept_privacy_policy: "Debes aceptar la política de privacidad.",
-      });
-    }
-    if (!formData.accept_data_processing) {
-      setErrors({
-        ...newErrors,
-        accept_data_processing: "Debes aceptar el consentimiento de procesamiento de datos.",
-      });
-    }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -282,7 +277,58 @@ function Cover() {
             <MDBox component="form" role="form" onSubmit={handleSubmit}>
               {steps[currentStep].fields.map(({ id, label, required, type = "text" }) => (
                 <MDBox mb={2} key={id}>
-                  {type === "select" ? (
+                  {type === "password" ? (
+                    <MDInput
+                      variant="standard"
+                      fullWidth
+                      id={id}
+                      label={label}
+                      required={required}
+                      value={formData[id]}
+                      onChange={handleChange}
+                      name={id}
+                      error={Boolean(errors[id])}
+                      helperText={errors[id]}
+                      type={
+                        id === "password"
+                          ? showPassword
+                            ? "text"
+                            : "password"
+                          : showConfirmPassword
+                          ? "text"
+                          : "password"
+                      }
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="toggle password visibility"
+                              onClick={() => {
+                                if (id === "password") {
+                                  setShowPassword(!showPassword);
+                                } else {
+                                  setShowConfirmPassword(!showConfirmPassword);
+                                }
+                              }}
+                              edge="end"
+                            >
+                              {id === "password" ? (
+                                showPassword ? (
+                                  <VisibilityOff />
+                                ) : (
+                                  <Visibility />
+                                )
+                              ) : showConfirmPassword ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  ) : type === "select" ? (
                     <FormControl fullWidth error={Boolean(errors[id])}>
                       <InputLabel>{label}</InputLabel>
                       <Select

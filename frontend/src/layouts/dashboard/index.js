@@ -259,19 +259,13 @@ function Dashboard() {
             {/* Gráfica de Distribución del Estado de las Transacciones */}
             <Grid item xs={12} sm={6} md={6}>
               <MDBox mt={4.5}>
-                {statusDistribution.length > 0 ? (
-                  <ReportsBarChart
-                    color="error"
-                    title="Distribución de estados de transacción"
-                    description="Desglose de los diferentes estados de las transacciones"
-                    date="Actualización automática"
-                    chart={reportsStatusChartData}
-                  />
-                ) : (
-                  <MDTypography variant="caption" color="text">
-                    No hay datos disponibles
-                  </MDTypography>
-                )}
+                <ReportsBarChart
+                  color="error"
+                  title="Distribución de estados de transacción"
+                  description="Desglose de los diferentes estados de las transacciones"
+                  date="Actualización automática"
+                  chart={reportsStatusChartData}
+                />
               </MDBox>
             </Grid>
           </Grid>
