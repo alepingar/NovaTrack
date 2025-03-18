@@ -36,20 +36,22 @@ class CompanyCreate(BaseModel):
         return confirm_password
 
     industry: Optional[str] = Field(None, max_length=50, description="El sector industrial no debe superar los 50 caracteres")
-    role: str = "admin"
     country: str = Field(..., min_length=2, max_length=50, description="El país debe tener entre 2 y 50 caracteres")
     phone_number: Optional[str] = Field(
         None, pattern=r"^\+?[1-9]\d{1,14}$", description="El número de teléfono debe seguir el formato internacional (E.164)"
     )
     tax_id: Optional[str] = Field(None, min_length=8, max_length=15, description="El ID fiscal debe tener entre 8 y 15 caracteres")
-    website: Optional[HttpUrl]
-    description: Optional[str] = Field(None, max_length=500, description="La descripción no debe superar los 500 caracteres")
     address: Optional[str] = Field(None, max_length=200, description="La dirección no debe superar los 200 caracteres")
     founded_date: Optional[datetime]
     billing_account_number: str = Field(..., description="Número de cuenta bancaria de la empresa para recibir pagos")
     entity_type: EntityType = Field(..., description="Tipo de entidad legal de la empresa")
     subscription_plan: SubscriptionPlan = SubscriptionPlan.BASICO
+    terms_accepted: bool = Field(..., description="Indica si la empresa aceptó los Términos y Condiciones")
+    privacy_policy_accepted: bool = Field(..., description="Indica si la empresa aceptó la Política de Privacidad")
+    data_processing_consent: bool = Field(..., description="Indica si la empresa consiente el uso de sus datos para detección de anomalías")
+    communication_consent: bool = Field(False, description="Permiso para recibir correos de alertas o marketing")
 
+    consent_timestamp: datetime = Field(default_factory=datetime.utcnow, description="Fecha en la que se aceptaron los términos")
     @validator("billing_account_number")
     def validate_billing_account_number(cls, value):
         iban_pattern = r"^ES\d{2}\d{4}\d{4}\d{12}$"
@@ -62,18 +64,16 @@ class CompanyResponse(BaseModel):
     name: str
     email: EmailStr
     industry: Optional[str] = None
-    role: str = "admin"
     country: str
     phone_number: Optional[str] = None
     tax_id: Optional[str] = None
-    website: Optional[HttpUrl] = None
-    description: Optional[str] = None
     address: Optional[str] = None
     founded_date: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     billing_account_number: Optional[str] = None
     subscription_plan: SubscriptionPlan = SubscriptionPlan.BASICO
+    
 
 class UpdateCompanyProfile(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=40)
@@ -82,7 +82,5 @@ class UpdateCompanyProfile(BaseModel):
     country: Optional[str] = Field(None, min_length=2, max_length=50)
     phone_number: Optional[str] = Field(None, pattern=r"^\+?[1-9]\d{1,14}$")
     tax_id: Optional[str] = Field(None, min_length=8, max_length=15)
-    website: Optional[HttpUrl]
-    description: Optional[str] = Field(None, max_length=500)
     address: Optional[str] = Field(None, max_length=200)
     founded_date: Optional[datetime]

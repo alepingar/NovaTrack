@@ -48,7 +48,13 @@ import TransferDetails from "layouts/tables/data/transfersDetails";
 import GeneralDashboard from "layouts/dashboard/generalDashboard";
 import ForgotPassword from "layouts/authentication/forgot-password";
 import ResetPassword from "layouts/authentication/reset-password";
-import { TermsOfService, PrivacyPolicy, Support, About } from "examples/Footer/legalPages";
+import {
+  TermsOfService,
+  PrivacyPolicy,
+  Support,
+  About,
+  DataProcessing,
+} from "examples/Footer/legalPages";
 import SubscriptionUpgrade from "layouts/suscriptions";
 // @mui icons
 import Icon from "@mui/material/Icon";
@@ -140,6 +146,15 @@ const routes = [
     icon: <Icon fontSize="small">terms_of_service</Icon>,
     route: "/terms",
     component: <TermsOfService />,
+    protected: false,
+  },
+  {
+    type: "invisible",
+    name: "Uso de datos",
+    key: "data_processing",
+    icon: <Icon fontSize="small">data_processing</Icon>,
+    route: "/data_processing",
+    component: <DataProcessing />,
     protected: false,
   },
   {

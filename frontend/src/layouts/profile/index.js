@@ -70,7 +70,7 @@ function CompanyProfile() {
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // Simple date format YYYY-MM-DD
 
     if (!formData.phone_number || !phoneRegex.test(formData.phone_number)) {
-      newErrors.phone_number = "Número de teléfono inválido. Debe tener 10 dígitos.";
+      newErrors.phone_number = "Número de teléfono inválido. Debe tener 9 dígitos.";
     }
 
     if (formData.email && !emailRegex.test(formData.email)) {
@@ -189,10 +189,8 @@ function CompanyProfile() {
                     "industry",
                     "address",
                     "phone_number",
-                    "website",
                     "country",
                     "tax_id",
-                    "description",
                     "founded_date",
                   ].map((field) => (
                     <Grid item xs={12} sm={6} key={field}>

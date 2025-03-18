@@ -25,6 +25,10 @@ async def register_new_company(company: CompanyCreate) -> CompanyResponse:
     """
     Registra una nueva empresa.
     """
+
+    if not company.terms_accepted or not company.privacy_policy_accepted or not company.data_processing_consent:
+        raise HTTPException(status_code=400, detail="Debes aceptar los términos y condiciones,la política de privacidad y el procesamiento de datos")
+    
     if company.password != company.confirm_password:
         raise HTTPException(status_code=400, detail="Las contraseñas no coinciden")
     
@@ -40,6 +44,7 @@ async def register_new_company(company: CompanyCreate) -> CompanyResponse:
         "password": hashed_password,
         "created_at": datetime.utcnow().isoformat(),
         "updated_at": datetime.utcnow().isoformat(),
+        "consent_timestamp": datetime.utcnow().isoformat(),
     })
 
     result = await db.companies.insert_one(company_data)
@@ -49,12 +54,9 @@ async def register_new_company(company: CompanyCreate) -> CompanyResponse:
         name=company.name,
         email=company.email,
         industry=company.industry,
-        role=company.role,
         country=company.country,
         phone_number=company.phone_number,
         tax_id=company.tax_id,
-        website=company.website,
-        description=company.description,
         address=company.address,
         founded_date=company.founded_date,
         created_at=company_data["created_at"],
@@ -75,12 +77,9 @@ async def fetch_company_profile(company_id: str) -> CompanyResponse:
         name=company["name"],
         email=company["email"],
         industry=company.get("industry"),
-        role=company.get("role"),
         country=company.get("country"),
         phone_number=company.get("phone_number"),
         tax_id=company.get("tax_id"),
-        website=company.get("website"),
-        description=company.get("description"),
         address=company.get("address"),
         founded_date=company.get("founded_date"),
         created_at=company.get("created_at"),
@@ -115,12 +114,9 @@ async def update_company_profile(company_id: str, company_data: UpdateCompanyPro
         name=updated_company.get("name"),
         email=updated_company.get("email"),
         industry=updated_company.get("industry"),
-        role=updated_company.get("role"),
         country=updated_company.get("country"),
         phone_number=updated_company.get("phone_number"),
         tax_id=updated_company.get("tax_id"),
-        website=updated_company.get("website"),
-        description=updated_company.get("description"),
         address=updated_company.get("address"),
         founded_date=updated_company.get("founded_date"),
         created_at=updated_company.get("created_at"),
@@ -183,12 +179,9 @@ async def upgrade_subscription(company_id: str, new_plan: SubscriptionPlan) -> C
         name=updated_company.get("name"),
         email=updated_company.get("email"),
         industry=updated_company.get("industry"),
-        role=updated_company.get("role"),
         country=updated_company.get("country"),
         phone_number=updated_company.get("phone_number"),
         tax_id=updated_company.get("tax_id"),
-        website=updated_company.get("website"),
-        description=updated_company.get("description"),
         address=updated_company.get("address"),
         founded_date=updated_company.get("founded_date"),
         created_at=updated_company.get("created_at"),

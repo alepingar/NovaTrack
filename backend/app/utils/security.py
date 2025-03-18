@@ -33,27 +33,18 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_email = payload.get("sub")
-        role = payload.get("role")
         user_id = payload.get("user_id")
         company_id = payload.get("company_id")
 
         # Validar los datos extraídos
-        if not user_email or not role:
+        if not user_email:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token inválido: Faltan campos requeridos",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        # Verificar según el rol
-        if role == "admin" and not company_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token inválido: Faltan datos de empresa",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        return {"email": user_email, "role": role, "user_id": user_id, "company_id": company_id}
+        return {"email": user_email, "user_id": user_id, "company_id": company_id}
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

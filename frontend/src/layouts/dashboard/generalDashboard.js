@@ -161,7 +161,7 @@ function GeneralDashboard() {
         <Grid container spacing={3}>
           <Grid item xs={12} sm={4}>
             <MDTypography variant="h6" fontWeight="medium">
-              Detección de Anomalías en Tiempo Real
+              Detección de Anomalías
             </MDTypography>
             <MDTypography variant="body2" color="secondary">
               Nuestro sistema detecta anomalías de manera instantánea, asegurando que ninguna

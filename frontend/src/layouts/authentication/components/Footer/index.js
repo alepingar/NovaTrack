@@ -58,6 +58,9 @@ function Footer({ companyName }) {
         <MDTypography component="a" href="/about" sx={linkStyle}>
           Acerca de
         </MDTypography>
+        <MDTypography component="a" href="/data_processing" sx={linkStyle}>
+          Uso de datos personales
+        </MDTypography>
       </MDBox>
     </MDBox>
   );

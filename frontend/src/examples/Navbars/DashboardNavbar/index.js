@@ -132,7 +132,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
       <Toolbar sx={(theme) => navbarContainer(theme)}>
         <MDBox color="inherit" mb={{ xs: 1, md: 0 }} sx={(theme) => navbarRow(theme, { isMini })}>
           <MDTypography variant="h6" color="inherit">
-            Detecta fraudes en tiempo real y ahorra hasta un 30% en pérdidas por anomalías.
+            Detecta anomalías en tus transferencias y ahorra hasta un 30% en pérdidas.
           </MDTypography>
         </MDBox>
         {isMini ? null : (

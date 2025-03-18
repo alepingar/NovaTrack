@@ -46,16 +46,19 @@ function Footer({ companyName }) {
       {/* Enlaces más juntos */}
       <MDBox display="flex" flexDirection="row" gap={1}>
         <MDTypography component="a" href="/terms" sx={linkStyle}>
-          Términos
+          Términos de servicio
         </MDTypography>
         <MDTypography component="a" href="/privacy-policy" sx={linkStyle}>
-          Privacidad
+          Política de Privacidad
         </MDTypography>
         <MDTypography component="a" href="/support" sx={linkStyle}>
           Soporte
         </MDTypography>
         <MDTypography component="a" href="/about" sx={linkStyle}>
-          Acerca de
+          Acerca de nosotros
+        </MDTypography>
+        <MDTypography component="a" href="/data_processing" sx={linkStyle}>
+          Uso de datos personales
         </MDTypography>
       </MDBox>
     </MDBox>

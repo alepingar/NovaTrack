@@ -18,7 +18,6 @@ async def authenticate_user(email: str, password: str):
     if company and verify_password(password, company["password"]):
         return create_access_token(data={
             "sub": company["email"],
-            "role": "admin",
             "company_id": str(company["_id"])
         })
 

@@ -22,13 +22,13 @@ function Cover() {
     industry: "",
     address: "",
     phone_number: "",
-    website: "",
     tax_id: "",
-    description: "",
     founded_date: "",
     billing_account_number: "",
     entity_type: "",
-    accept_terms: false,
+    terms_accepted: false,
+    privacy_policy_accepted: false,
+    data_processing_consent: false,
   });
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -70,7 +70,6 @@ function Cover() {
         { id: "country", label: "País", required: true },
         { id: "phone_number", label: "Teléfono" },
         { id: "address", label: "Dirección" },
-        { id: "website", label: "Sitio Web", type: "url" },
       ],
     },
     {
@@ -78,7 +77,6 @@ function Cover() {
       fields: [
         { id: "industry", label: "Industria" },
         { id: "tax_id", label: "ID Fiscal" },
-        { id: "description", label: "Descripción", type: "textarea" },
         { id: "founded_date", label: "Fecha de Fundación", type: "date" },
       ],
     },
@@ -93,6 +91,10 @@ function Cover() {
           type: "select",
         },
       ],
+    },
+    {
+      title: "Aceptación de Términos y Políticas",
+      fields: [],
     },
   ];
 
@@ -138,11 +140,6 @@ function Cover() {
           error = "El ID fiscal debe tener entre 8 y 15 caracteres.";
         }
         break;
-      case "website":
-        if (value && !/^https?:\/\/[\w\-]+(\.[\w\-]+)+[/#?]?.*$/.test(value)) {
-          error = "Introduce una URL válida.";
-        }
-        break;
       case "country":
         if (value.trim().length < 2 || value.trim().length > 50) {
           error = "El país debe tener entre 2 y 50 caracteres.";
@@ -151,6 +148,21 @@ function Cover() {
       case "billing_account_number":
         if (value && !/^ES\d{2}\d{20}$/.test(value)) {
           error = "El número de cuenta debe ser un IBAN español válido.";
+        }
+        break;
+      case "terms_accepted":
+        if (!value) {
+          error = "Debes aceptar los términos y condiciones.";
+        }
+        break;
+      case "privacy_policy_accepted":
+        if (!value) {
+          error = "Debes aceptar la política de privacidad.";
+        }
+        break;
+      case "data_processing_consent":
+        if (!value) {
+          error = "Debes aceptar el consentimiento de procesamiento de datos.";
         }
         break;
       default:
@@ -189,16 +201,29 @@ function Cover() {
 
     if (!formData.accept_terms) {
       setErrors({ ...newErrors, accept_terms: "Debes aceptar los términos de servicio." });
+    }
+    if (!formData.accept_privacy_policy) {
+      setErrors({
+        ...newErrors,
+        accept_privacy_policy: "Debes aceptar la política de privacidad.",
+      });
+    }
+    if (!formData.accept_data_processing) {
+      setErrors({
+        ...newErrors,
+        accept_data_processing: "Debes aceptar el consentimiento de procesamiento de datos.",
+      });
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
       setErrorMessage(null);
-      const payload = Object.fromEntries(
-        Object.entries(formData).filter(([_, value]) => {
-          return typeof value === "string" && value.trim() !== "";
-        })
-      );
+      const payload = { ...formData };
+      console.log(payload);
       if (payload.founded_date) {
         payload.founded_date = new Date(payload.founded_date).toISOString();
       }
@@ -207,7 +232,6 @@ function Cover() {
       navigate("/authentication/sign-in");
     } catch (error) {
       console.error("Error del servidor:", error.response?.data || error.message);
-      setErrorMessage("No se pudo conectar con el servidor.");
     }
   };
 
@@ -287,61 +311,101 @@ function Cover() {
                       variant="standard"
                       fullWidth
                       id={id}
-                      name={id}
                       label={label}
                       required={required}
                       value={formData[id]}
                       onChange={handleChange}
+                      name={id}
                       error={Boolean(errors[id])}
                       helperText={errors[id]}
                     />
                   ) : (
                     <MDInput
-                      type={type}
                       variant="standard"
                       fullWidth
                       id={id}
-                      name={id}
                       label={label}
                       required={required}
                       value={formData[id]}
                       onChange={handleChange}
+                      name={id}
                       error={Boolean(errors[id])}
                       helperText={errors[id]}
+                      type={type}
                     />
                   )}
                 </MDBox>
               ))}
+              {/* Solo mostrar los campos de aceptación en el último paso */}
               {currentStep === steps.length - 1 && (
-                <MDBox mb={2}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={formData.accept_terms}
-                        onChange={(e) =>
-                          setFormData({ ...formData, accept_terms: e.target.checked })
-                        }
-                        name="accept_terms"
-                        color="primary"
-                      />
-                    }
-                    label="Acepto los términos y condiciones"
-                  />
-                  {errors.accept_terms && (
-                    <MDTypography variant="button" color="error" textAlign="center">
-                      {errors.accept_terms}
-                    </MDTypography>
-                  )}
-                </MDBox>
+                <>
+                  <MDBox mb={2}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.terms_accepted}
+                          onChange={(e) =>
+                            setFormData({ ...formData, terms_accepted: e.target.checked })
+                          }
+                          name="terms_accepted"
+                        />
+                      }
+                      label="Acepto los términos de servicio"
+                    />
+                    {errors.terms_accepted && (
+                      <MDTypography variant="button" color="error" textAlign="center">
+                        {errors.terms_accepted}
+                      </MDTypography>
+                    )}
+                  </MDBox>
+                  <MDBox mb={2}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.privacy_policy_accepted}
+                          onChange={(e) =>
+                            setFormData({ ...formData, privacy_policy_accepted: e.target.checked })
+                          }
+                          name="privacy_policy_accepted"
+                        />
+                      }
+                      label="Acepto la política de privacidad"
+                    />
+                    {errors.privacy_policy_accepted && (
+                      <MDTypography variant="button" color="error" textAlign="center">
+                        {errors.privacy_policy_accepted}
+                      </MDTypography>
+                    )}
+                  </MDBox>
+                  <MDBox mb={2}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.data_processing_consent}
+                          onChange={(e) =>
+                            setFormData({ ...formData, data_processing_consent: e.target.checked })
+                          }
+                          name="data_processing_consent"
+                        />
+                      }
+                      label="Acepto el procesamiento de mis datos"
+                    />
+                    {errors.data_processing_consent && (
+                      <MDTypography variant="button" color="error" textAlign="center">
+                        {errors.data_processing_consent}
+                      </MDTypography>
+                    )}
+                  </MDBox>
+                </>
               )}
-              <MDBox mt={4} mb={1} display="flex" justifyContent="space-between">
+              <MDBox display="flex" justifyContent="space-between">
                 {currentStep > 0 && (
-                  <MDButton variant="outlined" color="dark" onClick={prevStep}>
+                  <MDButton variant="outlined" color="secondary" onClick={prevStep}>
                     Atrás
                   </MDButton>
                 )}
                 {currentStep < steps.length - 1 ? (
-                  <MDButton variant="gradient" color="dark" onClick={nextStep}>
+                  <MDButton variant="gradient" color="info" onClick={nextStep}>
                     Siguiente
                   </MDButton>
                 ) : (
