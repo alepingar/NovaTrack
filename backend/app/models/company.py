@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, HttpUrl, validator
-from typing import Optional
+from typing import Dict, List, Optional
 from datetime import datetime
 import re
 from enum import Enum
@@ -27,14 +27,6 @@ class CompanyCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=50, description="La contraseña debe tener entre 8 y 50 caracteres")
     confirm_password: str
-
-    @validator("confirm_password")
-    def passwords_match(cls, confirm_password, values):
-        password = values.get("password")
-        if password != confirm_password:
-            raise ValueError("Las contraseñas no coinciden")
-        return confirm_password
-
     industry: Optional[str] = Field(None, max_length=50, description="El sector industrial no debe superar los 50 caracteres")
     country: str = Field(..., min_length=2, max_length=50, description="El país debe tener entre 2 y 50 caracteres")
     phone_number: Optional[str] = Field(
@@ -46,12 +38,30 @@ class CompanyCreate(BaseModel):
     billing_account_number: str = Field(..., description="Número de cuenta bancaria de la empresa para recibir pagos")
     entity_type: EntityType = Field(..., description="Tipo de entidad legal de la empresa")
     subscription_plan: SubscriptionPlan = SubscriptionPlan.BASICO
-    terms_accepted: bool = Field(..., description="Indica si la empresa aceptó los Términos y Condiciones")
-    privacy_policy_accepted: bool = Field(..., description="Indica si la empresa aceptó la Política de Privacidad")
-    data_processing_consent: bool = Field(..., description="Indica si la empresa consiente el uso de sus datos para detección de anomalías")
-    communication_consent: bool = Field(False, description="Permiso para recibir correos de alertas o marketing")
+    # Consentimiento y Regulación
+    terms_accepted: bool
+    privacy_policy_accepted: bool
+    data_processing_consent: bool
+    communication_consent: bool = False
+    consent_timestamp: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Seguridad y Auditoría
+    last_login: Optional[datetime] = None
+    failed_login_attempts: int = 0
+    account_locked: bool = False
+    
+    # Trazabilidad y Cumplimiento
+    gdpr_request_log: List[Dict[str, str]] = []  # Lista de acciones GDPR (ej. solicitudes de acceso/eliminación)
+    account_deletion_requested: bool = False
+    data_sharing_consent: bool = False
 
-    consent_timestamp: datetime = Field(default_factory=datetime.utcnow, description="Fecha en la que se aceptaron los términos")
+    @validator("confirm_password")
+    def passwords_match(cls, confirm_password, values):
+        password = values.get("password")
+        if password != confirm_password:
+            raise ValueError("Las contraseñas no coinciden")
+        return confirm_password
+
     @validator("billing_account_number")
     def validate_billing_account_number(cls, value):
         iban_pattern = r"^ES\d{2}\d{4}\d{4}\d{12}$"

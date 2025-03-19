@@ -9,19 +9,57 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.models.auth import settings
 
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_TIME = timedelta(minutes=15) 
+
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_TIME = timedelta(minutes=15)  # Tiempo de bloqueo tras intentos fallidos
+
 async def authenticate_user(email: str, password: str):
     """
-    Authenticate a user (company or individual) by email and password.
+    Autentica a una empresa por email y contraseña, y maneja seguridad.
     """
-    # Buscar en empresas
     company = await db.companies.find_one({"email": email})
-    if company and verify_password(password, company["password"]):
-        return create_access_token(data={
-            "sub": company["email"],
-            "company_id": str(company["_id"])
-        })
+    
+    if not company:
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+    
+    # Verificar si la cuenta está bloqueada
+    if company.get("account_locked"):
+        lock_time = company.get("lockout_until")
+        if lock_time and datetime.utcnow() < lock_time:
+            raise HTTPException(status_code=403, detail="Cuenta bloqueada por múltiples intentos fallidos. Intente más tarde.")
+        else:
+            # Desbloquear automáticamente si ha pasado el tiempo
+            await db.companies.update_one({"email": email}, {"$set": {"account_locked": False, "failed_login_attempts": 0}})
+    
+    # Verificar la contraseña
+    if not verify_password(password, company["password"]):
+        failed_attempts = company.get("failed_login_attempts", 0) + 1
+        update_data = {"failed_login_attempts": failed_attempts}
+        
+        # Bloquear la cuenta si supera el límite
+        if failed_attempts >= MAX_FAILED_ATTEMPTS:
+            update_data.update({
+                "account_locked": True,
+                "lockout_until": datetime.utcnow() + LOCKOUT_TIME
+            })
+        
+        await db.companies.update_one({"email": email}, {"$set": update_data})
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+    
+    # Si la autenticación es correcta, resetear intentos fallidos y registrar el login
+    await db.companies.update_one({"email": email}, {"$set": {
+        "failed_login_attempts": 0,
+        "account_locked": False,
+        "last_login": datetime.utcnow()
+    }})
+    
+    return create_access_token(data={
+        "sub": company["email"],
+        "company_id": str(company["_id"])
+    })
 
-    raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
 
 def send_email(to_email: str, subject: str, content: str):

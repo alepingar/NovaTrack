@@ -45,7 +45,11 @@ function SignIn() {
       navigate("/dashboard");
     } catch (error) {
       console.error("Error al iniciar sesión:", error.response?.data || error.message);
-      alert("Error al iniciar sesión. Verifique sus credenciales.");
+      if (error.response?.data?.detail) {
+        alert(error.response.data.detail);
+      } else {
+        alert("Error al iniciar sesión. Verifique sus credenciales.");
+      }
     }
   };
 
