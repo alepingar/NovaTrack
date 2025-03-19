@@ -161,21 +161,6 @@ function Cover() {
           error = "El número de cuenta debe ser un IBAN español válido.";
         }
         break;
-      case "terms_accepted":
-        if (!value) {
-          error = "Debes aceptar los términos y condiciones.";
-        }
-        break;
-      case "privacy_policy_accepted":
-        if (!value) {
-          error = "Debes aceptar la política de privacidad.";
-        }
-        break;
-      case "data_processing_consent":
-        if (!value) {
-          error = "Debes aceptar el consentimiento de procesamiento de datos.";
-        }
-        break;
       default:
         break;
     }
@@ -210,8 +195,17 @@ function Cover() {
       return;
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
+    if (
+      !formData.privacy_policy_accepted &&
+      !formData.data_processing_consent &&
+      !formData.terms_accepted
+    ) {
+      setErrors({
+        ...errors,
+        terms_accepted: "Debes aceptar los términos y condiciones.",
+        privacy_policy_accepted: "Debes aceptar la política de privacidad.",
+        data_processing_consent: "Debes aceptar el consentimiento para el procesamiento de datos.",
+      });
       return;
     }
 
