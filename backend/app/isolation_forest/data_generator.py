@@ -100,28 +100,66 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
     amount = max(amount, round(random.uniform(0.50, 3.00), 2))
     
     # Generar fecha de transferencia aleatoria (más frecuente en las anomalías)
-    days_ago = random.randint(3, 63)  # Aleatorio entre 3 y 63 días atrás
-    minutes_ago = random.randint(0, 59)  # Aleatorio entre 0 y 59 minutos
-    seconds_ago = random.randint(0, 59)  # Aleatorio entre 0 y 59 segundos
-    
-    # Crear el timestamp final con la variabilidad en días, horas, minutos y segundos
+    first_day_of_year = datetime(datetime.now().year, 1, 1, tzinfo=timezone.utc)
+
+    # Calcular cuántos días han pasado desde el primer día del año hasta hoy
+    days_since_first_day = (datetime.now(timezone.utc) - first_day_of_year).days
+
+    # Ponderaciones para que las anomalías sean más frecuentes los fines de semana
+    weekend_weight_anomalous = 0.5  
+    weekday_weight_anomalous = 0.5  
+
+    # Ponderaciones para transferencias normales (menos probabilidad en fines de semana)
+    weekend_weight_normal = 0.2  
+    weekday_weight_normal = 0.8  
+
+    # Seleccionar un día aleatorio con más peso en fines de semana para anomalías
     if is_anomalous:
-    # Incluir horas dentro y fuera del horario bancario (08:00 - 22:00 y fuera de este rango)
-        hours_ago = random.choices(
-            population=list(range(0, 8)) + list(range(8, 22)) + list(range(22, 24)),  # Incluye todas las horas
-            weights=[0.5] * 8 + [0.1] * 14 + [0.4] * 2,  # Mayor probabilidad fuera del horario normal
+        days_ago = random.choices(
+            population=range(3, days_since_first_day),  
+            weights=[weekend_weight_anomalous if (datetime.now(timezone.utc) - timedelta(days=x)).weekday() in [5, 6] 
+                    else weekday_weight_anomalous for x in range(3, days_since_first_day)],  
             k=1
         )[0]
     else:
-        # Horarios bancarios mayoritarios (08:00 - 22:00) con un pequeño porcentaje de fuera de horario
-        hours_ago = random.choices(
-            population=list(range(8, 22)) + list(range(0, 8)) + list(range(22, 24)),  # Horas normales + raras
-            weights=[0.9] * 14 + [0.05] * 8 + [0.05] * 2,  # Mayor probabilidad de horas normales (08:00 - 22:00)
+        days_ago = random.choices(
+            population=range(3, days_since_first_day),  
+            weights=[weekend_weight_normal if (datetime.now(timezone.utc) - timedelta(days=x)).weekday() in [5, 6] 
+                    else weekday_weight_normal for x in range(3, days_since_first_day)],  
             k=1
         )[0]
 
-    # Crear el timestamp final con la variabilidad en días, horas, minutos y segundos
-    timestamp = datetime.now(timezone.utc) - timedelta(days=days_ago, hours=hours_ago, minutes=minutes_ago, seconds=seconds_ago)
+    # Generar la hora 
+    minutes_ago = random.randint(0, 59)  
+    seconds_ago = random.randint(0, 59)  
+
+    if is_anomalous:
+        hours_ago = random.choices(
+            population=list(range(0, 8)) + list(range(8, 22)) + list(range(22, 24)),
+            weights=[0.55] * 8 + [0.05] * 14 + [0.4] * 2,  
+            k=1
+        )[0]
+    else:
+        hours_ago = random.choices(
+            population=list(range(8, 22)) + list(range(0, 8)) + list(range(22, 24)),
+            weights=[0.9] * 14 + [0.05] * 8 + [0.05] * 2,
+            k=1
+        )[0]
+
+    # Fecha base ajustada
+    now = datetime.now(timezone.utc)
+    date_base = now - timedelta(days=days_ago)
+
+    # Timestamp final con la hora exacta
+    timestamp = datetime(
+        year=date_base.year, 
+        month=date_base.month, 
+        day=date_base.day,  
+        hour=hours_ago,  
+        minute=minutes_ago, 
+        second=seconds_ago,
+        tzinfo=timezone.utc
+    )
     
     # Decidir IBAN de destino: puede ser español o internacional (con probabilidad ajustada)
     use_recurrent = random.choices([True, False], weights=[80, 20])[0]  # 80% recurrente, 20% nuevo

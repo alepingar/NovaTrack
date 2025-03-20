@@ -1,10 +1,6 @@
 import pandas as pd
-import numpy as np
-import json
-import os
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
-from sklearn.preprocessing import MinMaxScaler
 
 # Conexión a MongoDB
 client = AsyncIOMotorClient("mongodb://localhost:27017/")
@@ -28,6 +24,7 @@ df["amount_zscore"] = (df["amount"] - df["amount_mean"]) / df["amount_std"]
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 df["status"] = df["status"].map(status_mapping)
 
+df["hour"] = df["timestamp"].dt.hour
 # Seleccionar columnas finales
 features = ["amount_zscore","status"]
 X = df[features]
