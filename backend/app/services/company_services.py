@@ -195,3 +195,73 @@ async def get_current_plan(company_id: str) -> str:
         raise HTTPException(status_code=404, detail="Empresa no encontrada")
 
     return company.get("subscription_plan", 0)
+
+
+async def request_gdpr_action(company_id: str, action: str):
+    """
+    Registra una solicitud GDPR (acceso/eliminación de datos).
+    """
+    update_result = await db.companies.update_one(
+        {"_id": ObjectId(company_id)},
+        {"$push": {"gdpr_request_log": {"action": action}}}
+    )
+    if update_result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="No se pudo registrar la solicitud GDPR")
+    
+async def request_account_deletion(company_id: str):
+    """
+    Marca una empresa como que ha solicitado eliminación de cuenta.
+    """
+    update_result = await db.companies.update_one(
+        {"_id": ObjectId(company_id)},
+        {"$set": {"account_deletion_requested": True}}
+    )
+    if update_result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="No se pudo solicitar la eliminación de cuenta")
+
+
+async def update_data_sharing_consent(company_id: str, consent: bool):
+    """
+    Actualiza el consentimiento de compartir datos de la empresa.
+    """
+    update_result = await db.companies.update_one(
+        {"_id": ObjectId(company_id)},
+        {"$set": {"data_sharing_consent": consent}}
+    )
+    if update_result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="No se pudo actualizar el consentimiento")
+
+
+async def get_data_sharing_consent(company_id: str):
+    """
+    Obtiene el consentimiento de compartir datos de la empresa.
+    """
+    company = await db.companies.find_one({"_id": ObjectId(company_id)}, {"data_sharing_consent": 1, "_id": 0})
+
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+
+    return company 
+
+
+async def get_delete_account_request(company_id: str):
+    """
+    Obtiene la solicitud de eliminación de cuenta de la empresa.
+    """
+    company = await db.companies.find_one({"_id": ObjectId(company_id)}, {"account_deletion_requested": 1, "_id": 0})
+
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+
+    return company 
+
+async def get_gdpr_logs(company_id: str):
+    """
+    Obtiene los logs de acciones de GDPR (acceso o eliminación de datos) para la empresa.
+    """
+    company = await db.companies.find_one({"_id": ObjectId(company_id)}, {"gdpr_request_log": 1, "_id": 0})
+
+    if not company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+
+    return company.get("gdpr_request_log", [])

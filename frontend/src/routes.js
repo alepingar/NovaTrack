@@ -108,7 +108,7 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Perfil",
+    name: "Datos de la cuenta",
     key: "profile",
     icon: <Icon fontSize="small">person</Icon>,
     route: "/profile",

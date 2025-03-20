@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from app.utils.security import get_current_user
 from app.services.company_services import (
     fetch_companies,
@@ -6,9 +6,15 @@ from app.services.company_services import (
     fetch_company_profile,
     upgrade_subscription,
     get_entity_types1,
-    get_current_plan
+    get_current_plan,
+    request_account_deletion,
+    request_gdpr_action,
+    update_data_sharing_consent,
+    get_data_sharing_consent,
+    get_delete_account_request,
+    get_gdpr_logs
 )
-from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProfile, EntityType, SubscriptionPlan
+from app.models.company import CompanyGDPRRequest, CompanyResponse, CompanyCreate, ConsentUpdate, UpdateCompanyProfile, EntityType, SubscriptionPlan
 from typing import List
 from app.database import db
 from bson import ObjectId
@@ -106,3 +112,73 @@ async def get_plan(current_user: dict = Depends(get_current_user)):
     return await get_current_plan(current_user["company_id"])
 
 
+@router.post("/gdpr/request")
+async def gdpr_request(action_data: CompanyGDPRRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Registra una solicitud GDPR (acceso/eliminación de datos).
+    """
+    action = action_data.action
+    await request_gdpr_action(current_user["company_id"], action)
+    return {"message": f"Solicitud GDPR '{action}' registrada correctamente"}
+
+@router.post("/account/delete")
+async def request_deletion(current_user: dict = Depends(get_current_user)):
+    """
+    Marca una empresa como que ha solicitado eliminación de cuenta.
+    """
+    return await request_account_deletion(current_user["company_id"])
+
+@router.put("/data-sharing-consent")
+async def update_consent(
+    consent_data: ConsentUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Actualiza el consentimiento de compartir datos de la empresa.
+    """
+    consent = consent_data.consent
+    try:
+        return await update_data_sharing_consent(current_user["company_id"], consent)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"No se pudo actualizar el consentimiento: {str(e)}")
+
+
+
+@router.get("/data-sharing-consent")
+async def update_consent(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obtiene el consentimiento de compartir datos de la empresa.
+    """
+    try:
+        return await get_data_sharing_consent(current_user["company_id"])
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"No se pudo obtener el consentimiento: {str(e)}")
+
+
+
+@router.get("/account/delete")
+async def update_consent(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obtiene la solicitud de eliminación de la cuenta.
+    """
+    try:
+        return await get_delete_account_request(current_user["company_id"])
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"No se pudo obtener el consentimiento: {str(e)}")
+    
+
+@router.get("/gdpr/logs")
+async def get_gdpr_logs_for_company(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obtiene los logs de las solicitudes GDPR de la empresa.
+    """
+    try:
+        return await get_gdpr_logs(current_user["company_id"])
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"No se pudo obtener los logs de GDPR: {str(e)}")

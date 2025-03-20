@@ -94,3 +94,10 @@ class UpdateCompanyProfile(BaseModel):
     tax_id: Optional[str] = Field(None, min_length=8, max_length=15)
     address: Optional[str] = Field(None, max_length=200)
     founded_date: Optional[datetime]
+
+
+class ConsentUpdate(BaseModel):
+    consent: bool
+
+class CompanyGDPRRequest(BaseModel):
+    action: str = Field(..., description="Acción GDPR solicitada (ej. 'acceso', 'eliminación')")
