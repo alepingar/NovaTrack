@@ -24,11 +24,12 @@ df["amount_zscore"] = (df["amount"] - df["amount_mean"]) / df["amount_std"]
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 df["status"] = df["status"].map(status_mapping)
 
-df["hour"] = df["timestamp"].dt.hour
+df["hour"]= df["timestamp"].dt.hour
+df["is_banking_hour"] = df["hour"].apply(lambda x: 1 if 8 <= x < 22 else 0)
 # Seleccionar columnas finales
-features = ["amount_zscore","status"]
+features = ["is_banking_hour","amount_zscore","status"]
 X = df[features]
 
 # Guardar los datos preprocesados en CSV para entrenar el modelo
-X.to_csv("preprocessed_data.csv", index=False)
-print("Datos preprocesados guardados en 'preprocessed_data.csv'")
+X.to_csv("preprocessed_data1.csv", index=False)
+print("Datos preprocesados guardados en 'preprocessed_data1.csv'")

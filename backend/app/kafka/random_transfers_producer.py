@@ -142,8 +142,22 @@ async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is
         )[0]
 
     # Generar timestamp basado en la configuración
-    timestamp = datetime.now(timezone.utc) - timedelta(days=days_ago, hours=hours_ago, minutes=minutes_ago, seconds=seconds_ago)
-    timestamp_str = timestamp.isoformat()
+    # Generar timestamp basado en la configuración
+    now = datetime.now(timezone.utc)
+
+    # Retroceder solo los días
+    date_base = now - timedelta(days=days_ago)
+
+    # Asignar la hora exacta que generamos, sin cambiar el día incorrectamente
+    timestamp_str = datetime(
+        year=date_base.year, 
+        month=date_base.month, 
+        day=date_base.day,  # Mantener el día ya corregido
+        hour=hours_ago,  # Asignar la hora correcta
+        minute=minutes_ago, 
+        second=seconds_ago,
+        tzinfo=timezone.utc
+    )
 
     # Selección de cuenta de destino (recurrente o nueva)
     use_recurrent = random.choices([True, False], weights=[80, 20])[0]  # 80% recurrente

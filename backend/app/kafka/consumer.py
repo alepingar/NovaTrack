@@ -13,7 +13,7 @@ from app.services.notification_services import save_notification
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Definir la ruta del modelo dentro de la misma carpeta
-MODEL_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/isolation_forest1.pkl")
+MODEL_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/isolation_forest.pkl")
 
 # Cargar el modelo con la ruta absoluta
 model = joblib.load(MODEL_PATH)
@@ -85,7 +85,7 @@ async def process_message(msg):
 
         # Convertir estado a número
         status_numeric = status_mapping.get(transfer["status"], -1)
-
+        is_banking_hour = transfer["timestamp"].hour
         # Obtener media y std de la empresa
         company_data = company_stats.get(company_id, {"mean": 0, "std": 1})
         amount_mean = company_data["mean"]
@@ -95,8 +95,8 @@ async def process_message(msg):
         amount_zscore = (amount - amount_mean) / amount_std
 
         # Crear DataFrame con las características necesarias para el modelo
-        data = pd.DataFrame([[amount_zscore, status_numeric]], 
-                            columns=["amount_zscore", "status"])
+        data = pd.DataFrame([[is_banking_hour,amount_zscore, status_numeric]], 
+                            columns=["is_banking_hour","amount_zscore", "status"])
 
         # Predecir anomalía (Isolation Forest devuelve -1 para anomalías)
         prediction = model.predict(data)
