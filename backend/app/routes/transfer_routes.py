@@ -12,7 +12,8 @@ from app.services.transfer_services import (
     fetch_number_anomaly_transfers_per_month,
     fetch_total_amount_per_month,
     fetch_summary_data_per_month_for_company,
-    fetch_new_users_per_month
+    fetch_new_users_per_month,
+    fetch_total_amount_per_month_for_company,
 )
 from app.models.transfer import TransferResponse, Transfer
 from typing import List
@@ -53,6 +54,15 @@ async def get_amount_transfers_per_month(year: int, month: int):
     Obtiene las transferencias asociadas a la empresa actual para un mes específico.
     """
     amount_count = await fetch_total_amount_per_month(year, month)
+    return amount_count
+
+@router.get("/amount/company/per-month/{year}/{month}", response_model=float)
+async def get_amount_transfers_per_month_by_company(year: int, month: int,
+    current_user: dict = Depends(get_current_user)):
+    """
+    Obtiene las transferencias asociadas a la empresa actual para un mes específico.
+    """
+    amount_count = await fetch_total_amount_per_month_for_company(current_user["company_id"], year, month)
     return amount_count
 
 @router.get("/summary/per-month/{year}/{month}", response_model=dict)

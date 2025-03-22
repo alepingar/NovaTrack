@@ -46,6 +46,7 @@ function Dashboard() {
   const [statusDistribution, setStatusDistribution] = useState([]);
   const [newUsers, setNewUsers] = useState([]);
   const [pastUsers, setPastUsers] = useState([]);
+  const [amount, setAmount] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -99,6 +100,18 @@ function Dashboard() {
           }
         );
         setPastUsers(pastUsersRes.data);
+
+        const promises = [];
+        for (let month = 1; month <= 12; month++) {
+          promises.push(
+            axios.get(`http://127.0.0.1:8000/transfers/amount/company/per-month/${year}/${month}`, {
+              headers,
+            })
+          );
+        }
+        const responses = await Promise.all(promises);
+        const amounts = responses.map((response) => response.data);
+        setAmount(amounts);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -123,6 +136,34 @@ function Dashboard() {
 
     return acc;
   }, []);
+
+  const getFilteredChartData = (data) => {
+    const currentMonthIndex = month;
+    return data.slice(0, currentMonthIndex + 1);
+  };
+
+  const reportsAmountChartData = {
+    labels: getFilteredChartData([
+      "Ene",
+      "Feb",
+      "Mar",
+      "Abr",
+      "May",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dic",
+    ]),
+    datasets: {
+      label: "Monto",
+      data: getFilteredChartData(amount),
+      fill: true,
+      tension: 0.4,
+    },
+  };
 
   const reportsVolumeByDayChartData = {
     labels: volumeByDay.map((item) => item.date),
@@ -265,6 +306,18 @@ function Dashboard() {
                   description="Desglose de los diferentes estados de las transacciones"
                   date="Actualización automática"
                   chart={reportsStatusChartData}
+                />
+              </MDBox>
+            </Grid>
+            <Grid item xs={12} sm={6} md={6}>
+              {" "}
+              <MDBox mt={4.5}>
+                <ReportsLineChart
+                  color="dark"
+                  title="Crecimiento de montos"
+                  description="Cantidad de montos analizados a lo largo del año"
+                  date="Actualizado automáticamente"
+                  chart={reportsAmountChartData}
                 />
               </MDBox>
             </Grid>

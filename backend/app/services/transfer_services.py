@@ -77,6 +77,41 @@ async def fetch_total_amount_per_month(year: int, month: int) -> float:
         print(f"Error al procesar el total amount por mes: {e}")
         raise
 
+async def fetch_total_amount_per_month_for_company(company_id: str, year: int, month: int) -> float:
+    """
+    Obtiene el total de las transferencias de un mes específico para una compañía.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    
+    end_date = end_date - timedelta(seconds=1)
+
+    try:
+        total_amount = await db.transfers.aggregate([
+            {
+                "$match": {
+                    "timestamp": {"$gte": start_date, "$lt": end_date},
+                    "company_id": company_id 
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total": {"$sum": "$amount"}
+                }
+            }
+        ]).to_list(length=1)
+
+        return round(total_amount[0]["total"], 2) if total_amount else 0.0
+    except Exception as e:
+        print(f"Error al procesar el total amount por mes para la compañía {company_id}: {e}")
+        raise
+
+
 async def fetch_transfer_details(company_id: str, transfer_id: UUID) -> Transfer:
     """
     Fetch details of a specific transfer by ID.
