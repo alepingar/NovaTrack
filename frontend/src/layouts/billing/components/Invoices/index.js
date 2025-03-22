@@ -35,7 +35,6 @@ function Invoices() {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log(response.data);
         setInvoices(response.data);
       } catch (error) {
         console.error(error);
@@ -58,7 +57,7 @@ function Invoices() {
               <Invoice
                 key={index}
                 date={invoice.issued_at.split("-").slice(0, 2).join("-")}
-                id={invoice.id}
+                id={invoice.id || `temp-${index}`}
                 price={`${invoice.amount}€`}
               />
             ))

@@ -3,7 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Card from "@mui/material/Card";
 import Switch from "@mui/material/Switch";
-import Button from "@mui/material/Button";
+import MDButton from "components/MDButton";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import Tooltip from "@mui/material/Tooltip";
@@ -159,45 +159,45 @@ function PlatformSettings() {
 
         <MDBox mt={1}>
           {gdprActions.access ? (
-            <Button variant="contained" color="white" fullWidth disabled>
+            <MDButton variant="contained" color="white" fullWidth disabled>
               Ya has solicitado acceso a tus datos
-            </Button>
+            </MDButton>
           ) : (
-            <Button
+            <MDButton
               variant="contained"
               color="white"
               fullWidth
               onClick={() => handleGdprRequest("access")}
             >
               Solicitar acceso a mis datos
-            </Button>
+            </MDButton>
           )}
         </MDBox>
         <MDBox mt={1}>
           {gdprActions.delete ? (
-            <Button variant="contained" color="white" fullWidth disabled>
+            <MDButton variant="contained" color="white" fullWidth disabled>
               Ya has solicitado eliminación de datos
-            </Button>
+            </MDButton>
           ) : (
-            <Button
+            <MDButton
               variant="contained"
               color="white"
               fullWidth
               onClick={() => handleGdprRequest("delete")}
             >
               Solicitar eliminación de datos
-            </Button>
+            </MDButton>
           )}
         </MDBox>
         <MDBox mt={1}>
           {deleteRequest ? (
-            <Button variant="contained" color="white" fullWidth disabled>
+            <MDButton variant="contained" color="white" fullWidth disabled>
               Tu cuenta ya ha sido marcada para la eliminación
-            </Button>
+            </MDButton>
           ) : (
-            <Button variant="contained" color="error" fullWidth onClick={handleDelete}>
+            <MDButton variant="contained" color="error" fullWidth onClick={handleDelete}>
               Eliminar cuenta
-            </Button>
+            </MDButton>
           )}
         </MDBox>
       </MDBox>

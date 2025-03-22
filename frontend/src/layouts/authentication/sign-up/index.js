@@ -445,7 +445,7 @@ function Cover() {
                   </MDButton>
                 )}
                 {currentStep < steps.length - 1 ? (
-                  <MDButton variant="gradient" color="info" onClick={nextStep}>
+                  <MDButton variant="gradient" color="dark" onClick={nextStep}>
                     Siguiente
                   </MDButton>
                 ) : (
