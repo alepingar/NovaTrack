@@ -62,12 +62,6 @@ async def authenticate_user(email: str, password: str):
 def send_email(to_email: str, subject: str, content: str):
     try:
         # Crear el mensaje
-        print(f"EMAIL_HOST: {settings.email_host}")
-        print(f"EMAIL_PORT: {settings.email_port}")
-        print(f"EMAIL_USER: {settings.email_user}")
-        print(f"EMAIL_PASSWORD: {settings.email_password}")
-        print(f"EMAIL_FROM: {settings.email_from}")
-        print(f"EMAIL_NAME: {settings.email_name}")
         message = MIMEMultipart()
         message["From"] = f"{settings.email_name} <{settings.email_from}>"
         message["To"] = to_email
