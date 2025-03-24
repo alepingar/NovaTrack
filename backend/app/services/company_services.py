@@ -25,7 +25,6 @@ async def register_new_company(company: CompanyCreate) -> CompanyResponse:
     """
     Registra una nueva empresa.
     """
-
     if not company.terms_accepted or not company.privacy_policy_accepted or not company.data_processing_consent:
         raise HTTPException(status_code=400, detail="Debes aceptar los términos y condiciones,la política de privacidad y el procesamiento de datos")
     
@@ -35,7 +34,7 @@ async def register_new_company(company: CompanyCreate) -> CompanyResponse:
     existing_company = await db.companies.find_one({"email": company.email})
     if existing_company:
         raise HTTPException(status_code=400, detail="La empresa ya está registrada")
-
+    
     hashed_password = hash_password(company.password)
 
     company_data = company.dict()

@@ -164,8 +164,8 @@ function GeneralDashboard() {
               Detección de Anomalías
             </MDTypography>
             <MDTypography variant="body2" color="secondary">
-              Nuestro sistema detecta anomalías de manera instantánea, asegurando que ninguna
-              transacción sospechosa pase desapercibida.
+              Nuestro sistema detecta anomalías de manera instantánea en cuanto se van recibienddo,
+              asegurando que ninguna transacción sospechosa pase desapercibida.
             </MDTypography>
           </Grid>
 

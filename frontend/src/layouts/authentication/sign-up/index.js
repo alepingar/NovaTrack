@@ -40,13 +40,15 @@ function Cover() {
     data_processing_consent: false,
   });
 
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(() => {
+    return parseInt(localStorage.getItem("currentStep")) || 0;
+  });
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState(null);
   const [entityTypes, setEntityTypes] = useState([]);
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar la contraseña
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Estado para mostrar/ocultar confirmar la contraseña
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const fetchEntityTypes = async () => {
@@ -64,6 +66,20 @@ function Cover() {
     };
     fetchEntityTypes();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("currentStep", currentStep);
+  }, [currentStep]);
+
+  useEffect(() => {
+    const storedFormData = JSON.parse(localStorage.getItem("formData"));
+    if (storedFormData) {
+      setFormData(storedFormData);
+    }
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("formData", JSON.stringify(formData));
+  }, [formData]);
 
   const steps = [
     {
@@ -94,7 +110,7 @@ function Cover() {
     {
       title: "Información Fiscal y Términos",
       fields: [
-        { id: "billing_account_number", label: "Número de Cuenta de Facturación" },
+        { id: "billing_account_number", label: "Número de Cuenta de Facturación", required: true },
         {
           id: "entity_type",
           label: "Tipo de Entidad",
@@ -109,7 +125,7 @@ function Cover() {
     },
   ];
 
-  const validateField = (name, value) => {
+  const validateField = async (name, value) => {
     let error = "";
     switch (name) {
       case "name":
@@ -120,6 +136,15 @@ function Cover() {
       case "email":
         if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) {
           error = "Introduce un correo electrónico válido.";
+        } else if (value) {
+          try {
+            const response = await axios.get(`http://127.0.1:8000/auth/check-email/${value}`);
+            if (response.data.exists) {
+              error = "Este correo electrónico ya está en uso.";
+            }
+          } catch (serverError) {
+            error = "El servidor no pudo validar el correo electrónico.";
+          }
         }
         break;
       case "password":
@@ -146,8 +171,13 @@ function Cover() {
           error = "El número de teléfono debe seguir el formato internacional (E.164).";
         }
         break;
+      case "address":
+        if (value.trim().length > 100) {
+          error = "La dirección debe tener menos de 100 caracteres.";
+        }
+        break;
       case "tax_id":
-        if (value.trim().length < 8 || value.trim().length > 15) {
+        if (value.trim().length > 15) {
           error = "El ID fiscal debe tener entre 8 y 15 caracteres.";
         }
         break;
@@ -167,13 +197,13 @@ function Cover() {
     return error;
   };
 
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
-    const error = validateField(name, value);
+    const error = await validateField(name, value);
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: error,
@@ -184,9 +214,11 @@ function Cover() {
     e.preventDefault();
     const newErrors = {};
     Object.keys(formData).forEach((key) => {
-      const error = validateField(key, formData[key]);
-      if (error) {
-        newErrors[key] = error;
+      if (steps[currentStep].fields.some((field) => field.id === key && field.required)) {
+        const error = validateField(key, formData[key]);
+        if (error) {
+          newErrors[key] = error;
+        }
       }
     });
 
@@ -194,6 +226,13 @@ function Cover() {
       setErrors(newErrors);
       return;
     }
+
+    const payload = { ...formData };
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === "") {
+        payload[key] = null;
+      }
+    });
 
     if (
       !formData.privacy_policy_accepted &&
@@ -211,13 +250,13 @@ function Cover() {
 
     try {
       setErrorMessage(null);
-      const payload = { ...formData };
-      console.log(payload);
       if (payload.founded_date) {
         payload.founded_date = new Date(payload.founded_date).toISOString();
       }
       await axios.post("http://127.0.0.1:8000/companies/register", payload);
       alert("Registro exitoso");
+      localStorage.removeItem("currentStep");
+      localStorage.removeItem("formData");
       navigate("/authentication/sign-in");
     } catch (error) {
       console.error("Error del servidor:", error.response?.data || error.message);
@@ -227,15 +266,27 @@ function Cover() {
   const nextStep = () => {
     const currentFields = steps[currentStep].fields;
     const invalidFields = currentFields.some((field) => {
-      return !formData[field.id] || errors[field.id];
+      if (field.required) {
+        return !formData[field.id] || errors[field.id];
+      }
+      return errors[field.id];
     });
-    if (!invalidFields) {
-      if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+    if (!invalidFields && currentStep < steps.length - 1) {
+      setCurrentStep((prevStep) => {
+        const newStep = prevStep + 1;
+        localStorage.setItem("currentStep", newStep);
+        return newStep;
+      });
     }
   };
-
   const prevStep = () => {
-    if (currentStep > 0) setCurrentStep(currentStep - 1);
+    if (currentStep > 0) {
+      setCurrentStep((prevStep) => {
+        const newStep = prevStep - 1;
+        localStorage.setItem("currentStep", newStep);
+        return newStep;
+      });
+    }
   };
 
   return (
@@ -323,7 +374,11 @@ function Cover() {
                       }}
                     />
                   ) : type === "select" ? (
-                    <FormControl fullWidth error={Boolean(errors[id])}>
+                    <FormControl
+                      fullWidth
+                      error={Boolean(errors[id])}
+                      sx={{ marginTop: 1, marginBottom: 2 }}
+                    >
                       <InputLabel>{label}</InputLabel>
                       <Select
                         value={formData[id]}
@@ -376,7 +431,6 @@ function Cover() {
                   )}
                 </MDBox>
               ))}
-              {/* Solo mostrar los campos de aceptación en el último paso */}
               {currentStep === steps.length - 1 && (
                 <>
                   <MDBox mb={2}>

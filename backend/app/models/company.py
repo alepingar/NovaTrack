@@ -3,7 +3,6 @@ from typing import Dict, List, Optional
 from datetime import datetime
 import re
 from enum import Enum
-
 class SubscriptionPlan(str, Enum):
     BASICO = "BASICO"
     NORMAL = "NORMAL"
@@ -28,7 +27,7 @@ class CompanyCreate(BaseModel):
     password: str = Field(..., min_length=8, max_length=50, description="La contraseña debe tener entre 8 y 50 caracteres")
     confirm_password: str
     industry: Optional[str] = Field(None, max_length=50, description="El sector industrial no debe superar los 50 caracteres")
-    country: str = Field(..., min_length=2, max_length=50, description="El país debe tener entre 2 y 50 caracteres")
+    country: str = Field(..., min_length=2, max_length=30, description="El país debe tener entre 2 y 30 caracteres")
     phone_number: Optional[str] = Field(
         None, pattern=r"^\+?[1-9]\d{1,14}$", description="El número de teléfono debe seguir el formato internacional (E.164)"
     )
@@ -51,7 +50,8 @@ class CompanyCreate(BaseModel):
     account_locked: bool = False
     
     # Trazabilidad y Cumplimiento
-    gdpr_request_log: List[Dict[str, str]] = []  # Lista de acciones GDPR (ej. solicitudes de acceso/eliminación)
+    gdpr_request_log: List[Dict[str, str]] = Field(default_factory=list)
+  # Lista de acciones GDPR (ej. solicitudes de acceso/eliminación)
     account_deletion_requested: bool = False
     data_sharing_consent: bool = False
 
@@ -68,6 +68,10 @@ class CompanyCreate(BaseModel):
         if not re.match(iban_pattern, value):
             raise ValueError("El número de cuenta debe ser un IBAN español válido")
         return value
+    
+    @validator("email")
+    def normalize_email(cls, value):
+        return value.lower()
 
 class CompanyResponse(BaseModel):
     id: str

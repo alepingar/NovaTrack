@@ -139,4 +139,13 @@ async def reset_user_password(token: str, new_password: str):
 
 
 
+async def check_email(email: str):
+    """
+    Check if the email exists in the database.
+    """
+    user = await db.companies.find_one({"email": email})
+    return bool(user)
+
+
+
 

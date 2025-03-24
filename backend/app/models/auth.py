@@ -7,6 +7,10 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=50, description="La contraseña debe tener entre 8 y 50 caracteres")
 
+
+class EmailCheckResponse(BaseModel):
+    exists: bool
+
 # Password Reset Schemas
 class PasswordResetRequest(BaseModel):
     email: EmailStr
