@@ -23,16 +23,3 @@ class PasswordResetConfirm(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
-
-class Settings(BaseSettings):
-    email_host: str
-    email_port: int
-    email_user: str
-    email_password: str
-    email_from: str
-    email_name: str
-
-    class Config:
-        env_file = ".env"
-
-settings = Settings()
