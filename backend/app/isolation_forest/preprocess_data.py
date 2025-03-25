@@ -31,5 +31,5 @@ features = ["is_banking_hour","amount_zscore","status"]
 X = df[features]
 
 # Guardar los datos preprocesados en CSV para entrenar el modelo
-X.to_csv("preprocessed_data1.csv", index=False)
+X.to_csv("preprocessed_data.csv", index=False)
 print("Datos preprocesados guardados en 'preprocessed_data1.csv'")

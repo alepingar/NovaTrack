@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 import joblib
 
 # Cargar los datos preprocesados
-df = pd.read_csv("preprocessed_data1.csv")
+df = pd.read_csv("preprocessed_data.csv")
 
 # Eliminar columna 'is_anomalous' si está presente
 if "is_anomalous" in df.columns:
@@ -25,8 +25,8 @@ model = IsolationForest(n_estimators=200, contamination="auto", random_state=42,
 model.fit(X_scaled)
 
 # Guardar el modelo entrenado y el scaler
-joblib.dump(model, "isolation_forest2.pkl")
-joblib.dump(scaler, "scaler2.pkl")
+joblib.dump(model, "isolation_forest.pkl")
+joblib.dump(scaler, "scaler.pkl")
 
 print("Modelo Isolation Forest guardado como 'isolation_forest.pkl'")
 print("Scaler guardado como 'scaler.pkl'")

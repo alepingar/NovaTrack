@@ -140,8 +140,7 @@ async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is
             weights=[0.9] * 14 + [0.05] * 8 + [0.05] * 2,  # Mayor probabilidad de horas normales (08:00 - 22:00)
             k=1
         )[0]
-
-    # Generar timestamp basado en la configuración
+        
     # Generar timestamp basado en la configuración
     now = datetime.now(timezone.utc)
 
@@ -159,6 +158,8 @@ async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is
         tzinfo=timezone.utc
     )
 
+    timestamp_str = timestamp_str.isoformat()
+    print(timestamp_str)
     # Selección de cuenta de destino (recurrente o nueva)
     use_recurrent = random.choices([True, False], weights=[80, 20])[0]  # 80% recurrente
     from_account = random.choice(recurrent_clients) if use_recurrent else generate_iban_es()

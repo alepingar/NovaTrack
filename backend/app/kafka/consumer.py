@@ -6,7 +6,7 @@ import pandas as pd
 import joblib
 import os
 import numpy as np
-
+from motor.motor_asyncio import AsyncIOMotorClient 
 from app.services.notification_services import save_notification
 
 # Obtener la ruta absoluta del directorio actual
@@ -33,15 +33,14 @@ status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 # Diccionario para almacenar estadísticas de cada empresa
 company_stats = {}
 
+client = AsyncIOMotorClient("mongodb://localhost:27017/")
+db = client["nova_track"]
+transfers_collection = db["transfers"]
+
 async def fetch_company_stats():
     """
     Obtiene la media y desviación estándar de los montos por cada empresa desde la base de datos.
     """
-    from motor.motor_asyncio import AsyncIOMotorClient  # Solo se importa aquí para evitar dependencias globales
-
-    client = AsyncIOMotorClient("mongodb://localhost:27017/")
-    db = client["nova_track"]
-    transfers_collection = db["transfers"]
 
     # Cargar todas las transferencias en un DataFrame
     cursor = transfers_collection.find({})
@@ -105,9 +104,13 @@ async def process_message(msg):
         # Agregar flag de anomalía en la transferencia
         transfer["is_anomalous"] = is_anomalous
 
+        inserted = await db.transfers.insert_one(transfer)
+        transfer["_id"] = inserted.inserted_id
+
         if is_anomalous:
             print(f"⚠️ ALERTA: Transacción anómala detectada: {transfer}")
             message = f"⚠️ Alerta: Se detectó una transferencia anómala con ID: {transfer['id']}"
+            await save_notification(message, "Anomalía",company_id=transfer["company_id"])
         else:
             print(f"✅ Transacción normal: {transfer}")
 
