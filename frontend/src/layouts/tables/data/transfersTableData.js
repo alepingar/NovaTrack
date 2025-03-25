@@ -1,0 +1,138 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable react/function-component-definition */
+/**
+=========================================================
+* Material Dashboard 2 React - v2.2.0
+=========================================================
+
+* Product Page: https://www.creative-tim.com/product/material-dashboard-react
+* Copyright 2023 Creative Tim (https://www.creative-tim.com)
+
+Coded by www.creative-tim.com
+
+ =========================================================
+
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+*/
+
+/* eslint-disable react/prop-types */
+/* eslint-disable react/function-component-definition */
+
+// Material Dashboard 2 React components
+import MDBox from "components/MDBox";
+import MDTypography from "components/MDTypography";
+import MDBadge from "components/MDBadge";
+import axios from "axios";
+import { useEffect, useState, useRef } from "react";
+
+export default function data() {
+  const [transfers, setTransfers] = useState([]);
+  const transfersRef = useRef([]);
+
+  useEffect(() => {
+    const fetchTransfers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://127.0.0.1:8000/transfers", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (JSON.stringify(response.data) !== JSON.stringify(transfersRef.current)) {
+          transfersRef.current = response.data;
+          setTransfers(response.data);
+        }
+      } catch (error) {
+        console.error("Error al obtener las transferencias:", error);
+      }
+    };
+
+    fetchTransfers();
+    const interval = setInterval(fetchTransfers, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const sortedTransfers = [...transfers].sort(
+    (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+  );
+
+  const rows = sortedTransfers.map((transfer) => ({
+    id: transfer.id.slice(0, 8),
+    amount: (
+      <MDTypography variant="caption" fontWeight="medium">
+        {transfer.amount.toLocaleString("es-ES", {
+          style: "currency",
+          currency: "EUR",
+        })}
+      </MDTypography>
+    ),
+    currency: (
+      <MDTypography variant="caption" fontWeight="medium">
+        {transfer.currency || "N/A"}
+      </MDTypography>
+    ),
+    from_account: (
+      <MDTypography variant="caption" fontWeight="medium">
+        {transfer.from_account}
+      </MDTypography>
+    ),
+    timestamp: (
+      <MDTypography variant="caption">{new Date(transfer.timestamp).toLocaleString()}</MDTypography>
+    ),
+    status: (
+      <MDBox ml={-1}>
+        <MDBadge
+          badgeContent={
+            transfer.status === "completada"
+              ? "Completada"
+              : transfer.status === "pendiente"
+              ? "Pendiente"
+              : "Fallida"
+          }
+          color={
+            transfer.status === "completada"
+              ? "success"
+              : transfer.status === "pendiente"
+              ? "warning"
+              : "error"
+          }
+          variant="gradient"
+          size="sm"
+        />
+      </MDBox>
+    ),
+    is_anomalous: (
+      <MDBadge
+        badgeContent={transfer.is_anomalous ? "Sí" : "No"}
+        color={transfer.is_anomalous ? "error" : "success"}
+        variant="gradient"
+        size="sm"
+      />
+    ),
+    action: (
+      <MDTypography
+        component="a"
+        href={`/transfers/${transfer.id}`}
+        variant="caption"
+        color="info"
+        fontWeight="medium"
+      >
+        Ver Detalles
+      </MDTypography>
+    ),
+  }));
+
+  return {
+    columns: [
+      { Header: "ID", accessor: "id", align: "left" },
+      { Header: "Monto convertido", accessor: "amount", align: "left" },
+      { Header: "Moneda", accessor: "currency", align: "center" },
+      { Header: "De", accessor: "from_account", align: "left" },
+      { Header: "Fecha", accessor: "timestamp", align: "center" },
+      { Header: "Estado", accessor: "status", align: "center" },
+      { Header: "Anómala", accessor: "is_anomalous", align: "center" },
+      { Header: "Acción", accessor: "action", align: "center" },
+    ],
+    rows,
+  };
+}

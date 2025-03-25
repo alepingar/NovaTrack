@@ -1,0 +1,303 @@
+from app.database import db
+from app.models.transfer import Transfer, TransferResponse
+from datetime import datetime, timezone, timedelta
+from typing import List
+from fastapi import HTTPException
+from typing import Dict, Union
+from uuid import UUID
+from pymongo import ASCENDING
+
+async def fetch_transfers(company_id: str) -> List[TransferResponse]:
+    """
+    Fetch all transfers for a given company.
+    """
+    transfers = await db.transfers.find({"company_id": company_id}).to_list()
+    return transfers
+
+async def fetch_number_transfers_per_month(year: int, month: int) -> int:
+    """
+    Cuenta las transferencias de un mes específico.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+    end_date = end_date - timedelta(seconds=1)
+
+    counte = await db.transfers.count_documents({"timestamp": {"$gte": start_date, "$lt": end_date}})
+    return counte
+
+async def fetch_number_anomaly_transfers_per_month(year: int, month: int) -> int:
+    """
+    Cuenta las anomalías de un mes específico.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+    end_date = end_date - timedelta(seconds=1)
+
+    counte = await db.transfers.count_documents({"is_anomalous": True, "timestamp": {"$gte": start_date, "$lt": end_date}})
+    return counte
+
+async def fetch_total_amount_per_month(year: int, month: int) -> float:
+    """
+    Obtiene el total de las transferencias de un mes específico.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    
+    end_date = end_date - timedelta(seconds=1)
+
+    try:
+        total_amount = await db.transfers.aggregate([
+            {
+                "$match": {
+                    "timestamp": {"$gte": start_date, "$lt": end_date} 
+                }
+            },
+            {
+                "$group": {
+                    "_id": None, 
+                    "total": {"$sum": "$amount"} 
+                }
+            }
+        ]).to_list(length=1)
+
+        return round(total_amount[0]["total"], 2) if total_amount else 0.0
+    except Exception as e:
+        print(f"Error al procesar el total amount por mes: {e}")
+        raise
+
+async def fetch_total_amount_per_month_for_company(company_id: str, year: int, month: int) -> float:
+    """
+    Obtiene el total de las transferencias de un mes específico para una compañía.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    
+    end_date = end_date - timedelta(seconds=1)
+
+    try:
+        total_amount = await db.transfers.aggregate([
+            {
+                "$match": {
+                    "timestamp": {"$gte": start_date, "$lt": end_date},
+                    "company_id": company_id 
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total": {"$sum": "$amount"}
+                }
+            }
+        ]).to_list(length=1)
+
+        return round(total_amount[0]["total"], 2) if total_amount else 0.0
+    except Exception as e:
+        print(f"Error al procesar el total amount por mes para la compañía {company_id}: {e}")
+        raise
+
+
+async def fetch_transfer_details(company_id: str, transfer_id: UUID) -> Transfer:
+    """
+    Fetch details of a specific transfer by ID.
+    """
+    transfer_id = str(transfer_id)
+    
+    transfer_doc = await db.transfers.find_one({
+        "id": transfer_id,
+        "company_id": company_id
+    })
+
+    if not transfer_doc:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontró la transferencia con el ID {transfer_id}"
+        )
+
+    if isinstance(transfer_doc.get("timestamp"), str):
+        transfer_doc["timestamp"] = datetime.fromisoformat(transfer_doc["timestamp"])
+
+    return Transfer(**transfer_doc)
+
+
+async def fetch_public_summary_data() -> Dict[str, Union[int, float]]:
+    """
+    Obtiene un resumen de todas las transferencias.
+    """
+    
+    try:
+        total_transactions = await db.transfers.count_documents({})
+
+        total_anomalies = await db.transfers.count_documents({"is_anomalous": True})
+
+        total_amount = await db.transfers.aggregate([
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(length=1)
+
+        return {
+            "totalTransactions": total_transactions,
+            "totalAnomalies": total_anomalies,
+            "totalAmount": round(total_amount[0]["total"], 2) if total_amount else 0.0,
+        }
+    except Exception as e:
+        print(f"Error al procesar el resumen: {e}")
+        raise
+
+async def fetch_summary_data_per_month_for_company(company_id: str, year: int, month: int) -> dict:
+    """
+    Obtiene un resumen de las transferencias para una empresa específica en un mes y año determinados.
+    Incluye:
+    - Número de transferencias.
+    - Número de transferencias anómalas.
+    - Monto total de las transferencias.
+    """
+    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+    end_date = end_date - timedelta(seconds=1)
+
+    # Número de transferencias
+    transfer_count = await db.transfers.count_documents({
+        "company_id": company_id,
+        "timestamp": {"$gte": start_date, "$lt": end_date}
+    })
+
+    # Número de transferencias anómalas
+    anomaly_count = await db.transfers.count_documents({
+        "company_id": company_id,
+        "is_anomalous": True,
+        "timestamp": {"$gte": start_date, "$lt": end_date}
+    })
+
+    # Monto total de las transferencias
+    try:
+        total_amount = await db.transfers.aggregate([
+            {
+                "$match": {
+                    "company_id": company_id,
+                    "timestamp": {"$gte": start_date, "$lt": end_date}
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total": {"$sum": "$amount"}
+                }
+            }
+        ]).to_list(length=1)
+
+        total_amount = round(total_amount[0]["total"], 2) if total_amount else 0.0
+    except Exception as e:
+        print(f"Error al procesar el total amount por mes: {e}")
+        total_amount = 0.0
+
+    # Resumen
+    summary_data = {
+        "company_id": company_id,
+        "year": year,
+        "month": month,
+        "totalTransfers": transfer_count,
+        "totalAnomalies": anomaly_count,
+        "totalAmount": total_amount
+    }
+
+    return summary_data
+
+async def fetch_summary(company_id: str) -> Dict[str, Union[int, float]]:
+    """
+    Obtiene un resumen de las transferencias para una empresa específica.
+    """
+    try:
+        # Total de transacciones
+        total_transactions = await db.transfers.count_documents({"company_id": company_id})
+
+        # Total de anomalías detectadas
+        total_anomalies = await db.transfers.count_documents(
+            {"company_id": company_id, "is_anomalous": True}
+        )
+
+        # Monto total transferido
+        total_amount = await db.transfers.aggregate([
+            {"$match": {"company_id": company_id}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(length=1)
+
+        return {
+            "totalTransactions": total_transactions,
+            "totalAnomalies": total_anomalies,
+            "totalAmount": round(total_amount[0]["total"], 2) if total_amount else 0.0,
+        }
+    except Exception as e:
+        print(f"Error al procesar el resumen: {e}")
+        raise
+
+async def fetch_new_users_per_month(company_id: str, year: int, month: int) -> int:
+    """
+    Obtiene los nuevos IBAN (from_account) de un mes específico que no estaban en el mes anterior.
+    """
+    start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+    if month < 12:
+        end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+    else:
+        end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    
+    prev_start_date = (start_date - timedelta(days=1)).replace(day=1)
+    prev_end_date = start_date - timedelta(seconds=1)
+    
+    current_month_ibans = await db.transfers.distinct("from_account", {
+        "company_id": company_id,
+        "timestamp": {"$gte": start_date, "$lt": end_date}
+    })
+    
+    previous_month_ibans = await db.transfers.distinct("from_account", {
+        "company_id": company_id,
+        "timestamp": {"$gte": prev_start_date, "$lt": prev_end_date}
+    })
+
+    new_users = len(set(current_month_ibans) - set(previous_month_ibans))
+ 
+    return new_users
+
+
+
+async def fetch_volume_by_day(company_id: str):
+    result = await db.transfers.aggregate([
+        {"$match": {"company_id": company_id}},
+        {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}}, "count": {"$sum": 1}}},
+        {"$sort": {"_id": 1}}
+    ]).to_list(length=100)
+    return [{"date": r["_id"], "count": r["count"]} for r in result]
+
+async def fetch_anomalous_volume_by_day(company_id: str):
+    result = await db.transfers.aggregate([
+        {"$match": {"company_id": company_id, "is_anomalous": True}},
+        {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}}, "count": {"$sum": 1}}},
+        {"$sort": {"_id": 1}}
+    ]).to_list(length=100)
+    return [{"date": r["_id"], "count": r["count"]} for r in result]
+
+async def fetch_status_distribution(company_id: str):
+    result = await db.transfers.aggregate([
+        {"$match": {"company_id": company_id}},
+        {"$group": {"_id": "$status", "count": {"$sum": 1}}}
+    ]).to_list(length=10)
+    return [{"status": r["_id"], "count": r["count"]} for r in result]
+
