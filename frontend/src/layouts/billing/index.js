@@ -27,12 +27,8 @@ import MasterCard from "examples/Cards/MasterCard";
 import DefaultInfoCard from "examples/Cards/InfoCards/DefaultInfoCard";
 import axios from "axios";
 // Billing page components
-import PaymentMethod from "layouts/billing/components/PaymentMethod";
 import Invoices from "layouts/billing/components/Invoices";
-import BillingInformation from "layouts/billing/components/BillingInformation";
-import Transactions from "layouts/billing/components/Transactions";
 import React, { useEffect, useState } from "react";
-import { set } from "date-fns";
 
 function Billing() {
   const [company, setCompany] = useState(null);
@@ -76,7 +72,7 @@ function Billing() {
   return (
     <DashboardLayout>
       <DashboardNavbar absolute isMini />
-      <MDBox mt={8}>
+      <MDBox mt={8} sx={{ flexGrow: 1, minHeight: "calc(100vh - 64px)" }}>
         <MDBox mb={3}>
           <Grid container spacing={3}>
             <Grid item xs={12} lg={8}>
@@ -85,7 +81,6 @@ function Billing() {
                   <MasterCard
                     number={company ? company.billing_account_number : "Cargando..."}
                     holder={company ? company.name : "Cargando..."}
-                    expires="11/22"
                   />
                 </Grid>
                 <Grid item xs={12} md={6} xl={3}>
@@ -98,29 +93,16 @@ function Billing() {
                 </Grid>
                 <Grid item xs={12} md={6} xl={3}>
                   <DefaultInfoCard
-                    icon="paypal"
-                    title="paypal"
-                    description="Freelance Payment"
-                    value="$455.00"
+                    icon="subscriptions"
+                    title="Suscripción actual"
+                    description="Hasta el 30 de este mes"
+                    value={company ? company.subscription_plan : "Cargando..."}
                   />
-                </Grid>
-                <Grid item xs={12}>
-                  <PaymentMethod />
                 </Grid>
               </Grid>
             </Grid>
             <Grid item xs={12} lg={4}>
               <Invoices />
-            </Grid>
-          </Grid>
-        </MDBox>
-        <MDBox mb={3}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={7}>
-              <BillingInformation />
-            </Grid>
-            <Grid item xs={12} md={5}>
-              <Transactions />
             </Grid>
           </Grid>
         </MDBox>

@@ -77,7 +77,7 @@ async def update_company_profile(
         address=updated_company.get("address"),
         founded_date=updated_company.get("founded_date"),
         created_at=updated_company.get("created_at"),
-        updated_at=updated_company.get("updated_at")
+        updated_at=updated_company.get("updated_at"),
     )
 
 

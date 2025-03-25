@@ -86,7 +86,7 @@ class CompanyResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     billing_account_number: Optional[str] = None
-    subscription_plan: SubscriptionPlan = SubscriptionPlan.BASICO
+    subscription_plan: Optional[SubscriptionPlan] = None
     
 
 class UpdateCompanyProfile(BaseModel):
