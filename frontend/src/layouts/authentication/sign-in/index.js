@@ -124,22 +124,6 @@ function SignIn() {
                     required
                   />
                 </MDBox>
-                <MDBox display="flex" alignItems="center" ml={-1}>
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={handleSetRememberMe}
-                    style={{ marginRight: "8px" }}
-                  />
-                  <MDTypography
-                    variant="button"
-                    fontWeight="regular"
-                    color="text"
-                    sx={{ cursor: "pointer", userSelect: "none" }}
-                  >
-                    Recordarme
-                  </MDTypography>
-                </MDBox>
                 <MDBox mt={4} mb={1}>
                   <MDButton variant="gradient" color="dark" fullWidth type="submit">
                     Iniciar Sesión

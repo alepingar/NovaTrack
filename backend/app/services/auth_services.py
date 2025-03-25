@@ -107,9 +107,10 @@ async def generate_reset_token(email: str):
     <p>Haz clic en el enlace para restablecer tu contraseña:</p>
     <a href="{reset_link}">{reset_link}</a>
     """
+
     send_email(email, subject, content)
 
-    return send_email(email, subject, content)
+    return {"message": "Correo de recuperación enviado correctamente."}
 
 
 

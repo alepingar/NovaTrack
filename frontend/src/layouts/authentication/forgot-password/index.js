@@ -16,8 +16,10 @@ function ForgotPassword() {
     e.preventDefault();
     try {
       const response = await axios.post("http://127.0.0.1:8000/auth/reset-password", { email });
-      setMessage(response.data.message);
+      console.log("Respuesta del backend:", response.data);
+      setMessage(response.data.message || "Solicitud enviada con éxito.");
     } catch (error) {
+      console.error("Error en la petición:", error.response);
       setMessage("Error: " + (error.response?.data?.detail || "Inténtalo de nuevo."));
     }
   };
