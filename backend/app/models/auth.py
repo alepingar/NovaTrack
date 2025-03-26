@@ -31,6 +31,7 @@ class Settings(BaseSettings):
      email_password: str
      email_from: str
      email_name: str
+     frontend_url: str
  
      class Config:
          env_file = ".env"
