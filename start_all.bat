@@ -16,7 +16,7 @@ start cmd /k ".\bin\windows\kafka-server-start.bat .\config\server.properties"
 
 :: Vuelve al directorio de NovaTrack y activa el entorno virtual
 cd /d C:\Users\alexander\Desktop\NovaTrack
-start cmd /k "venv\Scripts\activate && cd backend && uvicorn app.main:app --reload"
+start cmd /k " cd backend && venv\Scripts\activate && uvicorn app.main:app --reload"
 
 :: Inicia el frontend
 cd /d C:\Users\alexander\Desktop\NovaTrack
@@ -24,10 +24,12 @@ start cmd /k "cd frontend && npm start"
 
 :: Ejecuta el consumidor de Kafka
 cd /d C:\Users\alexander\Desktop\NovaTrack
-start cmd /k "venv\Scripts\activate && cd backend && python -m app.kafka.consumer"
+start cmd /k "cd backend && venv\Scripts\activate && python -m app.kafka.consumer"
 
 :: Ejecuta el script de transferencias aleatorias
 cd /d C:\Users\alexander\Desktop\NovaTrack
-start cmd /k "venv\Scripts\activate && python backend/app/kafka/random_transfers_producer.py"
+start cmd /k "cd backend && venv\Scripts\activate && python app/kafka/random_transfers_producer.py"
 
 : : cd C:\Users\alexander\Desktop\NovaTrack
+
+
