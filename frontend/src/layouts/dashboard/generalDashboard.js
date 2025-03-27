@@ -8,7 +8,6 @@ import axios from "axios";
 import Footer from "examples/Footer";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import MDTypography from "components/MDTypography";
-import FilterButtons from "./components/filterButtons";
 
 function GeneralDashboard() {
   const [transfers, setTransfers] = useState(0);
@@ -22,9 +21,6 @@ function GeneralDashboard() {
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [transfersData, setTransfersData] = useState([]);
   const [anomaliesData, setAnomaliesData] = useState([]);
-  const [filteredTransfersData, setFilteredTransfersData] = useState([]);
-  const [filteredAnomaliesData, setFilteredAnomaliesData] = useState([]);
-  const [usingFilter, setUsingFilter] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,10 +72,6 @@ function GeneralDashboard() {
         const responses1 = await Promise.all(promisesA);
         const anomalies = responses1.map((response) => response.data);
         setAnomaliesData(anomalies);
-
-        setFilteredTransfersData([]);
-        setFilteredAnomaliesData([]);
-        setUsingFilter(false);
       } catch (error) {
         console.log("Error fetching data", error);
       }
@@ -88,28 +80,7 @@ function GeneralDashboard() {
     fetchData();
   }, [year, month]);
 
-  const handleFilterChange = async (startDate, endDate) => {
-    try {
-      const transfersRes = await axios.get(
-        `http://127.0.0.1:8000/transfers/per-range?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`
-      );
-      setFilteredTransfersData(transfersRes.data);
-
-      const anomaliesRes = await axios.get(
-        `http://127.0.0.1:8000/transfers/anomaly/per-range?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`
-      );
-      setFilteredAnomaliesData(anomaliesRes.data);
-
-      setUsingFilter(true);
-    } catch (error) {
-      console.log("Error fetching filtered data", error);
-    }
-  };
-
-  const getChartData = (defaultData, filteredData) => {
-    if (usingFilter && filteredData && filteredData.length > 0) {
-      return filteredData;
-    }
+  const getChartData = (defaultData) => {
     return defaultData.slice(0, month);
   };
 
@@ -135,7 +106,7 @@ function GeneralDashboard() {
     ]),
     datasets: {
       label: "Transferencias",
-      data: getChartData(transfersData, filteredTransfersData),
+      data: getChartData(transfersData),
       fill: true,
       tension: 0.4,
     },
@@ -158,7 +129,7 @@ function GeneralDashboard() {
     ]),
     datasets: {
       label: "Anomalías",
-      data: getChartData(anomaliesData, filteredAnomaliesData),
+      data: getChartData(anomaliesData),
       fill: true,
       tension: 0.4,
     },
@@ -284,9 +255,6 @@ function GeneralDashboard() {
           <Grid container spacing={3}>
             {" "}
             {/* Espaciado entre los elementos */}
-            <MDBox py={3}>
-              <FilterButtons onFilterChange={handleFilterChange} />
-            </MDBox>
             <Grid item xs={12} sm={6} md={6}>
               {" "}
               {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
