@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.utils.security import get_current_user
 from app.services.transfer_services import (
     fetch_transfers,
@@ -14,6 +15,9 @@ from app.services.transfer_services import (
     fetch_summary_data_per_month_for_company,
     fetch_new_users_per_month,
     fetch_total_amount_per_month_for_company,
+    fetch_anomalies_in_range,
+    fetch_transfers_in_range,
+    fetch_transfers_by_range,
 )
 from app.models.transfer import TransferResponse, Transfer
 from typing import List
@@ -148,3 +152,47 @@ async def get_new_users_per_month(year: int, month: int,  current_user: dict = D
     company_id = current_user["company_id"]
     return await fetch_new_users_per_month(company_id, year, month)
 
+@router.get("/per-range", response_model=List[TransferResponse])
+async def get_transfers_in_range(start_date: datetime, end_date: datetime):
+    """
+    Endpoint que devuelve las transferencias en un rango de fechas.
+    Los parámetros start_date y end_date deben enviarse en formato ISO.
+    """
+    try:
+        transfers = await fetch_transfers_in_range(start_date, end_date)
+        return transfers
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/anomaly/per-range", response_model=List[TransferResponse])
+async def get_anomalies_in_range(start_date: datetime, end_date: datetime):
+    """
+    Endpoint que devuelve las transferencias anómalas en un rango de fechas.
+    """
+    try:
+        anomalies = await fetch_anomalies_in_range(start_date, end_date)
+        return anomalies
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.get("/filter/range", response_model=List[TransferResponse])
+async def get_transfers_by_range(
+    start_date: datetime = Query(...),
+    end_date: datetime = Query(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obtiene las transferencias dentro de un rango de fechas específico.
+    """
+    company_id = current_user["company_id"]
+    return await fetch_transfers_by_range(company_id, start_date, end_date)
+
+@router.get("/filter/all", response_model=List[TransferResponse])
+async def get_all_transfers(current_user: dict = Depends(get_current_user)):
+    """
+    Obtiene todas las transferencias.
+    """
+    company_id = current_user["company_id"]
+    return await fetch_transfers(company_id)

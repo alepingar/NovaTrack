@@ -1,56 +1,48 @@
-/* eslint-disable react/prop-types */
-/* eslint-disable react/function-component-definition */
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-/* eslint-disable react/prop-types */
-/* eslint-disable react/function-component-definition */
-
-// Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDBadge from "components/MDBadge";
 import axios from "axios";
 import { useEffect, useState, useRef } from "react";
 
-export default function data() {
+export default function data(filter) {
   const [transfers, setTransfers] = useState([]);
   const transfersRef = useRef([]);
 
-  useEffect(() => {
-    const fetchTransfers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://127.0.0.1:8000/transfers", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (JSON.stringify(response.data) !== JSON.stringify(transfersRef.current)) {
-          transfersRef.current = response.data;
-          setTransfers(response.data);
-        }
-      } catch (error) {
-        console.error("Error al obtener las transferencias:", error);
+  const fetchTransfers = async (range) => {
+    try {
+      const token = localStorage.getItem("token");
+      let url = "http://127.0.0.1:8000/transfers";
+      if (range && range !== "all") {
+        const endDate = new Date();
+        let startDate;
+        if (range === "week") startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+        if (range === "month")
+          startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 1, endDate.getDate());
+        if (range === "3months")
+          startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 3, endDate.getDate());
+        if (range === "year")
+          startDate = new Date(endDate.getFullYear() - 1, endDate.getMonth(), endDate.getDate());
+        url = `http://127.0.0.1:8000/transfers/filter/range?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`;
+      } else if (range === "all") {
+        url = "http://127.0.0.1:8000/transfers/filter/all";
       }
-    };
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (JSON.stringify(response.data) !== JSON.stringify(transfersRef.current)) {
+        transfersRef.current = response.data;
+        setTransfers(response.data);
+      }
+    } catch (error) {
+      console.error("Error al obtener las transferencias:", error);
+    }
+  };
 
-    fetchTransfers();
-    const interval = setInterval(fetchTransfers, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  useEffect(() => {
+    fetchTransfers(filter);
+  }, [filter]);
 
   const sortedTransfers = [...transfers].sort(
     (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
@@ -134,5 +126,6 @@ export default function data() {
       { Header: "Acción", accessor: "action", align: "center" },
     ],
     rows,
+    fetchFilteredData: fetchTransfers,
   };
 }
