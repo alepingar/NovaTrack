@@ -323,18 +323,75 @@ async def fetch_volume_by_day(company_id: str, period: str = Query("3months", en
     result = await db.transfers.aggregate(pipeline).to_list(length=100)
     return [{"date": r["date"], "count": r["count"]} for r in result]
 
-async def fetch_anomalous_volume_by_day(company_id: str):
-    result = await db.transfers.aggregate([
-        {"$match": {"company_id": company_id, "is_anomalous": True}},
-        {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}}, "count": {"$sum": 1}}},
-        {"$sort": {"_id": 1}}
-    ]).to_list(length=100)
-    return [{"date": r["_id"], "count": r["count"]} for r in result]
+async def fetch_anomalous_volume_by_day(company_id: str, period: str = Query("3months", enum=["month", "3months", "year"])):
+    end_date = datetime.now()
+    if period == "month":
+        start_date = end_date - timedelta(days=30)
+    elif period == "year":
+        start_date = end_date - timedelta(days=365)
+    else: 
+        start_date = end_date - timedelta(days=90)
 
-async def fetch_status_distribution(company_id: str):
-    result = await db.transfers.aggregate([
-        {"$match": {"company_id": company_id}},
-        {"$group": {"_id": "$status", "count": {"$sum": 1}}}
-    ]).to_list(length=10)
-    return [{"status": r["_id"], "count": r["count"]} for r in result]
+    pipeline = [
+        {
+            "$match": {
+                "company_id": company_id,
+                "is_anomalous": True,
+                "timestamp": {"$gte": start_date, "$lte": end_date},
+            }
+        },
+        {
+            "$group": {
+                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}},
+                "count": {"$sum": 1},
+            }
+        },
+        {
+            "$sort": {"_id": 1}
+        },
+        {
+            "$project": {
+                "date": "$_id",
+                "count": 1,
+                "_id": 0
+            }
+        }
+    ]
+
+    result = await db.transfers.aggregate(pipeline).to_list(length=100)
+    return [{"date": r["date"], "count": r["count"]} for r in result]
+
+async def fetch_status_distribution(company_id: str, period: str = Query("3months", enum=["month", "3months", "year"])):
+    end_date = datetime.now()
+    if period == "month":
+        start_date = end_date - timedelta(days=30)
+    elif period == "year":
+        start_date = end_date - timedelta(days=365)
+    else: 
+        start_date = end_date - timedelta(days=90)
+
+    pipeline = [
+        {
+            "$match": {
+                "company_id": company_id,
+                "timestamp": {"$gte": start_date, "$lte": end_date},
+            }
+        },
+        {
+            "$group": {
+                "_id": "$status",
+                "count": {"$sum": 1},
+            }
+        },
+        {
+            "$project": {
+                "status": "$_id",
+                "count": 1,
+                "_id": 0
+            }
+        }
+    ]
+
+    result = await db.transfers.aggregate(pipeline).to_list(length=10)
+    return [{"status": r["status"], "count": r["count"]} for r in result]
 
