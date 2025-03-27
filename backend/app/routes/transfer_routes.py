@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from app.utils.security import get_current_user
 from app.services.transfer_services import (
@@ -105,10 +105,13 @@ async def get_summary_data(current_user: dict = Depends(get_current_user)):
     
 
 @router.get("/volume-by-day")
-async def get_volume_by_day(current_user: dict = Depends(get_current_user)):
+async def get_volume_by_day(
+    current_user: dict = Depends(get_current_user),
+    period: str = Query("3months", enum=["month", "3months", "year"]),
+):
     try:
         company_id = current_user["company_id"]
-        return await fetch_volume_by_day(company_id)
+        return await fetch_volume_by_day(company_id, period)
     except Exception as e:
         print(f"Error al obtener el volumen por día: {e}")
         raise HTTPException(status_code=500, detail="Error al procesar el volumen por día")

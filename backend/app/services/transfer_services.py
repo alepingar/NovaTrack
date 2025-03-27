@@ -2,7 +2,7 @@ from app.database import db
 from app.models.transfer import Transfer, TransferResponse
 from datetime import datetime, timezone, timedelta
 from typing import List
-from fastapi import HTTPException
+from fastapi import HTTPException, Query
 from typing import Dict, Union
 from uuid import UUID
 from pymongo import ASCENDING
@@ -286,13 +286,42 @@ async def fetch_transfers_by_range(company_id: str, start_date: datetime, end_da
     }).to_list(length=None)
     return transfers
 
-async def fetch_volume_by_day(company_id: str):
-    result = await db.transfers.aggregate([
-        {"$match": {"company_id": company_id}},
-        {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}}, "count": {"$sum": 1}}},
-        {"$sort": {"_id": 1}}
-    ]).to_list(length=100)
-    return [{"date": r["_id"], "count": r["count"]} for r in result]
+async def fetch_volume_by_day(company_id: str, period: str = Query("3months", enum=["month", "3months", "year"])):
+    end_date = datetime.now()
+    if period == "month":
+        start_date = end_date - timedelta(days=30)
+    elif period == "year":
+        start_date = end_date - timedelta(days=365)
+    else:
+        start_date = end_date - timedelta(days=90)
+
+    pipeline = [
+        {
+            "$match": {
+                "company_id": company_id,
+                "timestamp": {"$gte": start_date, "$lte": end_date},
+            }
+        },
+        {
+            "$group": {
+                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}},
+                "count": {"$sum": 1},
+            }
+        },
+        {
+            "$sort": {"_id": 1}
+        },
+        {
+            "$project": {
+                "date": "$_id",
+                "count": 1,
+                "_id": 0
+            }
+        }
+    ]
+
+    result = await db.transfers.aggregate(pipeline).to_list(length=100)
+    return [{"date": r["date"], "count": r["count"]} for r in result]
 
 async def fetch_anomalous_volume_by_day(company_id: str):
     result = await db.transfers.aggregate([
