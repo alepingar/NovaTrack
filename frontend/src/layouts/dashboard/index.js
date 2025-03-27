@@ -23,8 +23,8 @@ import Footer from "examples/Footer";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
+import MDButton from "components/MDButton";
 import MDTypography from "components/MDTypography";
-import { set } from "date-fns";
 
 function Dashboard() {
   const [summary, setSummary] = useState({
@@ -47,6 +47,7 @@ function Dashboard() {
   const [newUsers, setNewUsers] = useState([]);
   const [pastUsers, setPastUsers] = useState([]);
   const [amount, setAmount] = useState([]);
+  const [filterPeriod, setFilterPeriod] = useState("3months");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,22 +68,28 @@ function Dashboard() {
         );
         setSummaryP(summaryPRes.data);
 
-        const volumeRes = await axios.get("http://127.0.0.1:8000/transfers/volume-by-day", {
-          headers,
-        });
+        const volumeRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/volume-by-day?period=${filterPeriod}`,
+          {
+            headers,
+          }
+        );
         setVolumeByDay(volumeRes.data);
 
         const volumeARes = await axios.get(
-          "http://127.0.0.1:8000/transfers/anomalous/volume-by-day",
+          `http://127.0.0.1:8000/transfers/anomalous/volume-by-day?period=${filterPeriod}`,
           {
             headers,
           }
         );
         setVolumeAByDay(volumeARes.data);
 
-        const statusRes = await axios.get("http://127.0.0.1:8000/transfers/status-distribution", {
-          headers,
-        });
+        const statusRes = await axios.get(
+          `http://127.0.0.1:8000/transfers/status-distribution?period=${filterPeriod}`,
+          {
+            headers,
+          }
+        );
         setStatusDistribution(statusRes.data);
 
         const newUsersRes = await axios.get(
@@ -118,32 +125,25 @@ function Dashboard() {
     };
 
     fetchData();
-  }, [month, year]);
+  }, [month, year, filterPeriod]);
 
-  const normalizeStatus = (status) =>
-    status.trim().toLowerCase() === "completeda" ? "completada" : status.trim().toLowerCase();
+  const handleFilterChange = (period) => {
+    setFilterPeriod(period);
+  };
 
-  const normalizedStatusDistribution = statusDistribution.reduce((acc, item) => {
-    const normalizedStatus = normalizeStatus(item.status);
-
-    const existingIndex = acc.findIndex((entry) => entry.status === normalizedStatus);
-
-    if (existingIndex !== -1) {
-      acc[existingIndex].count += item.count;
+  const getFilteredAmountData = (data) => {
+    if (filterPeriod === "month") {
+      return data.slice(0, month);
+    } else if (filterPeriod === "3months") {
+      const months = Math.min(12, month + 2);
+      return data.slice(0, months);
     } else {
-      acc.push({ status: normalizedStatus, count: item.count });
+      return data;
     }
-
-    return acc;
-  }, []);
-
-  const getFilteredChartData = (data) => {
-    const currentMonthIndex = month;
-    return data.slice(0, currentMonthIndex + 1);
   };
 
   const reportsAmountChartData = {
-    labels: getFilteredChartData([
+    labels: [
       "Ene",
       "Feb",
       "Mar",
@@ -156,10 +156,10 @@ function Dashboard() {
       "Oct",
       "Nov",
       "Dic",
-    ]),
+    ].slice(0, getFilteredAmountData(amount).length),
     datasets: {
       label: "Monto",
-      data: getFilteredChartData(amount),
+      data: getFilteredAmountData(amount),
       fill: true,
       tension: 0.4,
     },
@@ -182,9 +182,9 @@ function Dashboard() {
   };
 
   const reportsStatusChartData = {
-    labels: normalizedStatusDistribution.map((item) => item.status),
+    labels: statusDistribution.map((item) => item.status),
     datasets: {
-      data: normalizedStatusDistribution.map((item) => item.count),
+      data: statusDistribution.map((item) => item.count),
       label: "Distribución del estado de las Transacciones",
     },
   };
@@ -269,11 +269,42 @@ function Dashboard() {
             </MDBox>
           </Grid>
         </Grid>
-        <MDBox mt={7}>
+        <MDBox mt={5}>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6} md={6}>
               {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
               <MDBox mb={3}>
+                <MDBox mb={4} display="flex" flexDirection="column" alignItems="flex-start">
+                  <MDTypography variant="caption" fontWeight="medium">
+                    Período seleccionado: {filterPeriod}
+                  </MDTypography>
+                  <MDBox mt={1} display="flex" gap={1}>
+                    <MDButton
+                      variant={filterPeriod === "month" ? "contained" : "outlined"}
+                      onClick={() => handleFilterChange("month")}
+                    >
+                      <MDTypography variant="caption" fontWeight="medium">
+                        Último mes
+                      </MDTypography>
+                    </MDButton>
+                    <MDButton
+                      variant={filterPeriod === "3months" ? "contained" : "outlined"}
+                      onClick={() => handleFilterChange("3months")}
+                    >
+                      <MDTypography variant="caption" fontWeight="medium">
+                        Últimos 3 meses
+                      </MDTypography>
+                    </MDButton>
+                    <MDButton
+                      variant={filterPeriod === "year" ? "contained" : "outlined"}
+                      onClick={() => handleFilterChange("year")}
+                    >
+                      <MDTypography variant="caption" fontWeight="medium">
+                        Último año
+                      </MDTypography>
+                    </MDButton>
+                  </MDBox>
+                </MDBox>
                 <ReportsLineChart
                   color="info"
                   title="Crecimiento de transferencias"
@@ -285,7 +316,7 @@ function Dashboard() {
             </Grid>
             <Grid item xs={12} sm={6} md={6}>
               {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
-              <MDBox mb={3}>
+              <MDBox mb={3} mt={11.75}>
                 <ReportsBarChart
                   color="primary"
                   title="Procesamiento de anomalías"
