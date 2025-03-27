@@ -276,25 +276,6 @@ async def fetch_new_users_per_month(company_id: str, year: int, month: int) -> i
  
     return new_users
 
-async def fetch_transfers_in_range(start_date: datetime, end_date: datetime) -> List[TransferResponse]:
-    """
-    Devuelve las transferencias en un rango de fechas.
-    """
-    transfers = await db.transfers.find({
-        "timestamp": {"$gte": start_date, "$lte": end_date}
-    }).to_list(length=None)
-    return transfers
-
-async def fetch_anomalies_in_range(start_date: datetime, end_date: datetime) -> List[TransferResponse]:
-    """
-    Devuelve las transferencias marcadas como anómalas en un rango de fechas.
-    """
-    anomalies = await db.transfers.find({
-        "is_anomalous": True,
-        "timestamp": {"$gte": start_date, "$lte": end_date}
-    }).to_list(length=None)
-    return anomalies
-
 async def fetch_transfers_by_range(company_id: str, start_date: datetime, end_date: datetime) -> List[TransferResponse]:
     """
     Devuelve las transferencias en un rango de fechas para una compañía específica.
