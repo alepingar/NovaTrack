@@ -9,13 +9,13 @@ from app.services.transfer_services import (
     fetch_status_distribution,
     fetch_volume_by_day,
     fetch_public_summary_data,
-    fetch_number_transfers_per_month,
-    fetch_number_anomaly_transfers_per_month,
     fetch_total_amount_per_month,
     fetch_summary_data_per_month_for_company,
     fetch_new_users_per_month,
     fetch_total_amount_per_month_for_company,
     fetch_transfers_by_range,
+    fetch_number_anomaly_transfers_per_period,
+    fetch_number_transfers_per_period
 )
 from app.models.transfer import TransferResponse, Transfer
 from typing import List
@@ -33,22 +33,13 @@ async def get_transfers(current_user: dict = Depends(get_current_user)):
     company_id = current_user["company_id"]
     return await fetch_transfers(company_id)
 
-
 @router.get("/per-month/{year}/{month}", response_model=int)
-async def get_transfers_per_month(year: int, month: int):
-    """
-    Obtiene las transferencias asociadas a la empresa actual para un mes específico.
-    """
-    transfer_count = await fetch_number_transfers_per_month(year, month)
-    return transfer_count
+async def get_transfers_per_month(year: int, month: int, period: str = Query("3months", enum=["month", "3months", "year"])):
+    return await fetch_number_transfers_per_period(year, month, period)
 
 @router.get("/anomaly/per-month/{year}/{month}", response_model=int)
-async def get_anomaly_transfers_per_month(year: int, month: int):
-    """
-    Obtiene las transferencias asociadas a la empresa actual para un mes específico.
-    """
-    anomaly_count = await fetch_number_anomaly_transfers_per_month(year, month)
-    return anomaly_count
+async def get_anomaly_transfers_per_month(year: int, month: int, period: str = Query("3months", enum=["month", "3months", "year"])):
+    return await fetch_number_anomaly_transfers_per_period(year, month, period)
 
 @router.get("/amount/per-month/{year}/{month}", response_model=float)
 async def get_amount_transfers_per_month(year: int, month: int):

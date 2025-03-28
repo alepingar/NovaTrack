@@ -8,6 +8,7 @@ import axios from "axios";
 import Footer from "examples/Footer";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import MDTypography from "components/MDTypography";
+import MDButton from "components/MDButton";
 
 function GeneralDashboard() {
   const [transfers, setTransfers] = useState(0);
@@ -21,27 +22,30 @@ function GeneralDashboard() {
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [transfersData, setTransfersData] = useState([]);
   const [anomaliesData, setAnomaliesData] = useState([]);
+  const [filterPeriod, setFilterPeriod] = useState("3months");
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear = month === 1 ? year - 1 : year;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const transfersRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/per-month/${year}/${month}`
+          `http://127.0.0.1:8000/transfers/per-month/${year}/${month}?period=${filterPeriod}`
         );
         setTransfers(transfersRes.data);
 
         const transfersLastMonthRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/per-month/${year}/${month - 1 || 12}`
+          `http://127.0.0.1:8000/transfers/per-month/${prevYear}/${prevMonth}?period=${filterPeriod}`
         );
         setTransfersLastMonth(transfersLastMonthRes.data);
 
         const anomalyRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month}`
+          `http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month}?period=${filterPeriod}`
         );
         setAnomaly(anomalyRes.data);
 
         const anomalyLastMonthRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month - 1 || 12}`
+          `http://127.0.0.1:8000/transfers/anomaly/per-month/${prevYear}/${prevMonth}?period=${filterPeriod}`
         );
         setAnomalyLastMonth(anomalyLastMonthRes.data);
 
@@ -51,13 +55,17 @@ function GeneralDashboard() {
         setAmount(amountRes.data);
 
         const amountLastMonthRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/amount/per-month/${year}/${month - 1 || 12}`
+          `http://127.0.0.1:8000/transfers/amount/per-month/${prevYear}/${prevMonth}`
         );
         setAmountLastMonth(amountLastMonthRes.data);
 
         const promises = [];
         for (let month = 1; month <= 12; month++) {
-          promises.push(axios.get(`http://127.0.0.1:8000/transfers/per-month/${year}/${month}`));
+          promises.push(
+            axios.get(
+              `http://127.0.0.1:8000/transfers/per-month/${year}/${month}?period=${filterPeriod}`
+            )
+          );
         }
         const responses = await Promise.all(promises);
         const transfers = responses.map((response) => response.data);
@@ -66,7 +74,9 @@ function GeneralDashboard() {
         const promisesA = [];
         for (let month = 1; month <= 12; month++) {
           promisesA.push(
-            axios.get(`http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month}`)
+            axios.get(
+              `http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month}?period=${filterPeriod}`
+            )
           );
         }
         const responses1 = await Promise.all(promisesA);
@@ -78,7 +88,11 @@ function GeneralDashboard() {
     };
 
     fetchData();
-  }, [year, month]);
+  }, [year, month, filterPeriod]);
+
+  const handleFilterChange = (period) => {
+    setFilterPeriod(period);
+  };
 
   const getChartData = (defaultData) => {
     return defaultData.slice(0, month);
@@ -252,6 +266,37 @@ function GeneralDashboard() {
           </Grid>
         </Grid>
         <MDBox mt={8}>
+          <MDBox mb={4} display="flex" flexDirection="column" alignItems="flex-start">
+            <MDTypography variant="caption" fontWeight="medium">
+              Período seleccionado: {filterPeriod}
+            </MDTypography>
+            <MDBox mt={1} display="flex" gap={1}>
+              <MDButton
+                variant={filterPeriod === "month" ? "contained" : "outlined"}
+                onClick={() => handleFilterChange("month")}
+              >
+                <MDTypography variant="caption" fontWeight="medium">
+                  Último mes
+                </MDTypography>
+              </MDButton>
+              <MDButton
+                variant={filterPeriod === "3months" ? "contained" : "outlined"}
+                onClick={() => handleFilterChange("3months")}
+              >
+                <MDTypography variant="caption" fontWeight="medium">
+                  Últimos 3 meses
+                </MDTypography>
+              </MDButton>
+              <MDButton
+                variant={filterPeriod === "year" ? "contained" : "outlined"}
+                onClick={() => handleFilterChange("year")}
+              >
+                <MDTypography variant="caption" fontWeight="medium">
+                  Último año
+                </MDTypography>
+              </MDButton>
+            </MDBox>
+          </MDBox>
           <Grid container spacing={3}>
             {" "}
             {/* Espaciado entre los elementos */}
