@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from app.utils.security import get_current_user
 from app.services.transfer_services import (
     fetch_transfers,
@@ -22,6 +22,7 @@ from typing import List
 from typing import Dict, Union
 from app.database import db
 from uuid import UUID
+from app.isolation_forest.upload_files import upload_camt_file
 
 router = APIRouter()
 
@@ -169,3 +170,10 @@ async def get_all_transfers(current_user: dict = Depends(get_current_user)):
     """
     company_id = current_user["company_id"]
     return await fetch_transfers(company_id)
+
+@router.post("/upload-camt")
+async def upload_camt(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    """
+    Endpoint para subir archivos CAMT.053 y procesarlos.
+    """
+    return await upload_camt_file(file, current_user["company_id"])

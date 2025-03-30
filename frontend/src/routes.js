@@ -48,6 +48,7 @@ import TransferDetails from "layouts/tables/data/transfersDetails";
 import GeneralDashboard from "layouts/dashboard/generalDashboard";
 import ForgotPassword from "layouts/authentication/forgot-password";
 import ResetPassword from "layouts/authentication/reset-password";
+import UploadFiles from "layouts/upload_files";
 import {
   TermsOfService,
   PrivacyPolicy,
@@ -58,6 +59,7 @@ import {
 import SubscriptionUpgrade from "layouts/suscriptions";
 // @mui icons
 import Icon from "@mui/material/Icon";
+import { Upload } from "@mui/icons-material";
 
 const routes = [
   {
@@ -86,6 +88,15 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/tables",
     component: <Tables />,
+    protected: true,
+  },
+  {
+    type: "collapse",
+    name: "Subir extractos",
+    key: "upload_files",
+    icon: <Icon fontSize="small">upload_files</Icon>,
+    route: "/upload_files",
+    component: <UploadFiles />,
     protected: true,
   },
   {

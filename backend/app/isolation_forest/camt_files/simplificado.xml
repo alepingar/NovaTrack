@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08">
+  <BkToCstmrStmt>
+    <Stmt>
+      <Ntry>
+        <Amt Ccy="EUR">1000.00</Amt>
+        <DbtrAcct>
+          <Id>
+            <IBAN>ES1234567890123456789012</IBAN>
+          </Id>
+        </DbtrAcct>
+        <Sts>completada</Sts>
+        <BookgDt>
+          <DtTm>2025-03-30T10:30:00.000Z</DtTm>
+        </BookgDt>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="EUR">500.00</Amt>
+        <DbtrAcct>
+          <Id>
+            <IBAN>ES9876543210987654321098</IBAN>
+          </Id>
+        </DbtrAcct>
+        <Sts>pendiente</Sts>
+        <BookgDt>
+          <DtTm>2025-03-30T11:00:00.000Z</DtTm>
+        </BookgDt>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="EUR">1500.00</Amt>
+        <DbtrAcct>
+          <Id>
+            <IBAN>ES11223344556677889900</IBAN>
+          </Id>
+        </DbtrAcct>
+        <Sts>fallida</Sts>
+        <BookgDt>
+          <DtTm>2025-03-30T12:15:00.000Z</DtTm>
+        </BookgDt>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>
