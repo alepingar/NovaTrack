@@ -8,6 +8,8 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
 import MDButton from "components/MDButton";
 import { Snackbar, Alert, CircularProgress } from "@mui/material";
+import Tooltip from "@mui/material/Tooltip";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import axios from "axios";
 
 function UploadFiles() {
@@ -43,8 +45,6 @@ function UploadFiles() {
         headers,
         timeout: 20000,
       });
-
-      console.log("Response:", response);
       setSnackbarMessage("Archivo cargado exitosamente.");
       setUploadSuccess(true);
     } catch (error) {
@@ -91,6 +91,9 @@ function UploadFiles() {
                 >
                   <MDTypography variant="h6" color="white">
                     Subir archivo CAMT.053
+                    <Tooltip title="Para el correcto procesamiento del archivo, este deberá ser un extracto camt.053 en su última versión(v8.0) en formato .xml, si posee otro tipo de formato de extracto conviertalo antes de procesarlo.">
+                      <HelpOutlineIcon fontSize="small" sx={{ ml: 1, cursor: "pointer" }} />
+                    </Tooltip>
                   </MDTypography>
                 </MDBox>
                 <MDBox pt={3} px={2}>
