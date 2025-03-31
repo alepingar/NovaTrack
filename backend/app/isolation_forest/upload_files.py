@@ -13,6 +13,7 @@ from app.services.notification_services import save_notification
 from app.database import db
 from dateutil import parser
 import logging
+from bson import ObjectId
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -104,7 +105,8 @@ async def process_transfer(transfer, company_stats):
 async def get_to_account(company_id: str):
     """Obtiene la cuenta de facturación de la empresa."""
     try:
-        company = await db.companies.find_one({"_id": company_id}, {"billing_account_number": 1})
+        company_id_object = ObjectId(company_id)
+        company = await db.companies.find_one({"_id": company_id_object}, {"billing_account_number": 1})
         if company:
             return company.get("billing_account_number")
         else:
@@ -139,7 +141,7 @@ async def upload_camt_file(file: UploadFile, company_id: str):
             from_account_element = entry.find(".//camt:Acct/camt:Id/camt:IBAN", ns)
             from_account = from_account_element.text if from_account_element is not None else "Desconocido"
             to_account_element = entry.find(".//camt:Acct/camt:Id/camt:IBAN", ns)
-            to_account = to_account_element.text if to_account_element is not None else get_to_account(company_id)
+            to_account = to_account_element.text if to_account_element is not None else await get_to_account(company_id)
             status_element = entry.find(".//camt:Sts/camt:Cd", ns)
             status_code = status_element.text if status_element is not None else "PEND"
             status = status_mapping1.get(status_code, "pendiente")
