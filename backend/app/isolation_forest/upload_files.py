@@ -27,6 +27,12 @@ transfers_collection = db["transfers"]
 # Mapeo de estados de transferencias
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 
+status_mapping1 = {
+    "BOOK": "completada",
+    "PEND": "pendiente",
+    "REJ": "fallida",  # Añadir más códigos según sea necesario
+}
+
 async def fetch_company_stats():
     """Obtiene la media y desviación estándar de los montos por cada empresa."""
     cursor = transfers_collection.find({})
@@ -118,25 +124,27 @@ async def upload_camt_file(file: UploadFile, company_id: str):
 
         # Namespace para el XML
         ns = {'camt': 'urn:iso:std:iso:20022:tech:xsd:camt.053.001.08'}
-        entries = root.findall(".//camt:Ntry", ns)
+        entries = root.findall(".//camt:Bal", ns)  # Buscamos los elementos de tipo 'Bal'
 
         # Procesar cada entrada
         transfers = []
         for entry in entries:
             # Asegúrate de que los elementos existan antes de acceder a sus valores
             amount_element = entry.find(".//camt:Amt", ns)
-            amount = float(amount_element.text) if amount_element is not None else 0.0
+            amount = float(amount_element.text) if amount_element is not None else 0.50
+            if amount <= 0:
+                amount = 1.0
             currency_element = entry.find(".//camt:Amt", ns)
             currency = currency_element.attrib["Ccy"] if currency_element is not None else "EUR"
-            from_account_element = entry.find(".//camt:DbtrAcct/camt:Id/camt:IBAN", ns)
+            from_account_element = entry.find(".//camt:Acct/camt:Id/camt:IBAN", ns)
             from_account = from_account_element.text if from_account_element is not None else "Desconocido"
-            to_account_element = entry.find(".//camt:CdtrAcct/camt:Id/camt:IBAN", ns)
-            to_account = to_account_element.text if to_account_element is not None else "ES1234123412341234"
-            status_element = entry.find(".//camt:Sts", ns)
-            status = status_element.text if status_element is not None else "pendiente"
-            timestamp_element = entry.find(".//camt:BookgDt/camt:DtTm", ns)
+            to_account_element = entry.find(".//camt:Acct/camt:Id/camt:IBAN", ns)
+            to_account = to_account_element.text if to_account_element is not None else get_to_account(company_id)
+            status_element = entry.find(".//camt:Sts/camt:Cd", ns)
+            status_code = status_element.text if status_element is not None else "PEND"
+            status = status_mapping1.get(status_code, "pendiente")
+            timestamp_element = entry.find(".//camt:Dt/camt:DtTm", ns)
             timestamp = datetime.strptime(timestamp_element.text, "%Y-%m-%dT%H:%M:%S.%fZ") if timestamp_element is not None else datetime.now()
-            # Crear una transferencia
             transfer = Transfer(
                 id=str(uuid.uuid4()),  # Generamos un ID único
                 amount=amount,
