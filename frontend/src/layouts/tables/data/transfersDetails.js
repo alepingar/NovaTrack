@@ -27,6 +27,7 @@ function TransferDetails() {
         const response = await axios.get(`http://127.0.0.1:8000/transfers/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log(response.data);
         setTransfer(response.data);
         setLoading(false);
       } catch (error) {
@@ -56,6 +57,18 @@ function TransferDetails() {
     );
   }
 
+  const getAnomalyReason = (transfer) => {
+    if (!transfer.features) return "Datos insuficientes para evaluar la anomalía.";
+    const { is_banking_hour, amount_zscore } = transfer.features;
+    if (amount_zscore > 10) {
+      return "Monto extremadamente alto en comparación con el promedio.";
+    }
+    if (is_banking_hour === 0) {
+      return "Transferencia fuera del horario bancario.";
+    }
+    return "Anomalía detectada sin causa específica.";
+  };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -63,9 +76,9 @@ function TransferDetails() {
         sx={{
           display: "flex",
           flexDirection: "column",
-          flexGrow: 1, // Expande el contenido para empujar el footer
-          minHeight: "calc(100vh - 64px)", // Ajusta al 100% menos la navbar
-          alignItems: "center", // Centra el contenido
+          flexGrow: 1,
+          minHeight: "calc(100vh - 64px)",
+          alignItems: "center",
           justifyContent: "center",
           p: 3,
         }}
@@ -98,6 +111,14 @@ function TransferDetails() {
                 ))}
               </TableBody>
             </Table>
+            {transfer.is_anomalous && (
+              <MDBox mt={3} p={2} bgcolor="#ffebee" borderRadius="2px" boxShadow={1}>
+                <MDTypography variant="h6" color="error" fontWeight="bold">
+                  Motivo de la Anomalía
+                </MDTypography>
+                <MDTypography variant="body2">{getAnomalyReason(transfer)}</MDTypography>
+              </MDBox>
+            )}
             <MDBox mt={3} display="flex" justifyContent="flex-end">
               <MDButton variant="outlined" color="secondary" onClick={() => navigate(-1)}>
                 Volver

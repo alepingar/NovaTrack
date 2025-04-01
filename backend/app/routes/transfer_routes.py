@@ -43,11 +43,11 @@ async def get_anomaly_transfers_per_month(year: int, month: int, period: str = Q
     return await fetch_number_anomaly_transfers_per_period(year, month, period)
 
 @router.get("/amount/per-month/{year}/{month}", response_model=float)
-async def get_amount_transfers_per_month(year: int, month: int):
+async def get_amount_transfers_per_month(year: int, month: int, period: str = Query("3months", enum=["month", "3months", "year"])):
     """
     Obtiene las transferencias asociadas a la empresa actual para un mes específico.
     """
-    amount_count = await fetch_total_amount_per_month(year, month)
+    amount_count = await fetch_total_amount_per_month(year, month,period)
     return amount_count
 
 @router.get("/amount/company/per-month/{year}/{month}", response_model=float)

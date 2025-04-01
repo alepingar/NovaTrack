@@ -17,83 +17,62 @@ async def fetch_transfers(company_id: str) -> List[TransferResponse]:
 async def fetch_number_transfers_per_period(year: int, month: int, period: str = "3months") -> int:
     end_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc) + timedelta(days=32)
     end_date = end_date.replace(day=1) - timedelta(seconds=1)
-    
-    if period == "month":
-        start_date = end_date - timedelta(days=30)
-    elif period == "year":
-        start_date = end_date - timedelta(days=365)
-    else:
-        start_date = end_date - timedelta(days=90)
-    
-    pipeline = [
-        {
-            "$match": {
-                "timestamp": {"$gte": start_date, "$lte": end_date}
-            }
-        },
-        {
-            "$count": "count"
-        }
-    ]
-    
-    result = await db.transfers.aggregate(pipeline).to_list(length=None)
-    
-    return result[0]["count"] if result else 0
 
+    if period == "month":
+        start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    elif period == "year":
+        start_date = datetime(year, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:  # 3months
+        start_month = month - 2 if month > 2 else (month - 2) + 12
+        start_year = year if month > 2 else year - 1
+        start_date = datetime(start_year, start_month, 1, 0, 0, 0, tzinfo=timezone.utc)
+
+    pipeline = [
+        {"$match": {"timestamp": {"$gte": start_date, "$lte": end_date}}},
+        {"$count": "count"}
+    ]
+
+    result = await db.transfers.aggregate(pipeline).to_list(length=None)
+    return result[0]["count"] if result else 0
 
 async def fetch_number_anomaly_transfers_per_period(year: int, month: int, period: str = "3months") -> int:
     end_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc) + timedelta(days=32)
     end_date = end_date.replace(day=1) - timedelta(seconds=1)
-    
+
     if period == "month":
-        start_date = end_date - timedelta(days=30)
+        start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
     elif period == "year":
-        start_date = end_date - timedelta(days=365)
-    else:
-        start_date = end_date - timedelta(days=90)
-    
+        start_date = datetime(year, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:  # 3months
+        start_month = month - 2 if month > 2 else (month - 2) + 12
+        start_year = year if month > 2 else year - 1
+        start_date = datetime(start_year, start_month, 1, 0, 0, 0, tzinfo=timezone.utc)
+
     pipeline = [
-        {
-            "$match": {
-                "timestamp": {"$gte": start_date, "$lte": end_date},
-                "is_anomalous": True
-            }
-        },
-        {
-            "$count": "count"
-        }
+        {"$match": {"timestamp": {"$gte": start_date, "$lte": end_date}, "is_anomalous": True}},
+        {"$count": "count"}
     ]
-    
+
     result = await db.transfers.aggregate(pipeline).to_list(length=None)
-    
     return result[0]["count"] if result else 0
 
-async def fetch_total_amount_per_month(year: int, month: int) -> float:
-    """
-    Obtiene el total de las transferencias de un mes específico.
-    """
-    start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
-    
-    if month < 12:
-        end_date = datetime(year, month + 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    else:
-        end_date = datetime(year + 1, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    
-    end_date = end_date - timedelta(seconds=1)
+async def fetch_total_amount_per_month(year: int, month: int, period: str = "3months") -> float:
+    end_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc) + timedelta(days=32)
+    end_date = end_date.replace(day=1) - timedelta(seconds=1)
+
+    if period == "month":
+        start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
+    elif period == "year":
+        start_date = datetime(year, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    else:  # 3months
+        start_month = month - 2 if month > 2 else (month - 2) + 12
+        start_year = year if month > 2 else year - 1
+        start_date = datetime(start_year, start_month, 1, 0, 0, 0, tzinfo=timezone.utc)
 
     try:
         total_amount = await db.transfers.aggregate([
-            {
-                "$match": {
-                    "timestamp": {"$gte": start_date, "$lt": end_date} 
-                }
-            },
-            {
-                "$group": {
-                    "_id": None, 
-                    "total": {"$sum": "$amount"} 
-                }
-            }
+            {"$match": {"timestamp": {"$gte": start_date, "$lt": end_date}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
         ]).to_list(length=1)
 
         return round(total_amount[0]["total"], 2) if total_amount else 0.0
@@ -146,7 +125,7 @@ async def fetch_transfer_details(company_id: str, transfer_id: UUID) -> Transfer
         "id": transfer_id,
         "company_id": company_id
     })
-
+    print(f"SOY UNKAKO: {transfer_doc}")
     if not transfer_doc:
         raise HTTPException(
             status_code=404,
