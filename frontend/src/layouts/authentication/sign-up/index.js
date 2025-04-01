@@ -18,8 +18,11 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
-import Visibility from "@mui/icons-material/Visibility"; // Importa los iconos
+import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import TermsModal from "./components/termsModal";
+import PrivacyModal from "./components/privacyModal";
+import DataProcessingModal from "./components/dataProcessingModal";
 
 function Cover() {
   const [formData, setFormData] = useState({
@@ -49,6 +52,19 @@ function Cover() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [openTermsModal, setOpenTermsModal] = useState(false);
+  const [openPrivacyModal, setOpenPrivacyModal] = useState(false);
+  const [openDataProcessingModal, setOpenDataProcessingModal] = useState(false);
+
+  const handleOpenTermsModal = () => setOpenTermsModal(true);
+  const handleCloseTermsModal = () => setOpenTermsModal(false);
+
+  const handleOpenPrivacyModal = () => setOpenPrivacyModal(true);
+  const handleClosePrivacyModal = () => setOpenPrivacyModal(false);
+
+  const handleOpenDataProcessingModal = () => setOpenDataProcessingModal(true);
+  const handleCloseDataProcessingModal = () => setOpenDataProcessingModal(false);
 
   useEffect(() => {
     const fetchEntityTypes = async () => {
@@ -444,7 +460,20 @@ function Cover() {
                           name="terms_accepted"
                         />
                       }
-                      label="Acepto los términos de servicio"
+                      label={
+                        <span>
+                          Acepto los{" "}
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenTermsModal();
+                            }}
+                          >
+                            términos y condiciones de uso
+                          </a>
+                        </span>
+                      }
                     />
                     {errors.terms_accepted && (
                       <MDTypography variant="button" color="error" textAlign="center">
@@ -463,7 +492,20 @@ function Cover() {
                           name="privacy_policy_accepted"
                         />
                       }
-                      label="Acepto la política de privacidad"
+                      label={
+                        <span>
+                          Acepto la{" "}
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenPrivacyModal(); // Corrección: Invoca la función
+                            }}
+                          >
+                            política de privacidad
+                          </a>
+                        </span>
+                      }
                     />
                     {errors.privacy_policy_accepted && (
                       <MDTypography variant="button" color="error" textAlign="center">
@@ -482,7 +524,20 @@ function Cover() {
                           name="data_processing_consent"
                         />
                       }
-                      label="Acepto el procesamiento de mis datos"
+                      label={
+                        <span>
+                          Acepto el{" "}
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenDataProcessingModal(); // Corrección: Invoca la función
+                            }}
+                          >
+                            procesamiento de mis datos
+                          </a>
+                        </span>
+                      }
                     />
                     {errors.data_processing_consent && (
                       <MDTypography variant="button" color="error" textAlign="center">
@@ -512,6 +567,12 @@ function Cover() {
           </MDBox>
         </Card>
       </CoverLayout>
+      <TermsModal open={openTermsModal} onClose={handleCloseTermsModal} />
+      <PrivacyModal open={openPrivacyModal} onClose={handleClosePrivacyModal} />
+      <DataProcessingModal
+        open={openDataProcessingModal}
+        onClose={handleCloseDataProcessingModal}
+      />
     </Grid>
   );
 }
