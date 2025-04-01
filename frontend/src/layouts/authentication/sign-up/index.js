@@ -66,6 +66,8 @@ function Cover() {
   const handleOpenDataProcessingModal = () => setOpenDataProcessingModal(true);
   const handleCloseDataProcessingModal = () => setOpenDataProcessingModal(false);
 
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
   useEffect(() => {
     const fetchEntityTypes = async () => {
       try {
@@ -226,9 +228,21 @@ function Cover() {
     }));
   };
 
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: checked }));
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: checked ? "" : prevErrors[name],
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormSubmitted(true);
+
     const newErrors = {};
+
     Object.keys(formData).forEach((key) => {
       if (steps[currentStep].fields.some((field) => field.id === key && field.required)) {
         const error = validateField(key, formData[key]);
@@ -237,6 +251,16 @@ function Cover() {
         }
       }
     });
+
+    if (!formData.terms_accepted) {
+      newErrors.terms_accepted = "Debes aceptar los términos y condiciones.";
+    }
+    if (!formData.privacy_policy_accepted) {
+      newErrors.privacy_policy_accepted = "Debes aceptar la política de privacidad.";
+    }
+    if (!formData.data_processing_consent) {
+      newErrors.data_processing_consent = "Debes aceptar el procesamiento de datos.";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -249,20 +273,6 @@ function Cover() {
         payload[key] = null;
       }
     });
-
-    if (
-      !formData.privacy_policy_accepted &&
-      !formData.data_processing_consent &&
-      !formData.terms_accepted
-    ) {
-      setErrors({
-        ...errors,
-        terms_accepted: "Debes aceptar los términos y condiciones.",
-        privacy_policy_accepted: "Debes aceptar la política de privacidad.",
-        data_processing_consent: "Debes aceptar el consentimiento para el procesamiento de datos.",
-      });
-      return;
-    }
 
     try {
       setErrorMessage(null);
@@ -454,9 +464,7 @@ function Cover() {
                       control={
                         <Checkbox
                           checked={formData.terms_accepted}
-                          onChange={(e) =>
-                            setFormData({ ...formData, terms_accepted: e.target.checked })
-                          }
+                          onChange={handleCheckboxChange}
                           name="terms_accepted"
                         />
                       }
@@ -475,10 +483,8 @@ function Cover() {
                         </span>
                       }
                     />
-                    {errors.terms_accepted && (
-                      <MDTypography variant="button" color="error" textAlign="center">
-                        {errors.terms_accepted}
-                      </MDTypography>
+                    {formSubmitted && errors.terms_accepted && (
+                      <MDTypography color="error">{errors.terms_accepted}</MDTypography>
                     )}
                   </MDBox>
                   <MDBox mb={2}>
@@ -486,9 +492,7 @@ function Cover() {
                       control={
                         <Checkbox
                           checked={formData.privacy_policy_accepted}
-                          onChange={(e) =>
-                            setFormData({ ...formData, privacy_policy_accepted: e.target.checked })
-                          }
+                          onChange={handleCheckboxChange}
                           name="privacy_policy_accepted"
                         />
                       }
@@ -507,10 +511,8 @@ function Cover() {
                         </span>
                       }
                     />
-                    {errors.privacy_policy_accepted && (
-                      <MDTypography variant="button" color="error" textAlign="center">
-                        {errors.privacy_policy_accepted}
-                      </MDTypography>
+                    {formSubmitted && errors.privacy_policy_accepted && (
+                      <MDTypography color="error">{errors.privacy_policy_accepted}</MDTypography>
                     )}
                   </MDBox>
                   <MDBox mb={2}>
@@ -518,9 +520,7 @@ function Cover() {
                       control={
                         <Checkbox
                           checked={formData.data_processing_consent}
-                          onChange={(e) =>
-                            setFormData({ ...formData, data_processing_consent: e.target.checked })
-                          }
+                          onChange={handleCheckboxChange}
                           name="data_processing_consent"
                         />
                       }
@@ -539,10 +539,8 @@ function Cover() {
                         </span>
                       }
                     />
-                    {errors.data_processing_consent && (
-                      <MDTypography variant="button" color="error" textAlign="center">
-                        {errors.data_processing_consent}
-                      </MDTypography>
+                    {formSubmitted && errors.data_processing_consent && (
+                      <MDTypography color="error">{errors.data_processing_consent}</MDTypography>
                     )}
                   </MDBox>
                 </>
