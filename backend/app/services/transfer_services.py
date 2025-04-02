@@ -1,7 +1,8 @@
+import pandas as pd
 from app.database import db
 from app.models.transfer import Transfer, TransferResponse
 from datetime import datetime, timezone, timedelta
-from typing import List
+from typing import Any, List
 from fastapi import HTTPException, Query
 from typing import Dict, Union
 from uuid import UUID
@@ -125,7 +126,6 @@ async def fetch_transfer_details(company_id: str, transfer_id: UUID) -> Transfer
         "id": transfer_id,
         "company_id": company_id
     })
-    print(f"SOY UNKAKO: {transfer_doc}")
     if not transfer_doc:
         raise HTTPException(
             status_code=404,
@@ -398,3 +398,22 @@ async def fetch_status_distribution(company_id: str, period: str = Query("3month
     result = await db.transfers.aggregate(pipeline).to_list(length=10)
     return [{"status": r["status"], "count": r["count"]} for r in result]
 
+
+
+async def get_transfer_stats_by_company(company_id: str) -> Dict[str, Any]:
+    """
+    Obtiene estadísticas sobre las transferencias de una empresa específica.
+    """
+    transfers_collection = db.transfers
+    
+    cursor = transfers_collection.find({"company_id": company_id}, {"amount": 1})
+    data = await cursor.to_list(length=None)
+    
+    if not data:
+        return {"company_id": company_id, "mean": 0, "std": 0}
+    
+    df = pd.DataFrame(data)
+    amount_mean = df["amount"].mean()
+    amount_std = df["amount"].std()
+    
+    return {"mean": amount_mean, "std": amount_std}

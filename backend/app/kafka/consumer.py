@@ -104,11 +104,6 @@ async def process_message(msg):
 
         # Agregar flag de anomalía en la transferencia
         transfer["is_anomalous"] = is_anomalous
-        transfer["features"] = {
-                "is_banking_hour": is_banking_hour,
-                "amount_zscore": amount_zscore,
-                "status": status_numeric
-            }
         inserted = await db.transfers.insert_one(transfer)
         transfer["_id"] = inserted.inserted_id
 

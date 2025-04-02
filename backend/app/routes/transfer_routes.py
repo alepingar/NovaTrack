@@ -15,10 +15,11 @@ from app.services.transfer_services import (
     fetch_total_amount_per_month_for_company,
     fetch_transfers_by_range,
     fetch_number_anomaly_transfers_per_period,
-    fetch_number_transfers_per_period
+    fetch_number_transfers_per_period,
+    get_transfer_stats_by_company
 )
 from app.models.transfer import TransferResponse, Transfer
-from typing import List
+from typing import Any, List
 from typing import Dict, Union
 from app.database import db
 from uuid import UUID
@@ -33,6 +34,14 @@ async def get_transfers(current_user: dict = Depends(get_current_user)):
     """
     company_id = current_user["company_id"]
     return await fetch_transfers(company_id)
+
+@router.get("/stats", response_model=Dict[str, Any])
+async def get_company_stats(current_user: dict = Depends(get_current_user)):
+    company_id = current_user.get("company_id")
+    print("Company ID:", company_id)
+    if not company_id:
+        raise HTTPException(status_code=400, detail="Company ID is missing")
+    return await get_transfer_stats_by_company(company_id)
 
 @router.get("/per-month/{year}/{month}", response_model=int)
 async def get_transfers_per_month(year: int, month: int, period: str = Query("3months", enum=["month", "3months", "year"])):
@@ -177,3 +186,5 @@ async def upload_camt(file: UploadFile = File(...), current_user: dict = Depends
     Endpoint para subir archivos CAMT.053 y procesarlos.
     """
     return await upload_camt_file(file, current_user["company_id"])
+
+

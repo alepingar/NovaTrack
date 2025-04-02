@@ -18,20 +18,28 @@ function TransferDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [transfer, setTransfer] = useState(null);
+  const [companyStats, setCompanyStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTransferDetails = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`http://127.0.0.1:8000/transfers/${id}`, {
+        // Obtener detalles de la transferencia
+        const transferResponse = await axios.get(`http://127.0.0.1:8000/transfers/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(response.data);
-        setTransfer(response.data);
-        setLoading(false);
+
+        setTransfer(transferResponse.data);
+
+        // Obtener estadísticas de la empresa
+        const companyStatsResponse = await axios.get("http://127.0.0.1:8000/transfers/stats", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCompanyStats(companyStatsResponse.data);
       } catch (error) {
-        console.error("Error al obtener los detalles de la transferencia:", error);
+        console.error("Error al obtener los datos:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -47,28 +55,59 @@ function TransferDetails() {
     );
   }
 
-  if (!transfer) {
+  if (!transfer || !companyStats) {
     return (
       <MDBox display="flex" justifyContent="center" alignItems="center" height="100vh">
         <MDTypography variant="h6" color="error">
-          No se encontró la transferencia con el ID {id}.
+          No se encontraron datos de la transferencia o de la empresa.
         </MDTypography>
       </MDBox>
     );
   }
 
-  const getAnomalyReason = (transfer) => {
-    if (!transfer.features) return "Datos insuficientes para evaluar la anomalía.";
-    const { is_banking_hour, amount_zscore } = transfer.features;
-    if (amount_zscore > 10) {
-      return "Monto extremadamente alto en comparación con el promedio.";
-    }
-    if (is_banking_hour === 0) {
-      return "Transferencia fuera del horario bancario.";
-    }
-    return "Anomalía detectada sin causa específica.";
-  };
+  // Calcular amount_zscore en el frontend
+  const amountMean = companyStats.mean;
+  const amountStd = companyStats.std > 0 ? companyStats.std : 1; // Evitar división por 0
+  const amountZscore = (transfer.amount - amountMean) / amountStd;
 
+  // Verificar si la transferencia ocurrió en horario bancario
+  const transferHour = new Date(transfer.timestamp).getHours();
+  const isBankingHour = transferHour >= 8 && transferHour < 22 ? 1 : 0;
+
+  const getAnomalyReason = (amountZscore, isBankingHour, amount, avgAmount, status) => {
+    let reason = [];
+
+    // Verificar monto extremadamente alto o bajo en comparación con el promedio
+    if (amountZscore > 10) {
+      reason.push("Monto extremadamente alto en comparación con el promedio.");
+    } else if (amountZscore < -10) {
+      reason.push("Monto extremadamente bajo en comparación con el promedio.");
+    }
+
+    if (isBankingHour === 0) {
+      reason.push("Transferencia fuera del horario bancario (08:00 - 22:00).");
+    }
+
+    // Verificar si el monto está fuera del rango razonable para el tipo de transacción
+    if (amount > avgAmount * 4) {
+      reason.push("Monto excesivamente alto para la transacción.");
+    } else if (amount < avgAmount * 0.1) {
+      reason.push("Monto excesivamente bajo para la transacción.");
+    }
+
+    // Agregar el estado de la transferencia (si es fallida)
+    if (status === "fallida") {
+      reason.push("Estado de la transferencia: Fallida.");
+    }
+
+    // Si no se ha encontrado ninguna razón, se considera una anomalía sin causa específica
+    if (reason.length === 0) {
+      reason.push("Anomalía detectada sin causa específica.");
+    }
+
+    // Retornar las razones concatenadas
+    return reason.join(" ");
+  };
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -116,7 +155,15 @@ function TransferDetails() {
                 <MDTypography variant="h6" color="error" fontWeight="bold">
                   Motivo de la Anomalía
                 </MDTypography>
-                <MDTypography variant="body2">{getAnomalyReason(transfer)}</MDTypography>
+                <MDTypography variant="body2">
+                  {getAnomalyReason(
+                    amountZscore,
+                    isBankingHour,
+                    transfer.amount,
+                    amountMean,
+                    transfer.status
+                  )}
+                </MDTypography>
               </MDBox>
             )}
             <MDBox mt={3} display="flex" justifyContent="flex-end">

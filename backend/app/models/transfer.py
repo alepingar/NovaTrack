@@ -3,11 +3,6 @@ from typing import Optional
 from datetime import datetime
 from uuid import UUID
 
-
-class TransferFeatures(BaseModel):
-    is_banking_hour: int
-    amount_zscore: float
-    status: int
 # Modelo de Transferencia basado en camt.053
 class Transfer(BaseModel):
     id: UUID  # ID único de la transferencia (camt.053)
@@ -19,7 +14,6 @@ class Transfer(BaseModel):
     status: str = Field(..., pattern=r"^(pendiente|completada|fallida)$", description="Estado de la transacción (camt.053)")
     company_id: str = Field(..., description="ID de la empresa propietaria de la transacción")
     is_anomalous: Optional[bool] = False  # Indicador para anomalías
-    features: Optional[TransferFeatures] = None
 class TransferResponse(BaseModel):
     id: UUID
     amount: float
@@ -30,4 +24,3 @@ class TransferResponse(BaseModel):
     message_identifier: Optional[str] = None
     reference: Optional[str] = None
     currency: Optional[str] = "EUR"
-    features: Optional[TransferFeatures] = None
