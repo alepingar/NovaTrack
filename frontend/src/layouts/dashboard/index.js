@@ -41,6 +41,11 @@ function Dashboard() {
     totalAnomalies: 0,
     totalAmount: 0,
   });
+  const [summaryPA, setSummaryPA] = useState({
+    totalTransfers: 0,
+    totalAnomalies: 0,
+    totalAmount: 0,
+  });
   const [volumeByDay, setVolumeByDay] = useState([]);
   const [volumeAByDay, setVolumeAByDay] = useState([]);
   const [statusDistribution, setStatusDistribution] = useState([]);
@@ -67,6 +72,14 @@ function Dashboard() {
           }
         );
         setSummaryP(summaryPRes.data);
+
+        const summaryPARes = await axios.get(
+          `http://127.0.0.1:8000/transfers/summary/per-month/${year}/${month - 1}`,
+          {
+            headers,
+          }
+        );
+        setSummaryPA(summaryPARes.data);
 
         const volumeRes = await axios.get(
           `http://127.0.0.1:8000/transfers/volume-by-day?period=${filterPeriod}`,
@@ -200,9 +213,9 @@ function Dashboard() {
     };
   };
 
-  const transfersChange = calculatePercentage(summaryP.totalTransfers, summary.totalTransactions);
-  const anomalyChange = calculatePercentage(summaryP.totalAnomalies, summary.totalAnomalies);
-  const amountChange = calculatePercentage(summaryP.totalAmount, summary.totalAmount);
+  const transfersChange = calculatePercentage(summaryPA.totalTransfers, summaryP.totalTransfers);
+  const anomalyChange = calculatePercentage(summaryPA.totalAnomalies, summaryP.totalAnomalies);
+  const amountChange = calculatePercentage(summaryPA.totalAmount, summaryP.totalAmount);
   const usersChange = calculatePercentage(pastUsers, newUsers);
   return (
     <DashboardLayout>
@@ -219,7 +232,8 @@ function Dashboard() {
                 percentage={{
                   color: transfersChange.color,
                   amount: transfersChange.amount,
-                  label: "Desde el último mes",
+                  label:
+                    transfersChange.color === "success" ? "En crecimiento" : "En decrecimiento",
                 }}
               />
             </MDBox>
@@ -233,7 +247,7 @@ function Dashboard() {
                 percentage={{
                   color: anomalyChange.color,
                   amount: anomalyChange.amount,
-                  label: "Desde la última revisión",
+                  label: anomalyChange.color === "success" ? "En crecimiento" : "En decrecimiento",
                 }}
               />
             </MDBox>
@@ -276,7 +290,7 @@ function Dashboard() {
               <MDBox mb={3}>
                 <MDBox mb={4} display="flex" flexDirection="column" alignItems="flex-start">
                   <MDTypography variant="caption" fontWeight="medium">
-                    Período seleccionado: {filterPeriod}
+                    Filtrar gráficas por periodo:
                   </MDTypography>
                   <MDBox mt={1} display="flex" gap={1}>
                     <MDButton
@@ -308,7 +322,7 @@ function Dashboard() {
                 <ReportsLineChart
                   color="info"
                   title="Crecimiento de transferencias"
-                  description="Cantidad de transferencias analizadas a lo largo del año"
+                  description="Cantidad de transferencias analizadas a lo largo del periodo seleccionado"
                   date="Actualización automática"
                   chart={reportsVolumeByDayChartData}
                 />
@@ -320,7 +334,7 @@ function Dashboard() {
                 <ReportsBarChart
                   color="primary"
                   title="Procesamiento de anomalías"
-                  description="Distribución de anomalías por días"
+                  description="Distribución de anomalías en el periodo seleccionado"
                   date="Actualización automática"
                   chart={reportsVolumeAByDayChartData}
                 />
@@ -334,7 +348,7 @@ function Dashboard() {
                 <ReportsBarChart
                   color="error"
                   title="Distribución de estados de transacción"
-                  description="Desglose de los diferentes estados de las transacciones"
+                  description="Desglose de los diferentes estados de las transacciones a través del tiempo"
                   date="Actualización automática"
                   chart={reportsStatusChartData}
                 />
@@ -346,7 +360,7 @@ function Dashboard() {
                 <ReportsLineChart
                   color="dark"
                   title="Crecimiento de montos"
-                  description="Cantidad de montos analizados a lo largo del año"
+                  description="Cantidad de montos analizados a lo largo del periodo seleccionado"
                   date="Actualizado automáticamente"
                   chart={reportsAmountChartData}
                 />
