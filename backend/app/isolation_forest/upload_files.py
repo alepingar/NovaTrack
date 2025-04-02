@@ -77,11 +77,6 @@ async def process_transfer(transfer, company_stats):
         transfer["timestamp"] = timestamp
         transfer["id"] = str(uuid.uuid4()) if "id" not in transfer else transfer["id"]
         # Guardar en MongoDB
-        transfer["features"] = {
-            "is_banking_hour": is_banking_hour,
-            "amount_zscore": amount_zscore,
-            "status": status_numeric
-        }
         inserted = await transfers_collection.insert_one(transfer)
         transfer["_id"] = inserted.inserted_id
 
