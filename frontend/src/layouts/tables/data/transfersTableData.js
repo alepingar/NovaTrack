@@ -160,46 +160,98 @@ export default function data(filter) {
 
   return {
     columns: [
-      { Header: "ID", accessor: "id", align: "left" },
       {
         Header: (
-          <span onClick={() => handleSort("amount")} style={{ cursor: "pointer" }}>
+          <MDTypography variant="h6" fontWeight="bold">
+            ID
+          </MDTypography>
+        ),
+        accessor: "id",
+        align: "left",
+      },
+      {
+        Header: (
+          <MDTypography
+            variant="h6"
+            fontWeight="bold"
+            onClick={() => handleSort("amount")}
+            style={{ cursor: "pointer" }}
+          >
             Monto convertido {sortColumn === "amount" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-          </span>
+          </MDTypography>
         ),
         accessor: "amount",
         align: "left",
       },
-      { Header: "Moneda", accessor: "currency", align: "center" },
-      { Header: "De", accessor: "from_account", align: "left" },
       {
         Header: (
-          <span onClick={() => handleSort("timestamp")} style={{ cursor: "pointer" }}>
+          <MDTypography variant="h6" fontWeight="bold">
+            Moneda
+          </MDTypography>
+        ),
+        accessor: "currency",
+        align: "center",
+      },
+      {
+        Header: (
+          <MDTypography variant="h6" fontWeight="bold">
+            Origen
+          </MDTypography>
+        ),
+        accessor: "from_account",
+        align: "left",
+      },
+      {
+        Header: (
+          <MDTypography
+            variant="h6"
+            fontWeight="bold"
+            onClick={() => handleSort("timestamp")}
+            style={{ cursor: "pointer" }}
+          >
             Fecha {sortColumn === "timestamp" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-          </span>
+          </MDTypography>
         ),
         accessor: "timestamp",
         align: "center",
       },
       {
         Header: (
-          <span onClick={() => handleSort("status")} style={{ cursor: "pointer" }}>
+          <MDTypography
+            variant="h6"
+            fontWeight="bold"
+            onClick={() => handleSort("status")}
+            style={{ cursor: "pointer" }}
+          >
             Estado {sortColumn === "status" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-          </span>
+          </MDTypography>
         ),
         accessor: "status",
         align: "center",
       },
       {
         Header: (
-          <span onClick={() => handleSort("is_anomalous")} style={{ cursor: "pointer" }}>
+          <MDTypography
+            variant="h6"
+            fontWeight="bold"
+            onClick={() => handleSort("is_anomalous")}
+            style={{ cursor: "pointer" }}
+          >
             Anómala {sortColumn === "is_anomalous" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
-          </span>
+          </MDTypography>
         ),
         accessor: "is_anomalous",
         align: "center",
       },
-      { Header: "Acción", accessor: "action", align: "center" },
+      {
+        Header: (
+          <MDTypography variant="h6" fontWeight="bold">
+            Acción
+          </MDTypography>
+        ),
+        accessor: "action",
+        align: "center",
+      },
     ],
     rows,
     fetchFilteredData: fetchTransfers,
