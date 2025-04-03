@@ -3,10 +3,11 @@ from app.models.company import CompanyResponse, CompanyCreate, UpdateCompanyProf
 from bson import ObjectId
 from fastapi import HTTPException
 from app.utils.security import hash_password
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 import stripe
 import os
+from pymongo import ReturnDocument
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
@@ -238,13 +239,20 @@ class StripeService:
             return session.url
         except Exception as e:
             raise HTTPException(status_code=500, detail="Error al crear la sesión de pago")
-        
+
 async def confirmar_pago(company_id: str):
-    await db.companies.update_one(
+    """Confirma el pago y actualiza el plan de la empresa a PRO con expiración en 1 mes."""
+    expiration_date = datetime.utcnow() + timedelta(days=30)
+
+    updated_company = await db.companies.find_one_and_update(
         {"_id": company_id},
-        {"$set": {"subscription_plan": SubscriptionPlan.PRO}}
+        {"$set": {
+            "subscription_plan": SubscriptionPlan.PRO,
+            "subscription_expires_at": expiration_date
+        }},
+        return_document=ReturnDocument.AFTER
     )
-    # Insertar factura en la base de datos
+
     invoice_data = {
         "company_id": str(company_id),
         "plan": "PRO",
@@ -254,4 +262,21 @@ async def confirmar_pago(company_id: str):
     }
     await db.invoices.insert_one(invoice_data)
 
-    return {"status": "success", "message": "Plan actualizado correctamente"}
+    return {
+        "status": "success",
+        "message": "Plan actualizado correctamente",
+        "expires_at": expiration_date
+    }
+
+
+
+async def check_expired_subscriptions():
+    """Revisa qué empresas ya pasaron su fecha de expiración y las regresa al plan BÁSICO."""
+    now = datetime.utcnow()
+
+    result = await db.companies.update_many(
+        {"subscription_plan": SubscriptionPlan.PRO, "subscription_expires_at": {"$lt": now}},
+        {"$set": {"subscription_plan": SubscriptionPlan.BASICO}, "$unset": {"subscription_expires_at": ""}}
+    )
+
+    print(f"Planes degradados a BASICO: {result.modified_count}")
