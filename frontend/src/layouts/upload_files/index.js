@@ -45,11 +45,20 @@ function UploadFiles() {
         headers,
         timeout: 20000,
       });
+
       setSnackbarMessage("Archivo cargado exitosamente.");
       setUploadSuccess(true);
     } catch (error) {
       console.error("Error uploading file:", error);
-      setSnackbarMessage("Hubo un error al cargar el archivo.");
+
+      // Si el backend envía un mensaje específico, lo mostramos
+      if (error.response && error.response.data && error.response.data.detail) {
+        setSnackbarMessage(error.response.data.detail);
+      } else {
+        setSnackbarMessage("Hubo un error al cargar el archivo.");
+      }
+
+      setUploadSuccess(false);
     } finally {
       setLoading(false);
       setSnackbarOpen(true);

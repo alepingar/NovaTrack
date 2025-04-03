@@ -49,6 +49,7 @@ import GeneralDashboard from "layouts/dashboard/generalDashboard";
 import ForgotPassword from "layouts/authentication/forgot-password";
 import ResetPassword from "layouts/authentication/reset-password";
 import UploadFiles from "layouts/upload_files";
+import ConfirmPayment from "layouts/suscriptions/components/confirmPayment";
 import {
   TermsOfService,
   PrivacyPolicy,
@@ -131,6 +132,12 @@ const routes = [
     route: "/forgot-password",
     component: <ForgotPassword />,
     protected: false,
+  },
+  {
+    type: "invisible",
+    route: "/confirm-plan",
+    component: <ConfirmPayment />,
+    protected: true,
   },
   {
     type: "invisible",

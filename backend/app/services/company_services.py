@@ -5,6 +5,10 @@ from fastapi import HTTPException
 from app.utils.security import hash_password
 from datetime import datetime
 from typing import List
+import stripe
+import os
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 async def fetch_companies() -> List[CompanyResponse]:
     """
@@ -128,67 +132,6 @@ async def get_entity_types1() -> List[EntityType]:
     return [entity for entity in EntityType]
 
 
-async def upgrade_subscription(company_id: str, new_plan: SubscriptionPlan) -> CompanyResponse:
-    """
-    Actualiza el plan de suscripción de una empresa y genera una factura.
-    """
-    company = await db.companies.find_one({"_id": ObjectId(company_id)})
-    if not company:
-        raise HTTPException(status_code=404, detail="Empresa no encontrada")
-
-    current_plan = company.get("subscription_plan")
-
-    # Si el plan actual es igual al nuevo plan, no se hace nada
-    if current_plan == new_plan:
-        raise HTTPException(status_code=400, detail="Ya estás en este plan")
-
-    # Lógica de precios de planes
-    plan_prices = {
-        SubscriptionPlan.BASICO: 0,
-        SubscriptionPlan.NORMAL: 19.99,
-        SubscriptionPlan.PRO: 39.99,
-    }
-
-    # Si el usuario está en un plan superior al nuevo plan, no le dejamos hacer el downgrade
-    if (
-        (current_plan == SubscriptionPlan.NORMAL and new_plan == SubscriptionPlan.BASICO) or
-        (current_plan == SubscriptionPlan.PRO and new_plan in [SubscriptionPlan.BASICO, SubscriptionPlan.NORMAL])
-    ):
-        raise HTTPException(status_code=400, detail="No puedes bajar a un plan inferior una vez hayas pagado por uno superior")
-
-    # Si el nuevo plan es diferente y no es un downgrade, generamos la factura si es necesario
-    if new_plan != SubscriptionPlan.BASICO:  # Solo genera factura si el plan es diferente a Básico
-        invoice_data = {
-            "company_id": company_id,
-            "plan": new_plan.value,
-            "amount": plan_prices[new_plan],
-            "issued_at": datetime.utcnow(),
-            "status": "Pagado"
-        }
-        await db.invoices.insert_one(invoice_data)
-
-    # Actualizar el plan de suscripción
-    await db.companies.update_one(
-        {"_id": ObjectId(company_id)},
-        {"$set": {"subscription_plan": new_plan.value, "updated_at": datetime.utcnow().isoformat()}}
-    )
-
-    updated_company = await db.companies.find_one({"_id": ObjectId(company_id)})
-    return CompanyResponse(
-        id=str(updated_company["_id"]),
-        name=updated_company.get("name"),
-        email=updated_company.get("email"),
-        industry=updated_company.get("industry"),
-        country=updated_company.get("country"),
-        phone_number=updated_company.get("phone_number"),
-        tax_id=updated_company.get("tax_id"),
-        address=updated_company.get("address"),
-        founded_date=updated_company.get("founded_date"),
-        created_at=updated_company.get("created_at"),
-        updated_at=updated_company.get("updated_at"),
-        subscription_plan=updated_company.get("subscription_plan")
-    )
-
 async def get_current_plan(company_id: str) -> str:
     company = await db.companies.find_one({"_id": ObjectId(company_id)})
     if not company:
@@ -265,3 +208,50 @@ async def get_gdpr_logs(company_id: str):
         raise HTTPException(status_code=404, detail="Empresa no encontrada")
 
     return company.get("gdpr_request_log", [])
+
+class StripeService:
+    @staticmethod
+    def create_checkout_session(company_id: str) -> str:
+        try:
+            # Precio y producto según el plan
+            price = 1999  # Precio en centavos (19,99 EUR)
+            product_name = "Plan PRO"
+            
+            # Crear la sesión de Stripe
+            session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=[{
+                    "price_data": {
+                        "currency": "eur",
+                        "product_data": {
+                            "name": product_name,
+                        },
+                        "unit_amount": price,
+                    },
+                    "quantity": 1,
+                }],
+                mode="payment",
+                success_url="http://localhost:3000/confirm-plan",  # Redirige cuando el pago sea exitoso
+                cancel_url="http://localhost:3000/subscriptions", # Redirige si se cancela el pago
+                client_reference_id=company_id,  
+            )
+            return session.url
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Error al crear la sesión de pago")
+        
+async def confirmar_pago(company_id: str):
+    await db.companies.update_one(
+        {"_id": company_id},
+        {"$set": {"subscription_plan": SubscriptionPlan.PRO}}
+    )
+    # Insertar factura en la base de datos
+    invoice_data = {
+        "company_id": str(company_id),
+        "plan": "PRO",
+        "amount": 19.99,
+        "issued_at": datetime.utcnow(),
+        "status": "Pagado"
+    }
+    await db.invoices.insert_one(invoice_data)
+
+    return {"status": "success", "message": "Plan actualizado correctamente"}

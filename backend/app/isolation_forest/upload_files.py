@@ -102,9 +102,25 @@ async def get_to_account(company_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener la cuenta de la empresa: {e}")
 
+async def increment_uploads_count(company_id: str):
+    """Incrementa el contador de subidas de archivos de la empresa."""
+    await db.companies.update_one({"_id": ObjectId(company_id)}, {"$inc": {"uploads_count": 1}})
+
 async def upload_camt_file(file: UploadFile, company_id: str):
     """Recibe un archivo CAMT.053.xml, extrae las transferencias y las analiza."""
     try:
+
+        company = await db.companies.find_one({"_id": ObjectId(company_id)})
+        if not company:
+            raise HTTPException(status_code=404, detail="Empresa no encontrada.")
+
+        current_plan = company.get("subscription_plan", "BASICO")
+        uploads_count = company.get("uploads_count", 0)  # Por defecto, 0 si no existe
+
+        # Si el plan es BÁSICO, verificar el número de usos
+        if current_plan == "BASICO" and uploads_count >= 20:
+            raise HTTPException(status_code=403, detail="Lo sentimos, has usado todos los usos del plan BÁSICO.")
+        
         contents = await file.read()
 
         tree = ET.ElementTree(ET.fromstring(contents))  # Parsear el XML
@@ -153,6 +169,8 @@ async def upload_camt_file(file: UploadFile, company_id: str):
         
         tasks = [process_transfer(tx, company_stats) for tx in transfers]
         results = await asyncio.gather(*tasks)
+
+        await increment_uploads_count(company_id)
 
         # Convertir ObjectId a string antes de devolver la respuesta
         for result in results:
