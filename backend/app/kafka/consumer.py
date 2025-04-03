@@ -84,7 +84,6 @@ async def process_message(msg):
 
         # Convertir estado a número
         status_numeric = status_mapping.get(transfer["status"], -1)
-        is_banking_hour = transfer["timestamp"].hour
         # Obtener media y std de la empresa
         company_data = company_stats.get(company_id, {"mean": 0, "std": 1})
         amount_mean = company_data["mean"]
@@ -92,7 +91,9 @@ async def process_message(msg):
 
         # Calcular Z-score
         amount_zscore = (amount - amount_mean) / amount_std
-
+        
+        is_banking_hour = transfer["timestamp"].hour 
+        is_banking_hour = 1 if (8 <= is_banking_hour < 22) else 0
         # Crear DataFrame con las características necesarias para el modelo
         data = pd.DataFrame([[is_banking_hour,amount_zscore, status_numeric]], 
                             columns=["is_banking_hour","amount_zscore", "status"])
@@ -103,7 +104,6 @@ async def process_message(msg):
 
         # Agregar flag de anomalía en la transferencia
         transfer["is_anomalous"] = is_anomalous
-
         inserted = await db.transfers.insert_one(transfer)
         transfer["_id"] = inserted.inserted_id
 

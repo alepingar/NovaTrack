@@ -1,18 +1,21 @@
-
-
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.models.notification import Notification
 from app.database import db
 from bson import ObjectId
 
+NOTIFICATION_TTL_DAYS = 7
+
 async def save_notification(message: str, notification_type: str, company_id: str):
-    notification = Notification(
-        message=message,
-        timestamp=datetime.now(),
-        type=notification_type,
-        company_id=company_id
-    )    
-    await db.notifications.insert_one(notification.dict())
+    expiration_time = datetime.utcnow() + timedelta(days=NOTIFICATION_TTL_DAYS)
+    
+    notification = {
+        "message": message,
+        "timestamp": datetime.utcnow(),
+        "type": notification_type,
+        "company_id": company_id,
+        "expires_at": expiration_time
+    }   
+    await db.notifications.insert_one(notification)
 
 
 async def fetch_notifications(company_id: str):

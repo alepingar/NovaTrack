@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // Importamos Axios
+import axios from "axios";
 import Grid from "@mui/material/Grid";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
@@ -18,25 +18,16 @@ function SubscriptionUpgrade() {
     {
       title: "Básico",
       price: "Gratis",
-      description: "Hasta 100 transferencias analizadas con un modelo básico.",
+      description: "Hasta 20 archivos analizados al mes.",
       buttonText: "Mantener plan",
       buttonColor: "secondary",
       planId: "Basico",
-      disabled: currentPlan === "BASICO" || currentPlan === "NORMAL" || currentPlan === "PRO",
-    },
-    {
-      title: "Normal",
-      price: "19,99€/mes",
-      description: "Hasta 1000 transferencias analizadas con un modelo básico.",
-      buttonText: "Elegir plan",
-      buttonColor: "info",
-      planId: "Normal",
-      disabled: currentPlan === "NORMAL" || currentPlan === "PRO",
+      disabled: currentPlan === "BASICO" || currentPlan === "PRO",
     },
     {
       title: "Pro",
-      price: "39,99€/mes",
-      description: "Modelo avanzado sin límite de transferencias analizadas.",
+      price: "19,99€/mes",
+      description: "Sin límite de archivos analizados.",
       buttonText: "Mejorar a Pro",
       buttonColor: "success",
       planId: "Pro",
@@ -51,23 +42,26 @@ function SubscriptionUpgrade() {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setCurrentPlan(response.data);
-        console.log(response.data);
       } catch (error) {
         console.error("Error al obtener el plan actual:", error.response?.data || error);
       }
     };
     fetchCurrentPlan();
-  });
+  }, []); // Se agrega el array vacío para evitar bucles de actualización
+
   const handleUpgrade = async (planId) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.put(
-        `http://127.0.0.1:8000/companies/upgrade-plan/${planId}`,
-        null,
-        { headers }
+      const response = await axios.post(
+        "http://127.0.0.1:8000/companies/upgrade-plan",
+        {},
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
       );
+      // Redirigir a la URL de Stripe
+      window.location.href = response.data.checkoutUrl;
       setLoading(false);
     } catch (error) {
       console.error("Error al actualizar el plan:", error.response?.data || error);
@@ -91,23 +85,14 @@ function SubscriptionUpgrade() {
       >
         <Grid container justifyContent="center" spacing={3}>
           {plans.map((plan, index) => {
-            // Lógica para el texto del botón
-            let buttonText = "Elegir plan"; // Por defecto es "Elegir plan"
+            let buttonText = "Elegir plan";
 
-            // Si el plan actual es el mismo que el iterado
             if (currentPlan === plan.planId.toUpperCase()) {
-              buttonText = "Plan actual"; // El botón muestra "Plan actual"
-            } else if (currentPlan === "BASICO" && plan.planId.toUpperCase() === "NORMAL") {
-              // Si el plan actual es "BÁSICO" y seleccionas el plan "NORMAL"
-              buttonText = "Elegir plan"; // No mostrar "Mejorar a Pro", sino "Elegir plan"
-            } else if (currentPlan === "NORMAL" && plan.planId.toUpperCase() === "PRO") {
-              // Si el plan actual es "NORMAL" y seleccionas el plan "PRO"
-              buttonText = "Mejorar a Pro"; // Mostrar "Mejorar a Pro" solo si estás en un plan inferior
+              buttonText = "Plan actual";
             } else if (currentPlan === "BASICO" && plan.planId.toUpperCase() === "PRO") {
-              // Si el plan actual es "BÁSICO" y seleccionas el plan "PRO"
-              buttonText = "Mejorar a Pro"; // Mostrar "Mejorar a Pro"
+              buttonText = "Mejorar a Pro";
             } else {
-              buttonText = "Elegir plan"; // El caso por defecto, si no corresponde a las opciones anteriores
+              buttonText = "Elegir plan";
             }
 
             return (
@@ -128,9 +113,9 @@ function SubscriptionUpgrade() {
                         color={plan.buttonColor}
                         variant="contained"
                         onClick={() => handleUpgrade(plan.planId)}
-                        disabled={plan.disabled || loading} // Deshabilitar el botón mientras carga
+                        disabled={plan.disabled || loading} // Deshabilitar si ya tienes el plan
                       >
-                        {loading ? "Cargando..." : buttonText} {/* Mostrar texto de loading */}
+                        {loading ? "Cargando..." : buttonText}
                       </MDButton>
                     </MDBox>
                   </CardContent>

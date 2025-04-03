@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import secrets
 from app.utils.security import hash_password, verify_password, create_access_token
 from app.database import db
+from app.services.company_services import check_expired_subscriptions
 from fastapi import HTTPException
 import smtplib
 from email.mime.text import MIMEText
@@ -16,6 +17,7 @@ async def authenticate_user(email: str, password: str):
     """
     Autentica a una empresa por email y contraseña, y maneja seguridad.
     """
+    await check_expired_subscriptions() 
     company = await db.companies.find_one({"email": email})
     
     if not company:
@@ -98,7 +100,7 @@ async def generate_reset_token(email: str):
     })
 
     # Crear enlace de recuperación
-    reset_link = f"http://localhost:3000/reset-password?token={reset_token}"
+    reset_link = f"{settings.frontend_url}/reset-password?token={reset_token}"
 
     # Enviar correo
     subject = "Recupera tu contraseña"

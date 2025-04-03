@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-
+import os
 # Conectar a MongoDB
-client = AsyncIOMotorClient("mongodb://localhost:27017/")
+client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
 
 # Seleccionar la base de datos
 db = client["nova_track"]

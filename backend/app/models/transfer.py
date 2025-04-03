@@ -14,7 +14,6 @@ class Transfer(BaseModel):
     status: str = Field(..., pattern=r"^(pendiente|completada|fallida)$", description="Estado de la transacción (camt.053)")
     company_id: str = Field(..., description="ID de la empresa propietaria de la transacción")
     is_anomalous: Optional[bool] = False  # Indicador para anomalías
-
 class TransferResponse(BaseModel):
     id: UUID
     amount: float

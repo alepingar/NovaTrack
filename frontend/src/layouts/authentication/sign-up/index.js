@@ -18,8 +18,11 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
-import Visibility from "@mui/icons-material/Visibility"; // Importa los iconos
+import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import TermsModal from "./components/termsModal";
+import PrivacyModal from "./components/privacyModal";
+import DataProcessingModal from "./components/dataProcessingModal";
 
 function Cover() {
   const [formData, setFormData] = useState({
@@ -49,6 +52,21 @@ function Cover() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [openTermsModal, setOpenTermsModal] = useState(false);
+  const [openPrivacyModal, setOpenPrivacyModal] = useState(false);
+  const [openDataProcessingModal, setOpenDataProcessingModal] = useState(false);
+
+  const handleOpenTermsModal = () => setOpenTermsModal(true);
+  const handleCloseTermsModal = () => setOpenTermsModal(false);
+
+  const handleOpenPrivacyModal = () => setOpenPrivacyModal(true);
+  const handleClosePrivacyModal = () => setOpenPrivacyModal(false);
+
+  const handleOpenDataProcessingModal = () => setOpenDataProcessingModal(true);
+  const handleCloseDataProcessingModal = () => setOpenDataProcessingModal(false);
+
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   useEffect(() => {
     const fetchEntityTypes = async () => {
@@ -210,9 +228,21 @@ function Cover() {
     }));
   };
 
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: checked }));
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: checked ? "" : prevErrors[name],
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormSubmitted(true);
+
     const newErrors = {};
+
     Object.keys(formData).forEach((key) => {
       if (steps[currentStep].fields.some((field) => field.id === key && field.required)) {
         const error = validateField(key, formData[key]);
@@ -221,6 +251,16 @@ function Cover() {
         }
       }
     });
+
+    if (!formData.terms_accepted) {
+      newErrors.terms_accepted = "Debes aceptar los términos y condiciones.";
+    }
+    if (!formData.privacy_policy_accepted) {
+      newErrors.privacy_policy_accepted = "Debes aceptar la política de privacidad.";
+    }
+    if (!formData.data_processing_consent) {
+      newErrors.data_processing_consent = "Debes aceptar el procesamiento de datos.";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -233,20 +273,6 @@ function Cover() {
         payload[key] = null;
       }
     });
-
-    if (
-      !formData.privacy_policy_accepted &&
-      !formData.data_processing_consent &&
-      !formData.terms_accepted
-    ) {
-      setErrors({
-        ...errors,
-        terms_accepted: "Debes aceptar los términos y condiciones.",
-        privacy_policy_accepted: "Debes aceptar la política de privacidad.",
-        data_processing_consent: "Debes aceptar el consentimiento para el procesamiento de datos.",
-      });
-      return;
-    }
 
     try {
       setErrorMessage(null);
@@ -438,18 +464,27 @@ function Cover() {
                       control={
                         <Checkbox
                           checked={formData.terms_accepted}
-                          onChange={(e) =>
-                            setFormData({ ...formData, terms_accepted: e.target.checked })
-                          }
+                          onChange={handleCheckboxChange}
                           name="terms_accepted"
                         />
                       }
-                      label="Acepto los términos de servicio"
+                      label={
+                        <span>
+                          Acepto los{" "}
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenTermsModal();
+                            }}
+                          >
+                            términos y condiciones de uso
+                          </a>
+                        </span>
+                      }
                     />
-                    {errors.terms_accepted && (
-                      <MDTypography variant="button" color="error" textAlign="center">
-                        {errors.terms_accepted}
-                      </MDTypography>
+                    {formSubmitted && errors.terms_accepted && (
+                      <MDTypography color="error">{errors.terms_accepted}</MDTypography>
                     )}
                   </MDBox>
                   <MDBox mb={2}>
@@ -457,18 +492,27 @@ function Cover() {
                       control={
                         <Checkbox
                           checked={formData.privacy_policy_accepted}
-                          onChange={(e) =>
-                            setFormData({ ...formData, privacy_policy_accepted: e.target.checked })
-                          }
+                          onChange={handleCheckboxChange}
                           name="privacy_policy_accepted"
                         />
                       }
-                      label="Acepto la política de privacidad"
+                      label={
+                        <span>
+                          Acepto la{" "}
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenPrivacyModal(); // Corrección: Invoca la función
+                            }}
+                          >
+                            política de privacidad
+                          </a>
+                        </span>
+                      }
                     />
-                    {errors.privacy_policy_accepted && (
-                      <MDTypography variant="button" color="error" textAlign="center">
-                        {errors.privacy_policy_accepted}
-                      </MDTypography>
+                    {formSubmitted && errors.privacy_policy_accepted && (
+                      <MDTypography color="error">{errors.privacy_policy_accepted}</MDTypography>
                     )}
                   </MDBox>
                   <MDBox mb={2}>
@@ -476,18 +520,27 @@ function Cover() {
                       control={
                         <Checkbox
                           checked={formData.data_processing_consent}
-                          onChange={(e) =>
-                            setFormData({ ...formData, data_processing_consent: e.target.checked })
-                          }
+                          onChange={handleCheckboxChange}
                           name="data_processing_consent"
                         />
                       }
-                      label="Acepto el procesamiento de mis datos"
+                      label={
+                        <span>
+                          Acepto el{" "}
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenDataProcessingModal(); // Corrección: Invoca la función
+                            }}
+                          >
+                            procesamiento de mis datos
+                          </a>
+                        </span>
+                      }
                     />
-                    {errors.data_processing_consent && (
-                      <MDTypography variant="button" color="error" textAlign="center">
-                        {errors.data_processing_consent}
-                      </MDTypography>
+                    {formSubmitted && errors.data_processing_consent && (
+                      <MDTypography color="error">{errors.data_processing_consent}</MDTypography>
                     )}
                   </MDBox>
                 </>
@@ -512,6 +565,12 @@ function Cover() {
           </MDBox>
         </Card>
       </CoverLayout>
+      <TermsModal open={openTermsModal} onClose={handleCloseTermsModal} />
+      <PrivacyModal open={openPrivacyModal} onClose={handleClosePrivacyModal} />
+      <DataProcessingModal
+        open={openDataProcessingModal}
+        onClose={handleCloseDataProcessingModal}
+      />
     </Grid>
   );
 }

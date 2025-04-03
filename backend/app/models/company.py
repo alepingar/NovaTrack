@@ -5,7 +5,6 @@ import re
 from enum import Enum
 class SubscriptionPlan(str, Enum):
     BASICO = "BASICO"
-    NORMAL = "NORMAL"
     PRO = "PRO"
 class EntityType(str, Enum):
     SA = "Sociedad Anónima"
@@ -43,6 +42,7 @@ class CompanyCreate(BaseModel):
     data_processing_consent: bool
     communication_consent: bool = False
     consent_timestamp: datetime = Field(default_factory=datetime.utcnow)
+    uploads_count: int = 0
     
     # Seguridad y Auditoría
     last_login: Optional[datetime] = None

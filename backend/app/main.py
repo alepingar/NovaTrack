@@ -1,16 +1,29 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import company_routes, transfer_routes , auth_routes , notification_routes , invoice_routes
-
+import os
+from contextlib import asynccontextmanager
+from motor.motor_asyncio import AsyncIOMotorClient
 
 app = FastAPI()
 
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 
+# Manejo de la conexión con MongoDB
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.mongodb_client = AsyncIOMotorClient(MONGO_URI)
+    app.db = app.mongodb_client["nova_track"]
+    yield
+    app.mongodb_client.close()
+
+# Instancia de FastAPI
+app = FastAPI(lifespan=lifespan)
     
 # Middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  
+    allow_origins=["http://127.0.0.1:3000",os.getenv("FRONTEND_URL", "https://tu-dominio.com")],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

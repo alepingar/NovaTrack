@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Body, Depends, HTTPException
 from app.utils.security import get_current_user
 from app.services.company_services import (
+    StripeService,
     fetch_companies,
     register_new_company,
     fetch_company_profile,
-    upgrade_subscription,
     get_entity_types1,
     get_current_plan,
     request_account_deletion,
@@ -12,7 +12,8 @@ from app.services.company_services import (
     update_data_sharing_consent,
     get_data_sharing_consent,
     get_delete_account_request,
-    get_gdpr_logs
+    get_gdpr_logs,
+    confirmar_pago
 )
 from app.models.company import CompanyGDPRRequest, CompanyResponse, CompanyCreate, ConsentUpdate, UpdateCompanyProfile, EntityType, SubscriptionPlan
 from typing import List
@@ -52,7 +53,6 @@ async def update_company_profile(
     """
     Permite a una empresa actualizar su perfil.
     """
-    print(company_data.dict())
     
     company_id = ObjectId(current_user["company_id"])
     existing_company = await db.companies.find_one({"_id": company_id})
@@ -88,21 +88,21 @@ async def get_entity_types():
     """
     return await get_entity_types1()
 
+@router.post("/upgrade-plan")
+async def upgrade_plan(current_user: dict = Depends(get_current_user)):
 
-@router.put("/upgrade-plan/{new_plan}", response_model=CompanyResponse)
-async def upgrade_plan(new_plan: str, current_user: dict = Depends(get_current_user)):
+    company_id = ObjectId(current_user["company_id"])
+
+    checkout_url = StripeService.create_checkout_session(company_id) 
+    return {"checkoutUrl": checkout_url}
+
+@router.post("/confirm-plan")
+async def confirm_plan(current_user: dict = Depends(get_current_user)):
     """
-    Actualiza el plan de suscripción de la empresa y genera una factura.
+    Confirma el pago de la suscripción.
     """
-    print(f"🔍 Recibido en el backend: {new_plan}")
-    try:
-        new_plan_enum = SubscriptionPlan(new_plan.upper())  
-    except ValueError:
-        print("❌ Error: Plan de suscripción inválido")
-        raise HTTPException(status_code=422, detail="Plan de suscripción inválido")
-
-    return await upgrade_subscription(current_user["company_id"], new_plan_enum)
-
+    company_id = ObjectId(current_user["company_id"])
+    return await confirmar_pago(company_id)
 
 @router.get("/get-current-plan", response_model=str)
 async def get_plan(current_user: dict = Depends(get_current_user)):
