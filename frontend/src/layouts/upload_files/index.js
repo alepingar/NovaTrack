@@ -41,10 +41,14 @@ function UploadFiles() {
       const token = localStorage.getItem("token");
       const headers = { Authorization: `Bearer ${token}` };
 
-      const response = await axios.post("http://127.0.0.1:8000/transfers/upload-camt", formData, {
-        headers,
-        timeout: 20000,
-      });
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/transfers/upload-camt`,
+        formData,
+        {
+          headers,
+          timeout: 20000,
+        }
+      );
 
       setSnackbarMessage("Archivo cargado exitosamente.");
       setUploadSuccess(true);

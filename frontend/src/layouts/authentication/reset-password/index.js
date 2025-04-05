@@ -30,10 +30,13 @@ function ResetPassword() {
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/reset-password-confirm", {
-        token,
-        password,
-      });
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/auth/reset-password-confirm`,
+        {
+          token,
+          password,
+        }
+      );
       setMessage(response.data.message);
     } catch (error) {
       setMessage("Error: " + (error.response?.data?.detail || "Inténtalo de nuevo."));

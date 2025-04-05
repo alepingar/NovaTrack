@@ -12,7 +12,7 @@ function ConfirmPayment() {
       setLoading(true);
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://127.0.0.1:8000/companies/confirm-plan",
+        `${process.env.REACT_APP_API_URL}/companies/confirm-plan`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

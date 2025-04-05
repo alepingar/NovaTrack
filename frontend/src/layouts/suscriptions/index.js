@@ -38,9 +38,12 @@ function SubscriptionUpgrade() {
   useEffect(() => {
     const fetchCurrentPlan = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/companies/get-current-plan", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/companies/get-current-plan`,
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          }
+        );
         setCurrentPlan(response.data);
       } catch (error) {
         console.error("Error al obtener el plan actual:", error.response?.data || error);
@@ -54,7 +57,7 @@ function SubscriptionUpgrade() {
       setLoading(true);
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://127.0.0.1:8000/companies/upgrade-plan",
+        `${process.env.REACT_APP_API_URL}/companies/upgrade-plan`,
         {},
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },

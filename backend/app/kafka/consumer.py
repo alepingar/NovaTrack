@@ -14,13 +14,13 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Definir la ruta del modelo dentro de la misma carpeta
 MODEL_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/isolation_forest.pkl")
-
+kafka_broker = os.getenv("KAFKA_BROKER", "localhost:9092") 
 # Cargar el modelo con la ruta absoluta
 model = joblib.load(MODEL_PATH)
 
 # Configuración del consumidor Kafka
 consumer_config = {
-    'bootstrap.servers': 'localhost:9092',
+    'bootstrap.servers': kafka_broker,
     'group.id': 'transfer_group',
     'auto.offset.reset': 'earliest',
     'enable.auto.commit': True
@@ -33,7 +33,8 @@ status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 # Diccionario para almacenar estadísticas de cada empresa
 company_stats = {}
 
-client = AsyncIOMotorClient("mongodb://localhost:27017/")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+client = AsyncIOMotorClient(MONGO_URI)
 db = client["nova_track"]
 transfers_collection = db["transfers"]
 

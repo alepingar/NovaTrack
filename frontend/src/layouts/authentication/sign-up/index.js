@@ -72,7 +72,7 @@ function Cover() {
     const fetchEntityTypes = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://127.0.0.1:8000/companies/get-types", {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/companies/get-types`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -279,7 +279,7 @@ function Cover() {
       if (payload.founded_date) {
         payload.founded_date = new Date(payload.founded_date).toISOString();
       }
-      await axios.post("http://127.0.0.1:8000/companies/register", payload);
+      await axios.post(`${process.env.REACT_APP_API_URL}/companies/register`, payload);
       alert("Registro exitoso");
       localStorage.removeItem("currentStep");
       localStorage.removeItem("formData");

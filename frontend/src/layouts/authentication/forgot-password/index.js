@@ -15,7 +15,9 @@ function ForgotPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/reset-password", { email });
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/reset-password`, {
+        email,
+      });
       console.log("Respuesta del backend:", response.data);
       setMessage(response.data.message || "Solicitud enviada con éxito.");
     } catch (error) {

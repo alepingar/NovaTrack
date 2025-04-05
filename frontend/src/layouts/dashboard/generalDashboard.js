@@ -30,32 +30,32 @@ function GeneralDashboard() {
     const fetchData = async () => {
       try {
         const transfersRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/per-month/${year}/${month}?period=${filterPeriod}`
+          `${process.env.REACT_APP_API_URL}/transfers/per-month/${year}/${month}?period=${filterPeriod}`
         );
         setTransfers(transfersRes.data);
 
         const transfersLastMonthRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/per-month/${prevYear}/${prevMonth}?period=${filterPeriod}`
+          `${process.env.REACT_APP_API_URL}/transfers/per-month/${prevYear}/${prevMonth}?period=${filterPeriod}`
         );
         setTransfersLastMonth(transfersLastMonthRes.data);
 
         const anomalyRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/anomaly/per-month/${year}/${month}?period=${filterPeriod}`
+          `${process.env.REACT_APP_API_URL}/transfers/anomaly/per-month/${year}/${month}?period=${filterPeriod}`
         );
         setAnomaly(anomalyRes.data);
 
         const anomalyLastMonthRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/anomaly/per-month/${prevYear}/${prevMonth}?period=${filterPeriod}`
+          `${process.env.REACT_APP_API_URL}/transfers/anomaly/per-month/${prevYear}/${prevMonth}?period=${filterPeriod}`
         );
         setAnomalyLastMonth(anomalyLastMonthRes.data);
 
         const amountRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/amount/per-month/${year}/${month}?period=${filterPeriod}`
+          `${process.env.REACT_APP_API_URL}/transfers/amount/per-month/${year}/${month}?period=${filterPeriod}`
         );
         setAmount(amountRes.data);
 
         const amountLastMonthRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/amount/per-month/${prevYear}/${prevMonth}?period=${filterPeriod}`
+          `${process.env.REACT_APP_API_URL}/transfers/amount/per-month/${prevYear}/${prevMonth}?period=${filterPeriod}`
         );
         setAmountLastMonth(amountLastMonthRes.data);
 
@@ -83,7 +83,7 @@ function GeneralDashboard() {
 
           promises.push(
             axios.get(
-              `http://127.0.0.1:8000/transfers/per-month/${currentYear}/${currentMonth}?period=month`
+              `${process.env.REACT_APP_API_URL}/transfers/per-month/${currentYear}/${currentMonth}?period=month`
             )
           );
           monthLabels.push(
@@ -104,7 +104,7 @@ function GeneralDashboard() {
 
           promisesA.push(
             axios.get(
-              `http://127.0.0.1:8000/transfers/anomaly/per-month/${currentYear}/${currentMonth}?period=month`
+              `${process.env.REACT_APP_API_URL}/transfers/anomaly/per-month/${currentYear}/${currentMonth}?period=month`
             )
           );
         }

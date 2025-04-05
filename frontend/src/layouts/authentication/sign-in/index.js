@@ -36,7 +36,7 @@ function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/login", credentials);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, credentials);
       const { access_token } = response.data;
 
       login(access_token);

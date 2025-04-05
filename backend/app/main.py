@@ -4,7 +4,10 @@ from app.routes import company_routes, transfer_routes , auth_routes , notificat
 import os
 from contextlib import asynccontextmanager
 from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
 
+# Cargar las variables de entorno desde el archivo .env
+load_dotenv()
 app = FastAPI()
 
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")

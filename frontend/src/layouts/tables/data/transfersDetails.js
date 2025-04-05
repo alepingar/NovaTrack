@@ -26,16 +26,22 @@ function TransferDetails() {
       try {
         const token = localStorage.getItem("token");
         // Obtener detalles de la transferencia
-        const transferResponse = await axios.get(`http://127.0.0.1:8000/transfers/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const transferResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}/transfers/${id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         setTransfer(transferResponse.data);
 
         // Obtener estadísticas de la empresa
-        const companyStatsResponse = await axios.get("http://127.0.0.1:8000/transfers/stats", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const companyStatsResponse = await axios.get(
+          `${process.env.REACT_APP_API_URL}/transfers/stats`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setCompanyStats(companyStatsResponse.data);
       } catch (error) {
         console.error("Error al obtener los datos:", error);

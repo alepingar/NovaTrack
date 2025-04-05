@@ -11,7 +11,8 @@ from uuid import UUID
 from bson import Binary
 import uuid
 
-client = AsyncIOMotorClient("mongodb://localhost:27017/")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+client = AsyncIOMotorClient(MONGO_URI)
 db = client["nova_track"]
 
 logging.basicConfig(level=logging.DEBUG)

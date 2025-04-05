@@ -60,13 +60,16 @@ function Dashboard() {
       const headers = { Authorization: `Bearer ${token}` };
 
       try {
-        const summaryRes = await axios.get("http://127.0.0.1:8000/transfers/summary-data", {
-          headers,
-        });
+        const summaryRes = await axios.get(
+          `${process.env.REACT_APP_API_URL}/transfers/summary-data`,
+          {
+            headers,
+          }
+        );
         setSummary(summaryRes.data);
 
         const summaryPRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/summary/per-month/${year}/${month}`,
+          `${process.env.REACT_APP_API_URL}/transfers/summary/per-month/${year}/${month}`,
           {
             headers,
           }
@@ -74,7 +77,7 @@ function Dashboard() {
         setSummaryP(summaryPRes.data);
 
         const summaryPARes = await axios.get(
-          `http://127.0.0.1:8000/transfers/summary/per-month/${year}/${month - 1}`,
+          `${process.env.REACT_APP_API_URL}/transfers/summary/per-month/${year}/${month - 1}`,
           {
             headers,
           }
@@ -82,7 +85,7 @@ function Dashboard() {
         setSummaryPA(summaryPARes.data);
 
         const volumeRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/volume-by-day?period=${filterPeriod}`,
+          `${process.env.REACT_APP_API_URL}/transfers/volume-by-day?period=${filterPeriod}`,
           {
             headers,
           }
@@ -90,7 +93,7 @@ function Dashboard() {
         setVolumeByDay(volumeRes.data);
 
         const volumeARes = await axios.get(
-          `http://127.0.0.1:8000/transfers/anomalous/volume-by-day?period=${filterPeriod}`,
+          `${process.env.REACT_APP_API_URL}/transfers/anomalous/volume-by-day?period=${filterPeriod}`,
           {
             headers,
           }
@@ -98,7 +101,7 @@ function Dashboard() {
         setVolumeAByDay(volumeARes.data);
 
         const statusRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/status-distribution?period=${filterPeriod}`,
+          `${process.env.REACT_APP_API_URL}/transfers/status-distribution?period=${filterPeriod}`,
           {
             headers,
           }
@@ -106,7 +109,7 @@ function Dashboard() {
         setStatusDistribution(statusRes.data);
 
         const newUsersRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/new-users/per-month/${year}/${month}`,
+          `${process.env.REACT_APP_API_URL}/transfers/new-users/per-month/${year}/${month}`,
           {
             headers,
           }
@@ -114,7 +117,7 @@ function Dashboard() {
         setNewUsers(newUsersRes.data);
 
         const pastUsersRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/new-users/per-month/${year}/${month - 1}`,
+          `${process.env.REACT_APP_API_URL}/transfers/new-users/per-month/${year}/${month - 1}`,
           {
             headers,
           }
@@ -124,9 +127,12 @@ function Dashboard() {
         const promises = [];
         for (let month = 1; month <= 12; month++) {
           promises.push(
-            axios.get(`http://127.0.0.1:8000/transfers/amount/company/per-month/${year}/${month}`, {
-              headers,
-            })
+            axios.get(
+              `${process.env.REACT_APP_API_URL}/transfers/amount/company/per-month/${year}/${month}`,
+              {
+                headers,
+              }
+            )
           );
         }
         const responses = await Promise.all(promises);

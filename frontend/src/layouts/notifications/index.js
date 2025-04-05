@@ -17,7 +17,7 @@ function Notifications() {
     const fetchNotifications = async () => {
       try {
         const token = localStorage.getItem("token");
-        const notiRes = await axios.get("http://127.0.0.1:8000/notifications", {
+        const notiRes = await axios.get(`${process.env.REACT_APP_API_URL}/notifications`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -33,7 +33,7 @@ function Notifications() {
   const handleDeleteNotification = async (notificationId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://127.0.0.1:8000/notifications/${notificationId}`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/notifications/${notificationId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

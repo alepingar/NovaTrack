@@ -1,9 +1,10 @@
 import pandas as pd
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
-
+import os
 # Conexión a MongoDB
-client = AsyncIOMotorClient("mongodb://localhost:27017/")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+client = AsyncIOMotorClient(MONGO_URI)
 db = client["nova_track"]
 transfers_collection = db["transfers"]
 

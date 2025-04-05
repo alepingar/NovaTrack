@@ -8,9 +8,12 @@ from confluent_kafka import Producer
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 import numpy as np
+import os
+# Configuración del productor Kafka
+kafka_broker = os.getenv("KAFKA_BROKER", "localhost:9092")  # Valor por defecto para local
 
 # Configuración del productor Kafka
-producer_config = {'bootstrap.servers': 'localhost:9092'}
+producer_config = {'bootstrap.servers': kafka_broker}
 producer = Producer(producer_config)
 
 # Conexión a MongoDB con motor

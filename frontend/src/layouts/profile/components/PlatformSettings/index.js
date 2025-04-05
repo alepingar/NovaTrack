@@ -21,11 +21,14 @@ function PlatformSettings() {
       try {
         const token = localStorage.getItem("token");
         // Fetch privacy settings
-        const response = await axios.get("http://127.0.0.1:8000/companies/data-sharing-consent", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/companies/data-sharing-consent`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (response.data) {
           setSettings({
             consent: response.data.data_sharing_consent ?? false,
@@ -33,19 +36,25 @@ function PlatformSettings() {
         }
 
         // Fetch account deletion request status
-        const responseDelete = await axios.get("http://127.0.0.1:8000/companies/account/delete", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const responseDelete = await axios.get(
+          `${process.env.REACT_APP_API_URL}/companies/account/delete`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setDeleteRequest(responseDelete.data.account_deletion_requested ?? false);
 
         // Fetch GDPR request logs
-        const responseGdprLogs = await axios.get("http://127.0.0.1:8000/companies/gdpr/logs", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const responseGdprLogs = await axios.get(
+          `${process.env.REACT_APP_API_URL}/companies/gdpr/logs`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         // Check if there are access or delete actions already requested
         const logs = responseGdprLogs.data || [];
         const actions = logs.reduce((acc, log) => {
@@ -73,7 +82,7 @@ function PlatformSettings() {
       const payload = {
         consent: newValue,
       };
-      await axios.put("http://127.0.0.1:8000/companies/data-sharing-consent", payload, {
+      await axios.put(`${process.env.REACT_APP_API_URL}/companies/data-sharing-consent`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -89,7 +98,7 @@ function PlatformSettings() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://127.0.0.1:8000/companies/gdpr/request",
+        `${process.env.REACT_APP_API_URL}/companies/gdpr/request`,
         { action },
         {
           headers: {
@@ -108,7 +117,7 @@ function PlatformSettings() {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://127.0.0.1:8000/companies/account/delete",
+        `${process.env.REACT_APP_API_URL}/companies/account/delete`,
         {},
         {
           headers: {

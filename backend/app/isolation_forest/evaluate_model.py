@@ -16,7 +16,8 @@ else:
     print(f"El modelo no se encuentra en la ruta: {model_path}")
 
 # Conexión a MongoDB
-client = AsyncIOMotorClient("mongodb://localhost:27017/")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+client = AsyncIOMotorClient(MONGO_URI)
 db = client["nova_track"]
 transfers_collection = db["transfers"]
 

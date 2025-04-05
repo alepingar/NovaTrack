@@ -13,7 +13,7 @@ export default function data(filter) {
   const fetchTransfers = async (range) => {
     try {
       const token = localStorage.getItem("token");
-      let url = "http://127.0.0.1:8000/transfers";
+      let url = `${process.env.REACT_APP_API_URL}/transfers`;
 
       if (range && range !== "all") {
         const endDate = new Date();
@@ -27,9 +27,11 @@ export default function data(filter) {
         if (range === "year")
           startDate = new Date(endDate.getFullYear() - 1, endDate.getMonth(), endDate.getDate());
 
-        url = `http://127.0.0.1:8000/transfers/filter/range?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`;
+        url = `${
+          process.env.REACT_APP_API_URL
+        }/transfers/filter/range?start_date=${startDate.toISOString()}&end_date=${endDate.toISOString()}`;
       } else if (range === "all") {
-        url = "http://127.0.0.1:8000/transfers/filter/all";
+        url = `${process.env.REACT_APP_API_URL}/transfers/filter/all`;
       }
 
       const response = await axios.get(url, {

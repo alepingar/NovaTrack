@@ -4,6 +4,15 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from bson import ObjectId
 import numpy as np
+import os
+
+
+# Conexión a la base de datos MongoDB
+
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+client = AsyncIOMotorClient(MONGO_URI)
+db = client["nova_track"]
+transfers_collection = db["transfers"]
 
 # Genera IBAN español válido
 BANCOS_ESP = [
@@ -207,11 +216,6 @@ async def generate_transactions_for_company(company_id, avg_amount, num_transact
         transactions.append(transaction)
     
     return transactions
-
-# Conexión a la base de datos MongoDB
-client = AsyncIOMotorClient("mongodb://localhost:27017/")
-db = client["nova_track"]
-transfers_collection = db["transfers"]
 
 # Insertar las transferencias en la base de datos
 async def insert_transactions_to_db():

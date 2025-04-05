@@ -45,7 +45,7 @@ function Billing() {
     const fetchCompanyData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://127.0.0.1:8000/companies/profile", {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/companies/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -53,7 +53,7 @@ function Billing() {
         setCompany(response.data);
 
         const summaryPRes = await axios.get(
-          `http://127.0.0.1:8000/transfers/summary/per-month/${year}/${month}`,
+          `${process.env.REACT_APP_API_URL}/transfers/summary/per-month/${year}/${month}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
