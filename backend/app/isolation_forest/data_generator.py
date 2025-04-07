@@ -36,7 +36,7 @@ def generate_iban_es():
     return f"{country_code}{check_digits}{bank_code}{branch_code}{account_number}"
 
 # Generar clientes recurrentes para cada empresa
-def generate_recurrent_clients(num_clients=10):
+def generate_recurrent_clients(num_clients):
     return [generate_iban_es() for _ in range(num_clients)]
 
 # Función para seleccionar el estado de la transferencia
@@ -170,7 +170,6 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
         tzinfo=timezone.utc
     )
     
-    # Decidir IBAN de destino: puede ser español o internacional (con probabilidad ajustada)
     use_recurrent = random.choices([True, False], weights=[80, 20])[0]  # 80% recurrente, 20% nuevo
     
     if use_recurrent:
@@ -197,22 +196,43 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
         "is_anomalous": is_anomalous,
     }
 
-# Generar las transferencias para una empresa, con anomalías controladas
 async def generate_transactions_for_company(company_id, avg_amount, num_transactions=1000):
     transactions = []
+    # Determinar un rango realista para el número de clientes recurrentes
+    company_size_factor = random.choice(['small', 'medium', 'large'])
+    if company_size_factor == 'small':
+        recurrent_clients_count = random.randint(20, 50)  # Empresas pequeñas tendrán menos clientes
+        avg_amount = random.randint(50, 200)  # Promedio para pequeñas empresas
+    elif company_size_factor == 'medium':
+        recurrent_clients_count = random.randint(50, 150)  # Empresas medianas
+        avg_amount = random.randint(200, 500)  # Promedio para medianas empresas
+    else:  # large
+        recurrent_clients_count = random.randint(100, 300)  # Empresas grandes (pero aún PYMEs)
+        avg_amount = random.randint(500, 800)  # Promedio para grandes empresas
     
-    # Determinar cuántas transferencias serán anómalas (entre 1 y 10% de las transferencias)
-    num_anomalous = random.randint(num_transactions // 100, num_transactions // 10) 
-    recurrent_clients = generate_recurrent_clients(200)
+    recurrent_clients = generate_recurrent_clients(recurrent_clients_count)
+    
+    # Parámetros para las anomalías basados en comportamiento
+    mean_anomalies = 0.05 * num_transactions  # Suponemos que en promedio el 5% de las transferencias serán anómalas
+    std_dev = mean_anomalies * 0.5  # Desviación estándar ajustada para variar el número de anomalías
+    
+    # Usar una distribución normal para determinar el número de anomalías
+    num_anomalous = int(np.random.normal(mean_anomalies, std_dev))
+    
+    # Asegurarnos de que el número de anomalías no sea negativo ni más grande que el total de transacciones
+    num_anomalous = max(0, min(num_anomalous, num_transactions))
     
     # Generar las transferencias
     for i in range(num_transactions):
         is_anomalous = i < num_anomalous  # Las primeras "num_anomalous" serán anómalas
         
-        # Asegúrate de esperar la ejecución de la coroutine
-        transaction = await generate_random_transfer(company_id, recurrent_clients, avg_amount, is_anomalous)
+        # Generar el monto realista usando una distribución normal ajustada a PYMEs
+        amount = np.random.normal(avg_amount, avg_amount * 0.15)  # 15% de desviación estándar para no generar montos extremos
+        amount = max(10, min(amount, 1000))  # Asegurar que el monto esté en un rango realista para PYMEs (10 - 1000 EUR)
         
-        # Añadir la transferencia ya resuelta (no la coroutine)
+        # Asegúrate de esperar la ejecución de la coroutine
+        transaction = await generate_random_transfer(company_id, recurrent_clients, amount, is_anomalous)
+        
         transactions.append(transaction)
     
     return transactions
@@ -222,8 +242,7 @@ async def insert_transactions_to_db():
     companies_cursor = await db.companies.distinct("_id")  # Obtiene todos los ID de empresa únicos
     company_ids = [str(company_id) for company_id in companies_cursor]
     for cid in company_ids:
-        avg_amount = random.choice([10, 20, 30, 40, 50])  # Monto promedio aleatorio
-        transactions = await generate_transactions_for_company(cid, avg_amount)
+        transactions = await generate_transactions_for_company(cid)
         if transactions:  # Verifica que haya transacciones antes de insertar
             await transfers_collection.insert_many(transactions)  # Inserta las transferencias en la colección
         else:
