@@ -26,6 +26,7 @@ BANCOS_ESP = [
     "2038",  # Bankia (fusionado con CaixaBank)
 ]
 
+
 def generate_iban_es():
     country_code = "ES"
     check_digits = f"{random.randint(10, 99)}"  # Dos dígitos de control
@@ -42,11 +43,11 @@ def generate_recurrent_clients(num_clients):
 # Función para seleccionar el estado de la transferencia
 def generate_status(is_anomalous):
     if is_anomalous:
-        # Para las anomalías, más probabilidad de "fallida"
-        return random.choices(["fallida", "completada", "pendiente"], weights=[70, 20, 10], k=1)[0]
+        # Anomalías pueden ser completadas, pero en menor proporción
+        return random.choices(["completada", "fallida", "pendiente"], weights=[40, 40, 20], k=1)[0]
     else:
-        # Para las normales, más probabilidad de "completada"
-        return random.choices(["completada", "pendiente", "fallida"], weights=[80, 10, 10], k=1)[0]
+        # Mayoría de transferencias normales son completadas
+        return random.choices(["completada", "pendiente", "fallida"], weights=[90, 8, 2], k=1)[0]
 
 async def get_billing_account_company(company_id: str):
     try:
@@ -170,13 +171,21 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
         tzinfo=timezone.utc
     )
     
-    use_recurrent = random.choices([True, False], weights=[80, 20])[0]  # 80% recurrente, 20% nuevo
-    
-    if use_recurrent:
-        from_account = random.choice(recurrent_clients)  # Cliente conocido
+    if(is_anomalous):
+        use_recurrent = random.choices([True, False], weights=[30, 70])[0] 
+        if use_recurrent:
+            from_account = random.choice(recurrent_clients)  # Cliente conocido
+        else:
+            from_account = generate_iban_es()  # Nuevo remitente
     else:
-        from_account = generate_iban_es()  # Nuevo remitente
-    
+    # Para las transferencias normales, 80% provienen de clientes recurrentes
+        use_recurrent = random.choices([True, False], weights=[80, 20])[0]  # 80% recurrente, 20% no recurrente
+        
+        if use_recurrent:
+            from_account = random.choice(recurrent_clients)  # Cliente recurrente
+        else:
+            from_account = generate_iban_es()  # Nuevo cliente
+
     to_account = await get_billing_account_company(company_id)  # 80% de probabilidad de ser un IBAN español
     # Obtener la moneda del país de destino
     currency =  "EUR" # Si no está en el diccionario, por defecto EUR
@@ -196,7 +205,7 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
         "is_anomalous": is_anomalous,
     }
 
-async def generate_transactions_for_company(company_id, avg_amount, num_transactions=1000):
+async def generate_transactions_for_company(company_id,num_transactions=1000):
     transactions = []
     # Determinar un rango realista para el número de clientes recurrentes
     company_size_factor = random.choice(['small', 'medium', 'large'])

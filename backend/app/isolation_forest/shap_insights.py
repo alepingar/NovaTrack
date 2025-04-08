@@ -1,3 +1,4 @@
+import shap
 import pandas as pd
 import numpy as np
 import json
@@ -6,7 +7,44 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 from sklearn.preprocessing import MinMaxScaler
 import joblib
-from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_score
+import matplotlib.pyplot as plt
+
+class ShapInsights:
+    def __init__(self, model, data, features, shap_values=None):
+        self.model = model
+        self.data = data
+        self.features = features
+        self.shap_values = shap_values
+    
+    def calculate_shap_values(self):
+        """
+        Calcula los valores SHAP para el conjunto de datos dado.
+        """
+        explainer = shap.TreeExplainer(self.model)
+        shap_values = explainer.shap_values(self.data[self.features])
+        self.shap_values = shap_values
+        return shap_values
+    
+    def plot_dependence(self, feature_name, interaction_feature=None, xmax=None):
+        """
+        Muestra el gráfico de dependencia de SHAP para una característica específica.
+        
+        Parameters:
+        - feature_name: Nombre de la característica para la que se muestra el gráfico de dependencia.
+        - interaction_feature: Característica con la que interactuar, si es necesario.
+        - xmax: Limitar el valor máximo del eje X al percentil especificado.
+        """
+        if self.shap_values is None:
+            self.calculate_shap_values()
+        
+        shap.dependence_plot(
+            feature_name,
+            self.shap_values,
+            self.data[self.features],
+            interaction_index=interaction_feature,
+            xmax=xmax
+        )
+        plt.show()
 
 # Cargar el modelo
 model_path = "isolation_forest.pkl"
@@ -31,28 +69,6 @@ async def fetch_data():
 # Cargar los datos
 df = asyncio.run(fetch_data())
 
-# Preprocesar los datos
-df["amount_log"] = np.log1p(df["amount"])
-
-# Guardar min y max antes de escalar
-amount_log_min = df["amount_log"].min()
-amount_log_max = df["amount_log"].max()
-
-scaler = MinMaxScaler()
-df["amount_scaled"] = scaler.fit_transform(df[["amount_log"]])
-
-# Guardar min y max en un archivo JSON
-scaler_params = {
-    "amount_log_min": float(amount_log_min),
-    "amount_log_max": float(amount_log_max)
-}
-
-SCALER_PARAMS_PATH = os.path.join(os.getcwd(), "scaler_params.json")
-with open(SCALER_PARAMS_PATH, "w") as f:
-    json.dump(scaler_params, f)
-
-print(f"Parámetros de escalado guardados en {SCALER_PARAMS_PATH}")
-
 # Convertir estado de la transferencia en valores numéricos
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 df["status"] = df["status"].map(status_mapping)
@@ -70,11 +86,7 @@ df["amount_iqr_high"] = q3
 
 df["is_outside_iqr"] = ((df["amount"] < df["amount_iqr_low"]) | (df["amount"] > df["amount_iqr_high"])).astype(int)
 
-status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
-df["status"] = df["status"].map(status_mapping)
 df['is_recurrent_client'] = 0
-
-df["hour"] = df["timestamp"].dt.hour 
 
 # Marcar todos los 'from_account' que aparecen más de una vez como recurrentes
 recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_counts() > 1].index
@@ -82,26 +94,14 @@ recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_
 # Ahora marcamos las transferencias de esos accounts como recurrentes
 df.loc[df['from_account'].isin(recurrent_accounts), 'is_recurrent_client'] = 1
     
-features = ["amount_zscore", "is_outside_iqr","status","is_recurrent_client","hour"]
+features = ["amount_zscore", "is_outside_iqr", "status", "is_recurrent_client"]
 X = df[features]
 
-# Hacer las predicciones (1: normal, -1: anómala)
-predictions = model.predict(X)
+# Cargar los valores SHAP para los 5000 primeros puntos de datos
+shap_insights = ShapInsights(model, df, features)
+shap_insights.calculate_shap_values()
 
-# Convertir las predicciones a formato binario (1: normal, 0: anómala)
-predictions = (predictions == -1).astype(int)
+# Visualizar el gráfico de dependencia para una característica
+shap_insights.plot_dependence('amount_zscore')
+shap_insights.plot_dependence('amount_zscore', interaction_feature='status')
 
-# Obtener las etiquetas reales de anomalías desde la base de datos (campo 'is_anomalous')
-real_labels = df['is_anomalous'].values
-
-# Evaluar el modelo usando métricas
-accuracy = accuracy_score(real_labels, predictions)
-recall = recall_score(real_labels, predictions)
-precision = precision_score(real_labels, predictions)
-f1 = f1_score(real_labels, predictions)
-
-# Mostrar las métricas
-print(f"Accuracy: {accuracy:.2f}")
-print(f"Recall: {recall:.2f}")
-print(f"Precision: {precision:.2f}")
-print(f"F1 Score: {f1:.2f}")

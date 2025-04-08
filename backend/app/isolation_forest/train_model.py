@@ -1,32 +1,22 @@
-import pandas as pd
 from sklearn.ensemble import IsolationForest
-from sklearn.preprocessing import StandardScaler
+import pandas as pd
 import joblib
 
 # Cargar los datos preprocesados
 df = pd.read_csv("preprocessed_data.csv")
 
-# Eliminar columna 'is_anomalous' si está presente
-if "is_anomalous" in df.columns:
-    df = df.drop(columns=["is_anomalous"])
-
-# Guardar los nombres de las columnas para más tarde
+# Guardar nombres de columnas
 column_names = df.columns
 
-# Normalizar los datos
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df)
+# Entrenar Isolation Forest con n_estimators alto para mayor estabilidad
+model = IsolationForest(n_estimators=200, contamination=0.11, random_state=42, n_jobs=-1)
+model.fit(df)
 
-# Volver a convertir X_scaled a DataFrame con los nombres de las columnas originales
-X_scaled = pd.DataFrame(X_scaled, columns=column_names)
+# Obtener los scores de anomalía
+df["anomaly_score"] = model.score_samples(df)
 
-# Entrenar Isolation Forest con hiperparámetros optimizados
-model = IsolationForest(n_estimators=200, contamination="auto", random_state=42, n_jobs=-1)
-model.fit(X_scaled)
-
-# Guardar el modelo entrenado y el scaler
+# Guardar modelo y los scores
 joblib.dump(model, "isolation_forest.pkl")
-joblib.dump(scaler, "scaler.pkl")
+df.to_csv("anomaly_scores.csv", index=False)
 
-print("Modelo Isolation Forest guardado como 'isolation_forest.pkl'")
-print("Scaler guardado como 'scaler.pkl'")
+print("Modelo entrenado y guardado con anomaly scores.")
