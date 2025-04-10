@@ -116,13 +116,13 @@ async def main():
     tuner = IsolationForestTuner(df, features, is_anomalous_col)
 
     param_grid = {
-        'n_estimators': [100, 200, 300],
-        'max_samples': ['auto', 0.5, 0.7],
-        'contamination': ['auto', 0.05, 0.1],
-        'max_features': [0.5, 0.7, 1.0]
+        'n_estimators': [100, 200, 300, 400, 500],
+        'max_samples': ['auto', 0.3, 0.5, 0.7, 0.9],
+        'contamination': ['auto', 0.03, 0.05, 0.07, 0.1],
+        'max_features': [0.3, 0.5, 0.7, 0.9, 1.0],
     }
 
-    best_params = tuner.find_best_params(param_grid, n_iter=50) # Aumenté n_iter para una búsqueda más exhaustiva
+    best_params = tuner.find_best_params(param_grid, n_iter=300) # Aumenté n_iter para una búsqueda más exhaustiva
 
     # Entrenar el modelo final con los mejores parámetros encontrados
     best_model = IsolationForest(random_state=42, n_jobs=-1, **best_params)

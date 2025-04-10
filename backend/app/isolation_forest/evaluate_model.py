@@ -62,7 +62,7 @@ recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_
 
 # Ahora marcamos las transferencias de esos accounts como recurrentes
 df.loc[df['from_account'].isin(recurrent_accounts), 'is_recurrent_client'] = 1
-    
+
 features = ["amount_zscore","is_recurrent_client","hour","is_outside_iqr"]+ list(status_one_hot.columns)
 X = df[features]
 

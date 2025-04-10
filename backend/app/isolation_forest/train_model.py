@@ -9,7 +9,7 @@ df = pd.read_csv("preprocessed_data.csv")
 column_names = df.columns
 
 # Entrenar Isolation Forest con n_estimators alto para mayor estabilidad
-model = IsolationForest(n_estimators=100, contamination=0.1, random_state=42, n_jobs=-1, max_features=1.0, max_samples="auto")
+model = IsolationForest(n_estimators=100, contamination=0.1, n_jobs=-1, max_features=0.3, max_samples=0.3)
 model.fit(df)
 
 # Obtener los scores de anomalía
