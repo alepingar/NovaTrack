@@ -44,10 +44,10 @@ def generate_recurrent_clients(num_clients):
 def generate_status(is_anomalous):
     if is_anomalous:
         # Anomalías pueden ser completadas, pero en menor proporción
-        return random.choices(["completada", "fallida", "pendiente"], weights=[40, 40, 20], k=1)[0]
+        return random.choices(["completada", "fallida", "pendiente"], weights=[70, 20, 10], k=1)[0]
     else:
         # Mayoría de transferencias normales son completadas
-        return random.choices(["completada", "pendiente", "fallida"], weights=[90, 8, 2], k=1)[0]
+        return random.choices(["completada", "pendiente", "fallida"], weights=[98, 1, 1], k=1)[0]
 
 async def get_billing_account_company(company_id: str):
     try:
@@ -146,7 +146,7 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
     if is_anomalous:
         hours_ago = random.choices(
             population=list(range(0, 8)) + list(range(8, 22)) + list(range(22, 24)),
-            weights=[0.55] * 8 + [0.05] * 14 + [0.4] * 2,  
+            weights=[0.3] * 8 + [0.4] * 14 + [0.3] * 2, 
             k=1
         )[0]
     else:
@@ -199,7 +199,7 @@ async def generate_random_transfer(company_id,recurrent_clients, avg_amount, is_
         "currency": currency,  # Moneda según el IBAN de destino
         "from_account": from_account,
         "to_account": to_account, 
-        "timestamp": timestamp,  # Fecha aleatoria dentro del mes pasado
+        "timestamp": timestamp,
         "status": status,
         "company_id": str(company_id),
         "is_anomalous": is_anomalous,
@@ -211,29 +211,25 @@ async def generate_transactions_for_company(company_id,num_transactions=1000):
     company_size_factor = random.choice(['small', 'medium', 'large'])
     if company_size_factor == 'small':
         recurrent_clients_count = random.randint(20, 50)  # Empresas pequeñas tendrán menos clientes
-        avg_amount = random.randint(50, 200)  # Promedio para pequeñas empresas
+        avg_amount = random.randint(20, 100)  # Promedio para pequeñas empresas
     elif company_size_factor == 'medium':
         recurrent_clients_count = random.randint(50, 150)  # Empresas medianas
-        avg_amount = random.randint(200, 500)  # Promedio para medianas empresas
+        avg_amount = random.randint(100, 300)  # Promedio para medianas empresas
     else:  # large
         recurrent_clients_count = random.randint(100, 300)  # Empresas grandes (pero aún PYMEs)
-        avg_amount = random.randint(500, 800)  # Promedio para grandes empresas
+        avg_amount = random.randint(300, 600)  # Promedio para grandes empresas
     
     recurrent_clients = generate_recurrent_clients(recurrent_clients_count)
     
-    # Parámetros para las anomalías basados en comportamiento
-    mean_anomalies = 0.05 * num_transactions  # Suponemos que en promedio el 5% de las transferencias serán anómalas
-    std_dev = mean_anomalies * 0.5  # Desviación estándar ajustada para variar el número de anomalías
-    
-    # Usar una distribución normal para determinar el número de anomalías
+    mean_anomalies = 0.05 * num_transactions
+    std_dev = mean_anomalies * 0.5
     num_anomalous = int(np.random.normal(mean_anomalies, std_dev))
-    
-    # Asegurarnos de que el número de anomalías no sea negativo ni más grande que el total de transacciones
     num_anomalous = max(0, min(num_anomalous, num_transactions))
+    anomaly_rate = num_anomalous / num_transactions
     
     # Generar las transferencias
     for i in range(num_transactions):
-        is_anomalous = i < num_anomalous  # Las primeras "num_anomalous" serán anómalas
+        is_anomalous = random.random() < anomaly_rate
         
         # Generar el monto realista usando una distribución normal ajustada a PYMEs
         amount = np.random.normal(avg_amount, avg_amount * 0.15)  # 15% de desviación estándar para no generar montos extremos

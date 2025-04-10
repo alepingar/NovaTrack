@@ -31,47 +31,28 @@ async def fetch_data():
 # Cargar los datos
 df = asyncio.run(fetch_data())
 
-# Preprocesar los datos
-df["amount_log"] = np.log1p(df["amount"])
-
-# Guardar min y max antes de escalar
-amount_log_min = df["amount_log"].min()
-amount_log_max = df["amount_log"].max()
-
-scaler = MinMaxScaler()
-df["amount_scaled"] = scaler.fit_transform(df[["amount_log"]])
-
-# Guardar min y max en un archivo JSON
-scaler_params = {
-    "amount_log_min": float(amount_log_min),
-    "amount_log_max": float(amount_log_max)
-}
-
-SCALER_PARAMS_PATH = os.path.join(os.getcwd(), "scaler_params.json")
-with open(SCALER_PARAMS_PATH, "w") as f:
-    json.dump(scaler_params, f)
-
-print(f"Parámetros de escalado guardados en {SCALER_PARAMS_PATH}")
-
-# Convertir estado de la transferencia en valores numéricos
-status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
-df["status"] = df["status"].map(status_mapping)
-
 # Calcular estadísticas por empresa
 df["amount_mean"] = df.groupby("company_id")["amount"].transform("mean")
 df["amount_std"] = df.groupby("company_id")["amount"].transform("std")
 df["amount_zscore"] = (df["amount"] - df["amount_mean"]) / df["amount_std"]
 
 # Calcular IQR por empresa
-q1 = df.groupby("company_id")["amount"].transform(lambda x: x.quantile(0.25))
-q3 = df.groupby("company_id")["amount"].transform(lambda x: x.quantile(0.75))
+q1 = df.groupby("company_id")["amount"].transform(lambda x: x.quantile(0.05))
+q3 = df.groupby("company_id")["amount"].transform(lambda x: x.quantile(0.95))
 df["amount_iqr_low"] = q1
 df["amount_iqr_high"] = q3
 
 df["is_outside_iqr"] = ((df["amount"] < df["amount_iqr_low"]) | (df["amount"] > df["amount_iqr_high"])).astype(int)
 
-status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
-df["status"] = df["status"].map(status_mapping)
+# One-Hot Encoding para la columna 'status'
+status_one_hot = pd.get_dummies(df['status'], prefix='status')
+
+# Eliminar la columna original 'status'
+df = df.drop(columns=['status'])
+
+# Concatenar las columnas One-Hot al DataFrame
+df = pd.concat([df, status_one_hot], axis=1)
+
 df['is_recurrent_client'] = 0
 
 df["hour"] = df["timestamp"].dt.hour 
@@ -82,25 +63,33 @@ recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_
 # Ahora marcamos las transferencias de esos accounts como recurrentes
 df.loc[df['from_account'].isin(recurrent_accounts), 'is_recurrent_client'] = 1
     
-features = ["amount_zscore", "is_outside_iqr","status","is_recurrent_client","hour"]
+features = ["amount_zscore","is_recurrent_client","hour","is_outside_iqr"]+ list(status_one_hot.columns)
 X = df[features]
 
 # Hacer las predicciones (1: normal, -1: anómala)
-predictions = model.predict(X)
+anomaly_scores = model.score_samples(X)
 
-# Convertir las predicciones a formato binario (1: normal, 0: anómala)
-predictions = (predictions == -1).astype(int)
+# Normalizar los anomaly scores a un rango 0-1 para interpretación más clara
+scaler = MinMaxScaler()
+normalized_scores = scaler.fit_transform(anomaly_scores.reshape(-1, 1))
 
-# Obtener las etiquetas reales de anomalías desde la base de datos (campo 'is_anomalous')
+# Agregar los scores al DataFrame
+df["anomaly_score"] = normalized_scores
+
+# Evaluar el rendimiento si aún quieres usar etiquetas binarias
+threshold = np.percentile(anomaly_scores, 7.5)  # Por ejemplo, marcar como anómalas las peores 10%
+binary_predictions = (anomaly_scores < threshold).astype(int)
+
+# Obtener las etiquetas reales de anomalías
 real_labels = df['is_anomalous'].values
 
-# Evaluar el modelo usando métricas
-accuracy = accuracy_score(real_labels, predictions)
-recall = recall_score(real_labels, predictions)
-precision = precision_score(real_labels, predictions)
-f1 = f1_score(real_labels, predictions)
+# Evaluar con métricas
+accuracy = accuracy_score(real_labels, binary_predictions)
+recall = recall_score(real_labels, binary_predictions)
+precision = precision_score(real_labels, binary_predictions)
+f1 = f1_score(real_labels, binary_predictions)
 
-# Mostrar las métricas
+# Mostrar resultados
 print(f"Accuracy: {accuracy:.2f}")
 print(f"Recall: {recall:.2f}")
 print(f"Precision: {precision:.2f}")

@@ -12,7 +12,7 @@ class FeatureVisualizer:
         self.df = pd.read_csv(self.data_path)
         print(f"Datos cargados con {self.df.shape[0]} filas y {self.df.shape[1]} columnas.")
 
-    def plot_feature_scatter(self, feature_x="amount_zscore", feature_y="status"):
+    def plot_feature_scatter(self, feature_x="amount_zscore", feature_y="hour"):
         """Grafica un scatter plot con dos features y el anomaly score como color."""
         if feature_x not in self.df.columns or feature_y not in self.df.columns:
             print("Error: Una de las características no existe en los datos.")
@@ -30,5 +30,4 @@ class FeatureVisualizer:
 if __name__ == "__main__":
     visualizer = FeatureVisualizer()
     visualizer.load_data()
-    visualizer.plot_anomaly_distribution()
     visualizer.plot_feature_scatter()
