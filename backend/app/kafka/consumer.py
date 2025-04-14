@@ -6,15 +6,16 @@ import pandas as pd
 import joblib
 import os
 import numpy as np
-from motor.motor_asyncio import AsyncIOMotorClient 
-from app.services.notification_services import save_notification
+from sklearn.preprocessing import MinMaxScaler
+from motor.motor_asyncio import AsyncIOMotorClient
+from app.services.notification_services import save_notification  # Asegúrate de que esta importación sea correcta para tu proyecto
 
 # Obtener la ruta absoluta del directorio actual
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Definir la ruta del modelo dentro de la misma carpeta
 MODEL_PATH = os.path.join(CURRENT_DIR, "../isolation_forest/isolation_forest.pkl")
-kafka_broker = os.getenv("KAFKA_BROKER", "localhost:9092") 
+kafka_broker = os.getenv("KAFKA_BROKER", "localhost:9092")
 # Cargar el modelo con la ruta absoluta
 model = joblib.load(MODEL_PATH)
 
@@ -27,8 +28,9 @@ consumer_config = {
 }
 consumer = Consumer(consumer_config)
 
-# Mapeo de estado de transferencias
+# Mapeo de estado de transferencias (para las estadísticas iniciales)
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
+status_columns = ['status_completada', 'status_fallida', 'status_pendiente'] # Asegúrate de que coincidan con tus datos
 
 # Diccionario para almacenar estadísticas de cada empresa
 company_stats = {}
@@ -40,9 +42,8 @@ transfers_collection = db["transfers"]
 
 async def fetch_company_stats():
     """
-    Obtiene la media, desviación estándar, Q1 y Q3 de los montos por cada empresa desde la base de datos.
+    Obtiene la media, desviación estándar, Q5 y Q95 de los montos por cada empresa desde la base de datos.
     """
-    # Cargar todas las transferencias en un DataFrame
     cursor = transfers_collection.find({})
     data = await cursor.to_list(length=None)
     df = pd.DataFrame(data)
@@ -51,109 +52,157 @@ async def fetch_company_stats():
         print("⚠️ No hay datos en la base de datos.")
         return
 
-    # Calcular media, desviación estándar, Q1 y Q3 por empresa
     global company_stats
-    company_stats = {}  # Reiniciar el diccionario antes de recalcular las estadísticas
-    
+    company_stats = {}
     for company_id, group in df.groupby('company_id'):
-        q1 = group['amount'].quantile(0.25)
-        q3 = group['amount'].quantile(0.75)
+        q5 = group['amount'].quantile(0.05)
+        q95 = group['amount'].quantile(0.95)
         company_stats[company_id] = {
             "mean": group['amount'].mean(),
             "std": group['amount'].std(),
-            "q1": q1,
-            "q3": q3
+            "q5": q5,
+            "q95": q95
         }
-    
     print("📊 Estadísticas de empresas cargadas.")
     print(company_stats)
 
+async def get_recurrent_clients():
+    """
+    Obtiene un conjunto de 'from_account' que han aparecido más de una vez.
+    """
+    pipeline = [
+        {"$group": {"_id": "$from_account", "count": {"$sum": 1}}},
+        {"$match": {"count": {"$gt": 1}}},
+        {"$project": {"_id": 1}}
+    ]
+    recurrent_accounts_data = await transfers_collection.aggregate(pipeline).to_list(length=None)
+    return {item['_id'] for item in recurrent_accounts_data}
+
 async def process_message(msg):
     """
-    Procesa un mensaje del consumidor, lo analiza con Isolation Forest y lo guarda en la base de datos.
+    Procesa un mensaje del consumidor, lo analiza con Isolation Forest y lo guarda en la base de datos con el anomaly score.
     """
     try:
         transfer = json.loads(msg.value().decode('utf-8'))
-        print(f"Valor de timestamp recibido: {transfer.get('timestamp')}")
+        print(f"Mensaje recibido: {transfer}")
 
         company_id = transfer.get("company_id")
         amount = transfer.get("amount", 0)
+        status = transfer.get("status")
+        from_account = transfer.get("from_account")
+        timestamp_raw = transfer.get('timestamp')
+        timestamp = None
 
         # Validar y convertir timestamp de la transferencia
-        if "timestamp" in transfer:
-            if isinstance(transfer["timestamp"], str):
-                transfer["timestamp"] = datetime.fromisoformat(transfer["timestamp"])
-            elif not isinstance(transfer["timestamp"], datetime):
-                raise ValueError(f"Formato de timestamp no soportado: {transfer['timestamp']}")
+        if timestamp_raw:
+            if isinstance(timestamp_raw, str):
+                try:
+                    timestamp = datetime.fromisoformat(timestamp_raw.replace('Z', '+00:00'))
+                except ValueError:
+                    try:
+                        timestamp = datetime.strptime(timestamp_raw, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
+                    except ValueError:
+                        print(f"⚠️ Formato de timestamp no soportado: {timestamp_raw}")
+                        return  # No procesar si el timestamp es inválido
+            elif isinstance(timestamp_raw, datetime):
+                timestamp = timestamp_raw
+            if timestamp and timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=timezone.utc)
+            hour = timestamp.hour if timestamp else 0
+        else:
+            print("⚠️ Advertencia: No se encontró el timestamp en el mensaje.")
+            hour = 0
 
-        # Convertir el timestamp de la transferencia a UTC si no tiene zona horaria
-        if transfer["timestamp"].tzinfo is None:
-            transfer["timestamp"] = transfer["timestamp"].replace(tzinfo=timezone.utc)
-
-        # Obtener media y std de la empresa
-        # Obtener media, std, Q1 y Q3 de la empresa
-        company_data = company_stats.get(company_id, {"mean": 0, "std": 1, "q1": 0, "q3": 0})
+        # Obtener estadísticas de la empresa (asegúrate de que company_stats esté actualizado)
+        company_data = company_stats.get(company_id, {"mean": 0, "std": 1, "q5": 0, "q95": 0})
         amount_mean = company_data["mean"]
-        amount_std = company_data["std"] if company_data["std"] > 0 else 1  # Evitar división por 0
-        q1 = company_data["q1"]
-        q3 = company_data["q3"]
+        amount_std = company_data["std"] if company_data["std"] > 0 else 1
+        amount_iqr_low = company_data["q5"]
+        amount_iqr_high = company_data["q95"]
 
         # Calcular Z-score
         amount_zscore = (amount - amount_mean) / amount_std
-        
-        # Calcular IQR y si el monto está fuera del rango intercuartil
-        is_outside_iqr = 1 if (amount < q1 or amount > q3) else 0
 
-        # Extraer hora del timestamp
-        hour = transfer["timestamp"].hour
+        # Calcular si está fuera del IQR
+        is_outside_iqr = 1 if (amount < amount_iqr_low or amount > amount_iqr_high) else 0
 
-        status_numeric = status_mapping.get(transfer["status"], -1)
-        # Verificar si la cuenta es recurrente
-        recurrent_accounts = transfers_collection.aggregate([
-            {"$group": {"_id": "$from_account", "count": {"$sum": 1}}},
-            {"$match": {"count": {"$gt": 1}}}
-        ])
-        recurrent_accounts = {account["_id"] for account in await recurrent_accounts.to_list(length=None)}
-        is_recurrent_client = 1 if transfer["from_account"] in recurrent_accounts else 0
+        # Determinar si el cliente es recurrente
+        recurrent_clients = await get_recurrent_clients()
+        is_recurrent_client = 1 if from_account in recurrent_clients else 0
 
-        # Crear DataFrame con las características necesarias para el modelo
-        data = pd.DataFrame([[amount_zscore,is_outside_iqr, status_numeric, is_recurrent_client,hour]], 
-                            columns=["amount_zscore", "is_outside_iqr","status","is_recurrent_client","hour"])
+        # Crear características One-Hot para 'status'
+        status_one_hot = pd.Series([0] * len(status_columns), index=status_columns)
+        if status in status_mapping:
+            status_index = list(status_mapping.keys()).index(status)
+            if 0 <= status_index < len(status_columns):
+                status_one_hot[status_columns[status_index]] = 1
 
-        # Predecir anomalía (Isolation Forest devuelve -1 para anomalías)
-        prediction = model.predict(data)
-        is_anomalous = bool(prediction[0] == -1)
+        # Crear DataFrame con las características para el modelo
+        features = {
+            "amount_zscore": [amount_zscore],
+            "is_recurrent_client": [is_recurrent_client],
+            "hour": [hour],
+            "is_outside_iqr": [is_outside_iqr],
+        }
+        features.update(status_one_hot.to_dict())
+        data = pd.DataFrame(features)
 
-        # Agregar flag de anomalía en la transferencia
+        # Asegurarse de que el orden de las columnas coincida con el modelo entrenado
+        expected_columns = ["amount_zscore", "is_recurrent_client", "hour", "is_outside_iqr"] + status_columns
+        data = data.reindex(columns=expected_columns, fill_value=0)
+
+        # Calcular el anomaly score
+        anomaly_score = model.score_samples(data)[0]
+
+        # Predecir anomalía basado en el score
+        threshold = np.percentile(model.score_samples(pd.DataFrame(np.zeros((1, len(expected_columns))), columns=expected_columns)), 7.5)
+        is_anomalous = bool(anomaly_score < threshold)
+
+        # Agregar flag de anomalía y score a la transferencia
         transfer["is_anomalous"] = is_anomalous
 
+        # Guardar la transferencia en la base de datos
+        await transfers_collection.insert_one(transfer)
+
         if is_anomalous:
-            print(f"⚠️ ALERTA: Transacción anómala detectada: {transfer}")
+            print(f"⚠️ ALERTA: Transacción anómala detectada (Score: {anomaly_score:.4f}): {transfer}")
             message = f"⚠️ Alerta: Se detectó una transferencia anómala con ID: {transfer['id']}"
+            await save_notification(message, "Anomalía", company_id=transfer['company_id'])
         else:
-            print(f"✅ Transacción normal: {transfer}")
+            print(f"✅ Transacción normal (Score: {anomaly_score:.4f}): {transfer}")
 
     except Exception as e:
         print(f"Error procesando el mensaje: {e}")
+        import traceback
+        traceback.print_exc()
 
 async def consume_transfers():
     """
     Función asíncrona para consumir transferencias desde Kafka y analizar cada una.
     """
     try:
-        await fetch_company_stats()  # Obtener estadísticas antes de empezar
+        print("Iniciando el consumidor de transferencias...")
         consumer.subscribe(['transfers'])
-        print("Esperando transferencias...")
 
         while True:
-            msg = consumer.poll(timeout=1.0)
-            if msg is None:
-                await asyncio.sleep(2)  
-                continue
-            if msg.error():
-                print(f"Error en mensaje: {msg.error()}")
-            else:
-                await process_message(msg)
+            await fetch_company_stats()  # Recargar las estadísticas de las empresas
+            print("📊 Estadísticas de empresas recargadas.")
+
+            # Consumir mensajes durante un cierto período
+            consume_until = asyncio.get_event_loop().time() + (60 * 60) # Consumir durante 1 hora
+            while asyncio.get_event_loop().time() < consume_until:
+                msg = consumer.poll(timeout=1.0)
+                if msg is None:
+                    await asyncio.sleep(1)
+                    continue
+                if msg.error():
+                    print(f"Error en mensaje: {msg.error()}")
+                else:
+                    await process_message(msg)
+
+            print("⏳ Pausando el consumo para recargar estadísticas...")
+            await asyncio.sleep(3 * 60)
+
     finally:
         consumer.close()
 
