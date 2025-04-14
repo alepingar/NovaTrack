@@ -37,8 +37,7 @@ async def get_transfers(current_user: dict = Depends(get_current_user)):
 
 @router.get("/stats", response_model=Dict[str, Any])
 async def get_company_stats(current_user: dict = Depends(get_current_user)):
-    company_id = current_user.get("company_id")
-    print("Company ID:", company_id)
+    company_id = current_user["company_id"]
     if not company_id:
         raise HTTPException(status_code=400, detail="Company ID is missing")
     return await get_transfer_stats_by_company(company_id)
