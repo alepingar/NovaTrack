@@ -156,7 +156,9 @@ function Cover() {
           error = "Introduce un correo electrónico válido.";
         } else if (value) {
           try {
-            const response = await axios.get(`http://127.0.1:8000/auth/check-email/${value}`);
+            const response = await axios.get(
+              `${process.env.REACT_APP_API_URL}/auth/check-email/${value}`
+            );
             if (response.data.exists) {
               error = "Este correo electrónico ya está en uso.";
             }
