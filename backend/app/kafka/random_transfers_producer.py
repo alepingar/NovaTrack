@@ -9,13 +9,26 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 import numpy as np
 import os
-
+from confluent_kafka import KafkaException
 # Configuración del productor Kafka
 kafka_broker = os.getenv("KAFKA_BROKER", "localhost:9092")  # Valor por defecto para local
 
 # Configuración del productor Kafka
 producer_config = {'bootstrap.servers': kafka_broker}
-producer = Producer(producer_config)
+
+def wait_for_kafka_producer(max_retries=10, delay=10):
+    for i in range(max_retries):
+        try:
+            producer = Producer(producer_config)
+            producer.list_topics(timeout=5)
+            print("✅ Conectado a Kafka como productor.")
+            return producer
+        except KafkaException as e:
+            print(f"⏳ Kafka no disponible aún (intento {i+1}/{max_retries}): {e}. Esperando {delay}s...")
+            time.sleep(delay)
+    raise Exception("❌ Kafka no está disponible tras varios intentos.")
+
+producer = wait_for_kafka_producer()
 
 # Conexión a MongoDB con motor
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")

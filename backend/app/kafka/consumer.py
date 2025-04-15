@@ -1,3 +1,4 @@
+import time
 from confluent_kafka import Consumer
 import json
 from datetime import datetime, timezone
@@ -9,6 +10,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.services.notification_services import save_notification  # Asegúrate de que esta importación sea correcta para tu proyecto
+from confluent_kafka import KafkaException
 
 # Obtener la ruta absoluta del directorio actual
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +28,21 @@ consumer_config = {
     'auto.offset.reset': 'earliest',
     'enable.auto.commit': True
 }
-consumer = Consumer(consumer_config)
+
+
+def wait_for_kafka_consumer(max_retries=10, delay=10):
+    for i in range(max_retries):
+        try:
+            consumer = Consumer(consumer_config)
+            consumer.list_topics(timeout=5)  # Verifica que Kafka esté listo
+            print("✅ Conectado a Kafka como consumidor.")
+            return consumer
+        except KafkaException as e:
+            print(f"⏳ Kafka no disponible aún (intento {i+1}/{max_retries}): {e}. Esperando {delay}s...")
+            time.sleep(delay)
+    raise Exception("❌ Kafka no está disponible tras varios intentos.")
+
+consumer = wait_for_kafka_consumer()
 
 # Mapeo de estado de transferencias (para las estadísticas iniciales)
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}

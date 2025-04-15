@@ -40,7 +40,6 @@ function TransferDetails() {
           `${process.env.REACT_APP_API_URL}/transfers/stats`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log("Company Stats Response:", companyStatsResponse.data);
         setCompanyStats(companyStatsResponse.data);
         setCompanyIQR({ low: companyStatsResponse.data?.q1, high: companyStatsResponse.data?.q3 });
         setRecurrentClients(companyStatsResponse.data?.recurrent_accounts);
