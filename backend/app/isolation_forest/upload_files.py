@@ -113,7 +113,6 @@ async def process_transfer(transfer, company_stats, recurrent_clients):
         is_anomalous = bool(anomaly_score < threshold)
 
         transfer["is_anomalous"] = is_anomalous
-        transfer["anomaly_score"] = anomaly_score # Guardar el score también
         transfer["timestamp"] = timestamp
         transfer["id"] = str(uuid.uuid4()) if "id" not in transfer else transfer["id"]
         # Guardar en MongoDB
