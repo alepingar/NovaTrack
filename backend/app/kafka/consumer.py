@@ -25,7 +25,7 @@ consumer_config = {
     'enable.auto.commit': True
 }
 
-async def wait_for_kafka_consumer(max_retries=10, delay=10):
+async def wait_for_kafka_consumer(max_retries=20, delay=10):
     """
     Espera la conexión con Kafka, con un retraso inicial antes del primer intento.
     """
@@ -37,7 +37,7 @@ async def wait_for_kafka_consumer(max_retries=10, delay=10):
             return consumer
         except KafkaException as e:
             print(f"⏳ Kafka no disponible aún (intento {i+1}/{max_retries}): {e}. Esperando {delay}s...")
-            time.sleep(delay)
+            await asyncio.sleep(delay)
     raise Exception("❌ Kafka no está disponible tras varios intentos.")
 
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
@@ -111,9 +111,8 @@ async def process_message(msg):
         amount = transfer.get("amount", 0)
         status = transfer.get("status")
         from_account = transfer.get("from_account")
-        timestamp_raw = transfer.get('timestamp')
+        timestamp_raw = transfer.get("timestamp")
         timestamp = None
-
         if timestamp_raw:
             if isinstance(timestamp_raw, str):
                 try:
@@ -128,7 +127,9 @@ async def process_message(msg):
                 timestamp = timestamp_raw
             if timestamp and timestamp.tzinfo is None:
                 timestamp = timestamp.replace(tzinfo=timezone.utc)
+
             hour = timestamp.hour if timestamp else 0
+            print(f"Timestamp parseado: {timestamp}, tipo: {type(timestamp)}")
         else:
             print("⚠️ Advertencia: No se encontró el timestamp en el mensaje.")
             hour = 0
@@ -182,6 +183,8 @@ async def process_message(msg):
         is_anomalous = bool(anomaly_score < threshold)
 
         transfer["is_anomalous"] = is_anomalous
+        print(f"Timestamp parseado: {timestamp}")
+        transfer["timestamp"] = timestamp
         await transfers_collection.insert_one(transfer)
 
         if is_anomalous:

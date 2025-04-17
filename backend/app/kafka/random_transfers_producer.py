@@ -16,7 +16,7 @@ kafka_broker = os.getenv("KAFKA_BROKER", "localhost:9092")  # Valor por defecto 
 # Configuración del productor Kafka
 producer_config = {'bootstrap.servers': kafka_broker}
 
-async def wait_for_kafka_producer(max_retries=10, delay=10): 
+async def wait_for_kafka_producer(max_retries=20, delay=10): 
     for i in range(max_retries):
         try:
             producer = Producer(producer_config)
@@ -25,10 +25,10 @@ async def wait_for_kafka_producer(max_retries=10, delay=10):
             return producer
         except KafkaException as e:
             print(f"⏳ Kafka no disponible aún (intento {i+1}/{max_retries}): {e}. Esperando {delay}s...")
-            time.sleep(delay)
+            await asyncio.sleep(delay)  # 👈 aquí está el cambio bueno
     raise Exception("❌ Kafka no está disponible tras varios intentos.")
 
-producer = wait_for_kafka_producer()
+producer = asyncio.run(wait_for_kafka_producer())
 
 # Conexión a MongoDB con motor
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
@@ -224,7 +224,7 @@ async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is
         "currency": currency,  # Moneda según el IBAN de destino
         "from_account": from_account,
         "to_account": to_account,
-        "timestamp": timestamp,
+        "timestamp": timestamp.isoformat(),
         "status": status,
         "company_id": str(company_id),
     }
@@ -232,9 +232,14 @@ async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is
 async def produce_continuous_transfers():
     companies = []
     last_companies_update = datetime.now()
-    companies_update_interval = timedelta(minutes=30)  # Intervalo de actualización (3 minutos)
+    companies_update_interval = timedelta(minutes=30)  # Intervalo de actualización
 
     try:
+        companies = await get_companies()
+        if not companies:
+            print("No hay empresas en la base de datos.")
+            return 
+        print(f"Lista de empresas inicializada: {[str(company['_id']) for company in companies]}")
         while True:
             # Recargar la lista de empresas periódicamente
             if datetime.now() - last_companies_update > companies_update_interval:
