@@ -140,6 +140,7 @@ async def process_message(msg):
         if existing_transfers_count < 30:
             print(f"⚠️ Empresa {company_id} tiene solo {existing_transfers_count} transferencias. Aún no se aplica el modelo.")
             transfer["is_anomalous"] = False
+            transfer["timestamp"] = timestamp
             await transfers_collection.insert_one(transfer)
             return
 
@@ -183,7 +184,6 @@ async def process_message(msg):
         is_anomalous = bool(anomaly_score < threshold)
 
         transfer["is_anomalous"] = is_anomalous
-        print(f"Timestamp parseado: {timestamp}")
         transfer["timestamp"] = timestamp
         await transfers_collection.insert_one(transfer)
 
