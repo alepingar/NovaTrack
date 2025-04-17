@@ -181,6 +181,7 @@ async def process_message(msg):
         is_anomalous = bool(anomaly_score < threshold)
 
         transfer["is_anomalous"] = is_anomalous
+        transfer['timestamp'] = timestamp.isoformat()
         await transfers_collection.insert_one(transfer)
 
         if is_anomalous:
