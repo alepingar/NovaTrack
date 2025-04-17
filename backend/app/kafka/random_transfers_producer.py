@@ -16,7 +16,7 @@ kafka_broker = os.getenv("KAFKA_BROKER", "localhost:9092")  # Valor por defecto 
 # Configuración del productor Kafka
 producer_config = {'bootstrap.servers': kafka_broker}
 
-def wait_for_kafka_producer(max_retries=10, delay=10):
+async def wait_for_kafka_producer(max_retries=10, delay=10): 
     for i in range(max_retries):
         try:
             producer = Producer(producer_config)
@@ -224,7 +224,7 @@ async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is
         "currency": currency,  # Moneda según el IBAN de destino
         "from_account": from_account,
         "to_account": to_account,
-        "timestamp": timestamp.isoformat(),
+        "timestamp": timestamp,
         "status": status,
         "company_id": str(company_id),
     }

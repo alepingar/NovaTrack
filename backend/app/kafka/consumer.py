@@ -25,7 +25,10 @@ consumer_config = {
     'enable.auto.commit': True
 }
 
-def wait_for_kafka_consumer(max_retries=10, delay=10):
+async def wait_for_kafka_consumer(max_retries=10, delay=10):
+    """
+    Espera la conexión con Kafka, con un retraso inicial antes del primer intento.
+    """
     for i in range(max_retries):
         try:
             consumer = Consumer(consumer_config)
@@ -36,8 +39,6 @@ def wait_for_kafka_consumer(max_retries=10, delay=10):
             print(f"⏳ Kafka no disponible aún (intento {i+1}/{max_retries}): {e}. Esperando {delay}s...")
             time.sleep(delay)
     raise Exception("❌ Kafka no está disponible tras varios intentos.")
-
-consumer = wait_for_kafka_consumer()
 
 status_mapping = {"pendiente": 0, "completada": 1, "fallida": 2}
 status_columns = ['status_completada', 'status_fallida', 'status_pendiente']
@@ -181,7 +182,6 @@ async def process_message(msg):
         is_anomalous = bool(anomaly_score < threshold)
 
         transfer["is_anomalous"] = is_anomalous
-        transfer['timestamp'] = timestamp.isoformat()
         await transfers_collection.insert_one(transfer)
 
         if is_anomalous:
@@ -199,6 +199,7 @@ async def process_message(msg):
 async def consume_transfers():
     try:
         print("Iniciando el consumidor de transferencias...")
+        consumer = await wait_for_kafka_consumer()
         consumer.subscribe(['transfers'])
 
         while True:

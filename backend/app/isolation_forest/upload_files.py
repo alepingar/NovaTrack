@@ -69,6 +69,19 @@ async def process_transfer(transfer, company_stats, recurrent_clients):
         else:
             transfer_id = str(transfer_id)
 
+        # Obtener el número de transferencias existentes para la compañía
+        existing_transfers_count = await transfers_collection.count_documents({"company_id": company_id})
+
+        # Si hay menos de 30 transferencias, marcar como no anómala y guardar
+        if existing_transfers_count < 30:
+            transfer["is_anomalous"] = False
+            transfer["timestamp"] = timestamp
+            transfer["id"] = str(uuid.uuid4()) if "id" not in transfer else transfer["id"]
+            inserted = await transfers_collection.insert_one(transfer)
+            transfer["_id"] = inserted.inserted_id
+            transfer["id"] = transfer_id # Restaurar el ID original para la respuesta
+            return transfer
+
         # Obtener estadísticas de la empresa
         stats = company_stats.get(company_id, {"mean": 0, "std": 1, "q5": 0, "q95": 0})
         amount_mean = stats["mean"]
@@ -219,7 +232,7 @@ async def upload_camt_file(file: UploadFile, company_id: str):
                     else:
                         from_account = creditor_iban_elem.text if creditor_iban_elem is not None else await generate_iban_es()
 
-                    transfer = Transfer(
+                    transfer_data = Transfer(
                         id=str(uuid.uuid4()),
                         amount=amount,
                         currency=currency,
@@ -228,27 +241,28 @@ async def upload_camt_file(file: UploadFile, company_id: str):
                         timestamp=timestamp,
                         status=status,
                         company_id=company_id,
-                        is_anomalous=False,
+                        is_anomalous=False, # Inicialmente marcamos todas como no anómalas
                     ).model_dump()
 
-                    transfers.append(transfer)
+                    transfers.append(transfer_data)
 
         if not transfers:
             raise HTTPException(status_code=400, detail="No se encontraron transferencias válidas en el archivo.")
 
         company_stats = await fetch_company_stats()
         recurrent_clients = await get_recurrent_clients()
+        processed_transfers = []
         for transfer in transfers:
             transfer["id"] = str(uuid.uuid4())
-            
-        tasks = [process_transfer(tx, company_stats, recurrent_clients) for tx in transfers]
-        results = await asyncio.gather(*tasks)
+            processed_transfer = await process_transfer(transfer, company_stats, recurrent_clients)
+            processed_transfers.append(processed_transfer)
+
         await increment_uploads_count(company_id)
 
-        for result in results:
+        for result in processed_transfers:
             if "_id" in result:
                 result["_id"] = str(result["_id"])
-        return {"message": "Archivo procesado correctamente", "processed_transfers": results}
+        return {"message": "Archivo procesado correctamente", "processed_transfers": processed_transfers}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error procesando archivo: {e}")
