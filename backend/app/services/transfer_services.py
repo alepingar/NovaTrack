@@ -290,7 +290,7 @@ async def fetch_transfers_by_range(company_id: str, start_date: datetime, end_da
     return transfers
 
 async def fetch_volume_by_day(company_id: str, period: str = Query("3months", enum=["month", "3months", "year"])):
-    end_date = datetime.now()
+    end_date = datetime.now(timezone.utc)
     if period == "month":
         start_date = end_date - timedelta(days=30)
     elif period == "year":
@@ -327,7 +327,7 @@ async def fetch_volume_by_day(company_id: str, period: str = Query("3months", en
     return [{"date": r["date"], "count": r["count"]} for r in result]
 
 async def fetch_anomalous_volume_by_day(company_id: str, period: str = Query("3months", enum=["month", "3months", "year"])):
-    end_date = datetime.now()
+    end_date = datetime.now(timezone.utc)
     if period == "month":
         start_date = end_date - timedelta(days=30)
     elif period == "year":
@@ -365,7 +365,7 @@ async def fetch_anomalous_volume_by_day(company_id: str, period: str = Query("3m
     return [{"date": r["date"], "count": r["count"]} for r in result]
 
 async def fetch_status_distribution(company_id: str, period: str = Query("3months", enum=["month", "3months", "year"])):
-    end_date = datetime.now()
+    end_date = datetime.now(timezone.utc)
     if period == "month":
         start_date = end_date - timedelta(days=30)
     elif period == "year":
