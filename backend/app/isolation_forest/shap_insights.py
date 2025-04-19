@@ -1,3 +1,4 @@
+import shap
 import pandas as pd
 import numpy as np
 import json
@@ -6,7 +7,44 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 from sklearn.preprocessing import MinMaxScaler
 import joblib
-from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_score
+import matplotlib.pyplot as plt
+
+class ShapInsights:
+    def __init__(self, model, data, features, shap_values=None):
+        self.model = model
+        self.data = data
+        self.features = features
+        self.shap_values = shap_values
+    
+    def calculate_shap_values(self):
+        """
+        Calcula los valores SHAP para el conjunto de datos dado.
+        """
+        explainer = shap.TreeExplainer(self.model)
+        shap_values = explainer.shap_values(self.data[self.features])
+        self.shap_values = shap_values
+        return shap_values
+    
+    def plot_dependence(self, feature_name, interaction_feature=None, xmax=None):
+        """
+        Muestra el gráfico de dependencia de SHAP para una característica específica.
+        
+        Parameters:
+        - feature_name: Nombre de la característica para la que se muestra el gráfico de dependencia.
+        - interaction_feature: Característica con la que interactuar, si es necesario.
+        - xmax: Limitar el valor máximo del eje X al percentil especificado.
+        """
+        if self.shap_values is None:
+            self.calculate_shap_values()
+        
+        shap.dependence_plot(
+            feature_name,
+            self.shap_values,
+            self.data[self.features],
+            interaction_index=interaction_feature,
+            xmax=xmax
+        )
+        plt.show()
 
 # Cargar el modelo
 model_path = "isolation_forest.pkl"
@@ -31,6 +69,9 @@ async def fetch_data():
 # Cargar los datos
 df = asyncio.run(fetch_data())
 
+df = df.sample(frac=1).reset_index(drop=True)
+df = df.sort_values(by=["company_id", "timestamp"])
+
 # Calcular estadísticas por empresa
 df["amount_mean"] = df.groupby("company_id")["amount"].transform("mean")
 df["amount_std"] = df.groupby("company_id")["amount"].transform("std")
@@ -53,9 +94,10 @@ df = df.drop(columns=['status'])
 # Concatenar las columnas One-Hot al DataFrame
 df = pd.concat([df, status_one_hot], axis=1)
 
-df['is_recurrent_client'] = 0
-
 df["hour"] = df["timestamp"].dt.hour 
+
+# Seleccionar columnas finales
+df['is_recurrent_client'] = 0
 
 # Marcar todos los 'from_account' que aparecen más de una vez como recurrentes
 recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_counts() > 1].index
@@ -63,34 +105,15 @@ recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_
 # Ahora marcamos las transferencias de esos accounts como recurrentes
 df.loc[df['from_account'].isin(recurrent_accounts), 'is_recurrent_client'] = 1
 
-features = ["amount_zscore","is_recurrent_client","hour","is_outside_iqr"]+ list(status_one_hot.columns)
+# Seleccionar las características para el modelo
+features = ["amount_zscore", "is_recurrent_client", "hour", "is_outside_iqr"] + list(status_one_hot.columns)
 X = df[features]
 
-# Hacer las predicciones (1: normal, -1: anómala)
-anomaly_scores = model.score_samples(X)
+# Cargar los valores SHAP para los 5000 primeros puntos de datos
+shap_insights = ShapInsights(model, df, features)
+shap_insights.calculate_shap_values()
 
-# Normalizar los anomaly scores a un rango 0-1 para interpretación más clara
-scaler = MinMaxScaler()
-normalized_scores = scaler.fit_transform(anomaly_scores.reshape(-1, 1))
+# Visualizar el gráfico de dependencia para una característica
+shap_insights.plot_dependence('amount_zscore')
+shap_insights.plot_dependence('amount_zscore', interaction_feature='hour')
 
-# Agregar los scores al DataFrame
-df["anomaly_score"] = normalized_scores
-
-# Evaluar el rendimiento si aún quieres usar etiquetas binarias
-threshold = np.percentile(anomaly_scores, 7.5)  # Por ejemplo, marcar como anómalas las peores 10%
-binary_predictions = (anomaly_scores < threshold).astype(int)
-
-# Obtener las etiquetas reales de anomalías
-real_labels = df['is_anomalous'].values
-
-# Evaluar con métricas
-accuracy = accuracy_score(real_labels, binary_predictions)
-recall = recall_score(real_labels, binary_predictions)
-precision = precision_score(real_labels, binary_predictions)
-f1 = f1_score(real_labels, binary_predictions)
-
-# Mostrar resultados
-print(f"Accuracy: {accuracy:.2f}")
-print(f"Recall: {recall:.2f}")
-print(f"Precision: {precision:.2f}")
-print(f"F1 Score: {f1:.2f}")

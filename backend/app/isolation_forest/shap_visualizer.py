@@ -2,13 +2,15 @@ import pandas as pd
 import numpy as np
 import json
 import os
+import shap
+import joblib
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_score
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
-from sklearn.preprocessing import MinMaxScaler
-import joblib
-from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_score
+import matplotlib.pyplot as plt  # Importa matplotlib
 
-# Cargar el modelo
+# Cargar el modelo de Isolation Forest
 model_path = "isolation_forest.pkl"
 if os.path.exists(model_path):
     model = joblib.load(model_path)
@@ -30,6 +32,9 @@ async def fetch_data():
 
 # Cargar los datos
 df = asyncio.run(fetch_data())
+
+df = df.sample(frac=1).reset_index(drop=True)
+df = df.sort_values(by=["company_id", "timestamp"])
 
 # Calcular estadísticas por empresa
 df["amount_mean"] = df.groupby("company_id")["amount"].transform("mean")
@@ -53,9 +58,10 @@ df = df.drop(columns=['status'])
 # Concatenar las columnas One-Hot al DataFrame
 df = pd.concat([df, status_one_hot], axis=1)
 
-df['is_recurrent_client'] = 0
-
 df["hour"] = df["timestamp"].dt.hour 
+
+# Seleccionar columnas finales
+df['is_recurrent_client'] = 0
 
 # Marcar todos los 'from_account' que aparecen más de una vez como recurrentes
 recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_counts() > 1].index
@@ -63,34 +69,25 @@ recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_
 # Ahora marcamos las transferencias de esos accounts como recurrentes
 df.loc[df['from_account'].isin(recurrent_accounts), 'is_recurrent_client'] = 1
 
-features = ["amount_zscore","is_recurrent_client","hour","is_outside_iqr"]+ list(status_one_hot.columns)
+# Seleccionar las características para el modelo
+features = ["amount_zscore", "is_recurrent_client", "hour", "is_outside_iqr"] + list(status_one_hot.columns)
 X = df[features]
 
-# Hacer las predicciones (1: normal, -1: anómala)
-anomaly_scores = model.score_samples(X)
+# SHAP: Crear explicaciones locales
+explainer = shap.TreeExplainer(model)
 
-# Normalizar los anomaly scores a un rango 0-1 para interpretación más clara
-scaler = MinMaxScaler()
-normalized_scores = scaler.fit_transform(anomaly_scores.reshape(-1, 1))
+# Elegir una muestra aleatoria de datos para explicar
+random_indices = np.random.choice(len(X), 1)  # Reducimos a una sola instancia para el force plot
+shap_values_random = explainer.shap_values(X.iloc[random_indices, :])
+random_features = X.iloc[random_indices, :]
 
-# Agregar los scores al DataFrame
-df["anomaly_score"] = normalized_scores
+# Generar el force plot
+plt.figure()  # Crea una nueva figura
+shap.force_plot(explainer.expected_value, shap_values_random[0, :], random_features.iloc[0, :], show=False, matplotlib=True)
 
-# Evaluar el rendimiento si aún quieres usar etiquetas binarias
-threshold = np.percentile(anomaly_scores, 7.5)  # Por ejemplo, marcar como anómalas las peores 10%
-binary_predictions = (anomaly_scores < threshold).astype(int)
+# Guardar la figura como una imagen
+output_path = "force_plot.png"
+plt.savefig(output_path)
+plt.close()  # Cierra la figura para liberar memoria
 
-# Obtener las etiquetas reales de anomalías
-real_labels = df['is_anomalous'].values
-
-# Evaluar con métricas
-accuracy = accuracy_score(real_labels, binary_predictions)
-recall = recall_score(real_labels, binary_predictions)
-precision = precision_score(real_labels, binary_predictions)
-f1 = f1_score(real_labels, binary_predictions)
-
-# Mostrar resultados
-print(f"Accuracy: {accuracy:.2f}")
-print(f"Recall: {recall:.2f}")
-print(f"Precision: {precision:.2f}")
-print(f"F1 Score: {f1:.2f}")
+print(f"El force plot se ha guardado en: {output_path}")

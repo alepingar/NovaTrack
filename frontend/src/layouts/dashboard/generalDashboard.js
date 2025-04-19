@@ -405,7 +405,13 @@ function GeneralDashboard() {
               <Grid container spacing={3} justifyContent="center">
                 {testimonials.map((testimonial, index) => (
                   <Grid item xs={12} sm={6} md={4} key={index}>
-                    <MDBox p={3} border="1px solid lightgray" borderRadius="md" textAlign="left">
+                    <MDBox
+                      mt={3}
+                      p={3}
+                      border="1px solid lightgray"
+                      borderRadius="md"
+                      textAlign="left"
+                    >
                       <MDTypography variant="body1" fontWeight="medium">
                         {testimonial.quote}
                       </MDTypography>

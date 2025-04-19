@@ -89,7 +89,6 @@ function Notifications() {
                         </MDTypography>
                         <button
                           onClick={() => {
-                            console.log("Cerrando la alerta para la notificación ID:", notif._id);
                             handleDeleteNotification(notif._id);
                           }}
                           style={{

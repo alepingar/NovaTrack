@@ -290,7 +290,7 @@ async def fetch_transfers_by_range(company_id: str, start_date: datetime, end_da
     return transfers
 
 async def fetch_volume_by_day(company_id: str, period: str = Query("3months", enum=["month", "3months", "year"])):
-    end_date = datetime.now()
+    end_date = datetime.now(timezone.utc)
     if period == "month":
         start_date = end_date - timedelta(days=30)
     elif period == "year":
@@ -327,7 +327,7 @@ async def fetch_volume_by_day(company_id: str, period: str = Query("3months", en
     return [{"date": r["date"], "count": r["count"]} for r in result]
 
 async def fetch_anomalous_volume_by_day(company_id: str, period: str = Query("3months", enum=["month", "3months", "year"])):
-    end_date = datetime.now()
+    end_date = datetime.now(timezone.utc)
     if period == "month":
         start_date = end_date - timedelta(days=30)
     elif period == "year":
@@ -365,7 +365,7 @@ async def fetch_anomalous_volume_by_day(company_id: str, period: str = Query("3m
     return [{"date": r["date"], "count": r["count"]} for r in result]
 
 async def fetch_status_distribution(company_id: str, period: str = Query("3months", enum=["month", "3months", "year"])):
-    end_date = datetime.now()
+    end_date = datetime.now(timezone.utc)
     if period == "month":
         start_date = end_date - timedelta(days=30)
     elif period == "year":
@@ -402,18 +402,29 @@ async def fetch_status_distribution(company_id: str, period: str = Query("3month
 
 async def get_transfer_stats_by_company(company_id: str) -> Dict[str, Any]:
     """
-    Obtiene estadísticas sobre las transferencias de una empresa específica.
+    Obtiene estadísticas detalladas sobre las transferencias de una empresa específica.
     """
     transfers_collection = db.transfers
-    
-    cursor = transfers_collection.find({"company_id": company_id}, {"amount": 1})
+
+    cursor = transfers_collection.find({"company_id": company_id}, {"amount": 1, "from_account": 1})
     data = await cursor.to_list(length=None)
-    
+
     if not data:
-        return {"company_id": company_id, "mean": 0, "std": 0}
-    
+        return {"mean": 0, "std": 0, "q1": 0, "q3": 0, "recurrent_accounts": []}
+
     df = pd.DataFrame(data)
     amount_mean = df["amount"].mean()
     amount_std = df["amount"].std()
-    
-    return {"mean": amount_mean, "std": amount_std}
+    q1 = df["amount"].quantile(0.05)
+    q3 = df["amount"].quantile(0.95)
+
+    # Identificar cuentas recurrentes (aparecen más de una vez para esta compañía)
+    recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_counts() > 1].index.tolist()
+
+    return {
+        "mean": amount_mean,
+        "std": amount_std,
+        "q1": q1,
+        "q3": q3,
+        "recurrent_accounts": recurrent_accounts
+    }

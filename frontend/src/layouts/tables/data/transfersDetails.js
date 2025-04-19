@@ -19,6 +19,8 @@ function TransferDetails() {
   const navigate = useNavigate();
   const [transfer, setTransfer] = useState(null);
   const [companyStats, setCompanyStats] = useState(null);
+  const [recurrentClients, setRecurrentClients] = useState(null); // Nuevo estado para clientes recurrentes
+  const [companyIQR, setCompanyIQR] = useState(null); // Nuevo estado para el IQR de la empresa
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,17 +34,15 @@ function TransferDetails() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
         setTransfer(transferResponse.data);
 
-        // Obtener estadísticas de la empresa
         const companyStatsResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}/transfers/stats`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setCompanyStats(companyStatsResponse.data);
+        setCompanyIQR({ low: companyStatsResponse.data?.q1, high: companyStatsResponse.data?.q3 });
+        setRecurrentClients(companyStatsResponse.data?.recurrent_accounts);
       } catch (error) {
         console.error("Error al obtener los datos:", error);
       } finally {
@@ -61,7 +61,7 @@ function TransferDetails() {
     );
   }
 
-  if (!transfer || !companyStats) {
+  if (!transfer || !companyStats || !companyIQR || !recurrentClients) {
     return (
       <MDBox display="flex" justifyContent="center" alignItems="center" height="100vh">
         <MDTypography variant="h6" color="error">
@@ -71,49 +71,87 @@ function TransferDetails() {
     );
   }
 
-  // Calcular amount_zscore en el frontend
-  const amountMean = companyStats.mean;
-  const amountStd = companyStats.std > 0 ? companyStats.std : 1; // Evitar división por 0
-  const amountZscore = (transfer.amount - amountMean) / amountStd;
-
-  // Verificar si la transferencia ocurrió en horario bancario
-  const transferHour = new Date(transfer.timestamp).getHours();
-  const isBankingHour = transferHour >= 8 && transferHour < 22 ? 1 : 0;
-
-  const getAnomalyReason = (amountZscore, isBankingHour, amount, avgAmount, status) => {
+  const getAnomalyReason = (transfer, companyStats, companyIQR, recurrentClients) => {
     let reason = [];
+    const amountZscore =
+      (transfer.amount - companyStats.mean) / (companyStats.std > 0 ? companyStats.std : 1);
+    const transferHour = new Date(transfer.timestamp).getHours();
 
-    // Verificar monto extremadamente alto o bajo en comparación con el promedio
-    if (amountZscore > 10) {
-      reason.push("Monto extremadamente alto en comparación con el promedio.");
-    } else if (amountZscore < -10) {
-      reason.push("Monto extremadamente bajo en comparación con el promedio.");
+    const isOutsideIQR = transfer.amount < companyIQR.low || transfer.amount > companyIQR.high;
+    const isRecurrentClient = recurrentClients.includes(transfer.from_account);
+
+    // 1. Basado en el Z-score del Monto
+    if (amountZscore > 3) {
+      reason.push("Monto significativamente superior al promedio histórico de la empresa.");
+    } else if (amountZscore < -3) {
+      reason.push("Monto significativamente inferior al promedio histórico de la empresa.");
+    } else if (amountZscore > 2 || amountZscore < -2) {
+      reason.push("Monto inusual en comparación con el promedio histórico de la empresa.");
     }
 
-    if (isBankingHour === 0) {
-      reason.push("Transferencia fuera del horario bancario (08:00 - 22:00).");
+    // 2. Hora de la Transferencia (considerando horas inusuales)
+    if (transferHour < 7 || transferHour > 23) {
+      reason.push(
+        `Transferencia realizada en una hora muy inusual (${transferHour}:00 - ${
+          transferHour + 1
+        }:00) para la actividad general.`
+      );
+    } else if (transferHour < 9 || transferHour > 21) {
+      reason.push(
+        `Transferencia realizada en una hora fuera del horario comercial típico (${transferHour}:00 - ${
+          transferHour + 1
+        }:00).`
+      );
     }
 
-    // Verificar si el monto está fuera del rango razonable para el tipo de transacción
-    if (amount > avgAmount * 4) {
-      reason.push("Monto excesivamente alto para la transacción.");
-    } else if (amount < avgAmount * 0.1) {
-      reason.push("Monto excesivamente bajo para la transacción.");
+    // 3. Basado en el Rango Intercuartílico (IQR)
+    if (isOutsideIQR) {
+      reason.push(
+        "El monto de la transferencia se encuentra fuera del rango intercuartílico (5%-95%) de las transacciones históricas de la empresa."
+      );
     }
 
-    // Agregar el estado de la transferencia (si es fallida)
-    if (status === "fallida") {
-      reason.push("Estado de la transferencia: Fallida.");
+    // 4. Cliente Recurrente
+    if (!isRecurrentClient) {
+      reason.push(
+        "La transferencia proviene de un cliente que no se identifica como recurrente en el historial de la empresa."
+      );
     }
 
-    // Si no se ha encontrado ninguna razón, se considera una anomalía sin causa específica
-    if (reason.length === 0) {
-      reason.push("Anomalía detectada sin causa específica.");
+    // 5. Estado de la Transferencia
+    if (transfer.status === "fallida") {
+      reason.push("El estado de la transferencia es: Fallida.");
     }
 
-    // Retornar las razones concatenadas
+    // Combinaciones de Razones (con enfoque en la hora y nuevas características)
+    if (amountZscore > 2 && (transferHour < 9 || transferHour > 21)) {
+      reason.push("Monto inusual realizado fuera del horario comercial típico.");
+    }
+    if (isOutsideIQR && (transferHour < 7 || transferHour > 23)) {
+      reason.push("Monto fuera del rango típico transferido en una hora muy inusual.");
+    }
+    if (!isRecurrentClient && (transferHour < 9 || transferHour > 21)) {
+      reason.push(
+        "Transferencia de un cliente no recurrente realizada fuera del horario comercial típico."
+      );
+    }
+    if (amountZscore > 2 && !isRecurrentClient) {
+      reason.push("Monto inusual proveniente de un cliente no recurrente.");
+    }
+    if (isOutsideIQR && !isRecurrentClient) {
+      reason.push("Monto fuera del rango típico realizado por un cliente no recurrente.");
+    }
+
+    // Razón genérica
+    if (reason.length === 0 && transfer.is_anomalous) {
+      reason.push("Anomalía detectada basada en una combinación de factores inusuales.");
+    } else if (reason.length === 0 && !transfer.is_anomalous) {
+      return "Transferencia normal.";
+    }
+
     return reason.join(" ");
   };
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -162,13 +200,7 @@ function TransferDetails() {
                   Motivo de la Anomalía
                 </MDTypography>
                 <MDTypography variant="body2">
-                  {getAnomalyReason(
-                    amountZscore,
-                    isBankingHour,
-                    transfer.amount,
-                    amountMean,
-                    transfer.status
-                  )}
+                  {getAnomalyReason(transfer, companyStats, companyIQR, recurrentClients)}
                 </MDTypography>
               </MDBox>
             )}

@@ -6,7 +6,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 from sklearn.preprocessing import MinMaxScaler
 import joblib
-from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
 
 # Cargar el modelo
 model_path = "isolation_forest.pkl"
@@ -37,8 +38,8 @@ df["amount_std"] = df.groupby("company_id")["amount"].transform("std")
 df["amount_zscore"] = (df["amount"] - df["amount_mean"]) / df["amount_std"]
 
 # Calcular IQR por empresa
-q1 = df.groupby("company_id")["amount"].transform(lambda x: x.quantile(0.05))
-q3 = df.groupby("company_id")["amount"].transform(lambda x: x.quantile(0.95))
+q1 = df.groupby("company_id")["amount"].transform(lambda x: x.quantile(0.15))
+q3 = df.groupby("company_id")["amount"].transform(lambda x: x.quantile(0.85))
 df["amount_iqr_low"] = q1
 df["amount_iqr_high"] = q3
 
@@ -56,41 +57,54 @@ df = pd.concat([df, status_one_hot], axis=1)
 df['is_recurrent_client'] = 0
 
 df["hour"] = df["timestamp"].dt.hour 
-
 # Marcar todos los 'from_account' que aparecen más de una vez como recurrentes
 recurrent_accounts = df['from_account'].value_counts()[df['from_account'].value_counts() > 1].index
 
 # Ahora marcamos las transferencias de esos accounts como recurrentes
 df.loc[df['from_account'].isin(recurrent_accounts), 'is_recurrent_client'] = 1
-
-features = ["amount_zscore","is_recurrent_client","hour","is_outside_iqr"]+ list(status_one_hot.columns)
+    
+features = ["amount_zscore","is_recurrent_client","hour", "is_outside_iqr"] + list(status_one_hot.columns)
 X = df[features]
 
 # Hacer las predicciones (1: normal, -1: anómala)
-anomaly_scores = model.score_samples(X)
+predictions = model.predict(X)
 
-# Normalizar los anomaly scores a un rango 0-1 para interpretación más clara
-scaler = MinMaxScaler()
-normalized_scores = scaler.fit_transform(anomaly_scores.reshape(-1, 1))
+# Convertir las predicciones a formato binario (1: normal, 0: anómala)
+predictions = (predictions == -1).astype(int)
 
-# Agregar los scores al DataFrame
-df["anomaly_score"] = normalized_scores
-
-# Evaluar el rendimiento si aún quieres usar etiquetas binarias
-threshold = np.percentile(anomaly_scores, 7.5)  # Por ejemplo, marcar como anómalas las peores 10%
-binary_predictions = (anomaly_scores < threshold).astype(int)
-
-# Obtener las etiquetas reales de anomalías
+# Obtener las etiquetas reales de anomalías desde la base de datos (campo 'is_anomalous')
 real_labels = df['is_anomalous'].values
 
-# Evaluar con métricas
-accuracy = accuracy_score(real_labels, binary_predictions)
-recall = recall_score(real_labels, binary_predictions)
-precision = precision_score(real_labels, binary_predictions)
-f1 = f1_score(real_labels, binary_predictions)
+# Calcular la Curva ROC del modelo Isolation Forest
+fpr, tpr, _ = roc_curve(real_labels, predictions)
+roc_auc = auc(fpr, tpr)
 
-# Mostrar resultados
-print(f"Accuracy: {accuracy:.2f}")
-print(f"Recall: {recall:.2f}")
-print(f"Precision: {precision:.2f}")
-print(f"F1 Score: {f1:.2f}")
+# Curva Naive (modelo aleatorio con distribución uniforme)
+random_probs = np.random.uniform(0, 1, len(real_labels))
+fpr_naive, tpr_naive, _ = roc_curve(real_labels, random_probs)
+roc_auc_naive = auc(fpr_naive, tpr_naive)
+
+# Configuración de la gráfica
+plt.figure(figsize=(8,6))
+
+# Curva del modelo
+plt.plot(fpr, tpr, color='blue', lw=2, label=f'Isolation Forest (AUC = {roc_auc:.2f})')
+
+# Curva Naive
+plt.plot(fpr_naive, tpr_naive, 'r--', lw=2, label=f'Naive (AUC = {roc_auc_naive:.2f})')
+
+# Curva Random
+plt.plot([0, 1], [0, 1], color='gray', linestyle='--', lw=2, label='Random')
+
+# Ajustar límites con margen
+plt.xlim([-0.02, 1.02])
+plt.ylim([-0.02, 1.02])
+
+# Etiquetas y título
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Curva ROC - Isolation Forest')
+plt.legend(loc='lower right')
+
+# Mostrar la gráfica
+plt.show()
