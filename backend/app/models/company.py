@@ -31,7 +31,7 @@ class CompanyCreate(BaseModel):
         None, pattern=r"^\+?[1-9]\d{1,14}$", description="El número de teléfono debe seguir el formato internacional (E.164)"
     )
     tax_id: Optional[str] = Field(None, min_length=8, max_length=15, description="El ID fiscal debe tener entre 8 y 15 caracteres")
-    address: Optional[str] = Field(None, max_length=200, description="La dirección no debe superar los 200 caracteres")
+    address: Optional[str] = Field(None, max_length=100, description="La dirección no debe superar los 200 caracteres")
     founded_date: Optional[datetime]
     billing_account_number: str = Field(..., description="Número de cuenta bancaria de la empresa para recibir pagos")
     entity_type: EntityType = Field(..., description="Tipo de entidad legal de la empresa")

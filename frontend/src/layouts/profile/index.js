@@ -69,7 +69,7 @@ function CompanyProfile() {
     const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/; // Regex for valid email format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // Simple date format YYYY-MM-DD
 
-    if (!formData.phone_number || !phoneRegex.test(formData.phone_number)) {
+    if (formData.phone_number && !phoneRegex.test(formData.phone_number)) {
       newErrors.phone_number = "Número de teléfono inválido. Debe tener 9 dígitos.";
     }
 
@@ -80,7 +80,23 @@ function CompanyProfile() {
     if (formData.founded_date && !dateRegex.test(formData.founded_date)) {
       newErrors.founded_date = "Fecha de fundación inválida. Debe ser en formato YYYY-MM-DD.";
     }
+    if (formData.address && formData.address.length > 100) {
+      newErrors.address = "La dirección no puede superar los 200 caracteres.";
+    }
+    if (formData.name && formData.name.length > 40) {
+      newErrors.name = "El nombre no puede superar los 40 caracteres.";
+    }
+    if (formData.industry && formData.industry.length > 50) {
+      newErrors.industry = "El sector industrial no puede superar los 50 caracteres.";
+    }
 
+    if (formData.country && formData.country.length > 30) {
+      newErrors.country = "El país no puede superar los 30 caracteres.";
+    }
+
+    if (formData.tax_id && formData.tax_id.length > 15) {
+      newErrors.tax_id = "El ID fiscal no puede superar los 15 caracteres.";
+    }
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
@@ -204,14 +220,37 @@ function CompanyProfile() {
                       </MDTypography>
                       {isEditing ? (
                         <>
-                          <MDInput
-                            fullWidth
-                            name={field}
-                            value={formData[field] || ""}
-                            onChange={handleChange}
-                            error={Boolean(errors[field])}
-                            helperText={errors[field]}
-                          />
+                          {field === "founded_date" ? (
+                            <>
+                              <input
+                                type="date"
+                                name={field}
+                                value={formData[field] || ""}
+                                onChange={handleChange}
+                                className="MuiInputBase-input MuiInput-input MuiInputBase-inputAdornedEnd"
+                                style={{
+                                  width: "100%",
+                                  padding: "8px",
+                                  border: "1px solid #ccc",
+                                  borderRadius: "4px",
+                                }}
+                              />
+                              {errors[field] && (
+                                <MDTypography variant="caption" color="error">
+                                  {errors[field]}
+                                </MDTypography>
+                              )}
+                            </>
+                          ) : (
+                            <MDInput
+                              fullWidth
+                              name={field}
+                              value={formData[field] || ""}
+                              onChange={handleChange}
+                              error={Boolean(errors[field])}
+                              helperText={errors[field]}
+                            />
+                          )}
                         </>
                       ) : (
                         <MDTypography variant="body1" fontWeight="light">

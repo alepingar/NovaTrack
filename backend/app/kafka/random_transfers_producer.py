@@ -267,13 +267,13 @@ async def produce_continuous_transfers():
                 transfer = await generate_random_transfer(company_id, recurrent_clients, avg_amount, is_anomalous)
                 producer.produce('transfers', key=str(transfer["id"]), value=json.dumps(transfer, ensure_ascii=False))
                 print(f"Transferencia enviada para la empresa {company_id}: {transfer}")
-            producer.flush()
+            producer.flush(timeout=3)
             await asyncio.sleep(random.uniform(40, 120))  # Intervalo más corto para flujo continuo
 
     except KeyboardInterrupt:
         print("\nGeneración de transferencias interrumpida.")
     finally:
-        producer.flush()
+        producer.flush(timeout=3)
 
 if __name__ == "__main__":
     asyncio.run(produce_continuous_transfers())
