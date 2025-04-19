@@ -107,6 +107,9 @@ function PlatformSettings() {
         }
       );
       toast.success("Solicitud enviada correctamente");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error("Error al realizar la solicitud GDPR:", error);
       toast.error("Error en la solicitud GDPR");
@@ -126,6 +129,9 @@ function PlatformSettings() {
         }
       );
       toast.success("Solicitud de eliminación de cuenta enviada correctamente");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error("Error al realizar la solicitud:", error);
       toast.error("Error en la solicitud");
