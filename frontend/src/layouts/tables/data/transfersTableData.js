@@ -4,7 +4,7 @@ import MDBadge from "components/MDBadge";
 import axios from "axios";
 import { useEffect, useState, useRef } from "react";
 
-export default function data(filter) {
+export default function DataTableContent(filter) {
   const [transfers, setTransfers] = useState([]);
   const transfersRef = useRef([]);
   const [sortColumn, setSortColumn] = useState("timestamp"); // Orden predeterminado
