@@ -9,6 +9,7 @@ import Footer from "examples/Footer";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
+import Card from "@mui/material/Card";
 
 function GeneralDashboard() {
   const [transfers, setTransfers] = useState(0);
@@ -219,142 +220,11 @@ function GeneralDashboard() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
+
+      {/* Sección: Beneficios y Características */}
       <MDBox py={3}>
-        {/* Título de la sección de beneficios */}
-        <MDBox textAlign="center">
-          <MDTypography variant="h4" fontWeight="bold">
-            {getStatisticsTitle()}
-          </MDTypography>
-          <MDTypography variant="body1" color="secondary">
-            Resumen de las transferencias y anomalías detectadas por la aplicación durante el
-            período seleccionado.
-          </MDTypography>
-        </MDBox>
-      </MDBox>
-      <MDBox py={3}>
-        <MDBox mb={6} display="flex" justifyContent="space-between" alignItems="flex-start">
-          <MDBox display="flex" flexDirection="column" alignItems="left">
-            <MDTypography variant="caption" fontWeight="medium">
-              Filtrar estadísticas por:
-            </MDTypography>
-            <MDBox mt={1} display="flex" gap={1}>
-              <MDButton
-                variant={filterPeriod === "month" ? "contained" : "outlined"}
-                onClick={() => handleFilterChange("month")}
-              >
-                <MDTypography variant="caption" fontWeight="medium">
-                  Último mes
-                </MDTypography>
-              </MDButton>
-              <MDButton
-                variant={filterPeriod === "3months" ? "contained" : "outlined"}
-                onClick={() => handleFilterChange("3months")}
-              >
-                <MDTypography variant="caption" fontWeight="medium">
-                  Últimos 3 meses
-                </MDTypography>
-              </MDButton>
-              <MDButton
-                variant={filterPeriod === "year" ? "contained" : "outlined"}
-                onClick={() => handleFilterChange("year")}
-              >
-                <MDTypography variant="caption" fontWeight="medium">
-                  Último año
-                </MDTypography>
-              </MDButton>
-            </MDBox>
-          </MDBox>
-        </MDBox>
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} lg={3}>
-            <MDBox mb={1.5}>
-              <ComplexStatisticsCard
-                color="dark"
-                icon="sync_alt"
-                title="Transferencias analizadas"
-                count={transfers || 0}
-                percentage={
-                  filterPeriod !== "year"
-                    ? {
-                        color: transfersChange.color,
-                        amount: transfersChange.amount,
-                        label: "Desde el último mes",
-                      }
-                    : null
-                }
-              />
-            </MDBox>
-          </Grid>
-          <Grid item xs={12} sm={6} lg={3}>
-            <MDBox mb={1.5}>
-              <ComplexStatisticsCard
-                icon="warning"
-                title="Anomalías detectadas"
-                count={anomaly || 0}
-                percentage={
-                  filterPeriod !== "year"
-                    ? {
-                        color: anomalyChange.color,
-                        amount: anomalyChange.amount,
-                        label: "Desde la última revisión",
-                      }
-                    : null
-                }
-              />
-            </MDBox>
-          </Grid>
-          <Grid item xs={12} sm={6} lg={3}>
-            <MDBox mb={1.5}>
-              <ComplexStatisticsCard
-                color="success"
-                icon="warning"
-                title="Cantidad transferida"
-                count={`${amount.toLocaleString("es-ES") || 0}€`}
-                percentage={
-                  filterPeriod !== "year"
-                    ? {
-                        color: amountChange.color,
-                        amount: amountChange.amount,
-                        label: amountChange.amount > 0 ? "En crecimiento" : "En decrecimiento",
-                      }
-                    : null
-                }
-              />
-            </MDBox>
-          </Grid>
-        </Grid>
-        <MDBox mt={8}>
-          <Grid container spacing={3}>
-            {" "}
-            {/* Espaciado entre los elementos */}
-            <Grid item xs={12} sm={6} md={6}>
-              {" "}
-              {/* Cada gráfico ocupa la mitad del espacio en pantallas medianas y grandes */}
-              <MDBox mb={3}>
-                <ReportsLineChart
-                  color="info"
-                  title="Crecimiento de transferencias"
-                  description="Cantidad de transferencias analizadas a lo largo del año"
-                  date="Actualizado automáticamente"
-                  chart={reportsGrowthChartData}
-                />
-              </MDBox>
-            </Grid>
-            <Grid item xs={12} sm={6} md={6}>
-              {" "}
-              {/* El segundo gráfico también ocupa la mitad */}
-              <MDBox mb={3}>
-                <ReportsLineChart
-                  color="error"
-                  title="Anomalías detectadas"
-                  description="Cantidad de anomalías detectadas a lo largo del año"
-                  date="Actualizado automáticamente"
-                  chart={reportsAnomaliesChartData}
-                />
-              </MDBox>
-            </Grid>
-          </Grid>
-          <MDBox mt={4.5} mb={6} textAlign="center">
+        <Card sx={{ padding: 3, mb: 4 }}>
+          <MDBox textAlign="center" mb={2}>
             <MDTypography variant="h4" fontWeight="bold">
               Beneficios y Características
             </MDTypography>
@@ -363,19 +233,20 @@ function GeneralDashboard() {
             </MDTypography>
           </MDBox>
 
-          {/* Contenedor de los beneficios */}
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={4}>
+            {/* Card 1: Detección de Anomalías */}
+            <Grid item xs={12} sm={4} mt={3}>
               <MDTypography variant="h6" fontWeight="medium">
                 Detección de Anomalías
               </MDTypography>
               <MDTypography variant="body2" color="secondary">
-                Nuestro sistema detecta anomalías de manera instantánea en cuanto se van asegurando
-                asegurando que ninguna transacción sospechosa pase desapercibida.
+                Nuestro sistema detecta anomalías de manera instantánea, asegurando que ninguna
+                transacción sospechosa pase desapercibida.
               </MDTypography>
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            {/* Card 2: Prevención de Fraudes */}
+            <Grid item xs={12} sm={4} mt={3}>
               <MDTypography variant="h6" fontWeight="medium">
                 Prevención de Fraudes con Algoritmos Avanzados
               </MDTypography>
@@ -385,7 +256,8 @@ function GeneralDashboard() {
               </MDTypography>
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            {/* Card 3: Ahorro de Tiempo y Costes */}
+            <Grid item xs={12} sm={4} mt={3}>
               <MDTypography variant="h6" fontWeight="medium">
                 Ahorro de Tiempo y Dinero al Automatizar la Seguridad
               </MDTypography>
@@ -394,38 +266,181 @@ function GeneralDashboard() {
                 costos asociados con la seguridad manual.
               </MDTypography>
             </Grid>
-            <Grid container spacing={3}>
-              {/* ... (Benefits) */}
-            </Grid>
-            {/* Sección de testimonios */}
-            <MDBox mb={6} mt={6} textAlign="center">
-              <MDTypography variant="h4" fontWeight="bold">
-                Opiniones de Empresas
-              </MDTypography>
-              <Grid container spacing={3} justifyContent="center">
-                {testimonials.map((testimonial, index) => (
-                  <Grid item xs={12} sm={6} md={4} key={index}>
-                    <MDBox
-                      mt={3}
-                      p={3}
-                      border="1px solid lightgray"
-                      borderRadius="md"
-                      textAlign="left"
-                    >
-                      <MDTypography variant="body1" fontWeight="medium">
-                        {testimonial.quote}
-                      </MDTypography>
-                      <MDTypography variant="caption" fontWeight="regular" color="text" mt={2}>
-                        - {testimonial.author}, {testimonial.company}
-                      </MDTypography>
-                    </MDBox>
-                  </Grid>
-                ))}
-              </Grid>
-            </MDBox>
           </Grid>
-        </MDBox>
+        </Card>
       </MDBox>
+
+      {/* Sección: Estadísticas de Actividad */}
+      <Card sx={{ padding: 3, mb: 4 }}>
+        <MDBox py={3}>
+          <MDBox textAlign="center">
+            <MDTypography variant="h4" fontWeight="bold">
+              {getStatisticsTitle()}
+            </MDTypography>
+            <MDTypography variant="body1" color="secondary">
+              Resumen de las transferencias y anomalías detectadas por la aplicación durante el
+              período seleccionado.
+            </MDTypography>
+          </MDBox>
+        </MDBox>
+
+        {/* Filtros de estadísticas */}
+        <MDBox py={3}>
+          <MDBox mb={6} display="flex" justifyContent="space-between" alignItems="flex-start">
+            <MDBox display="flex" flexDirection="column" alignItems="left">
+              <MDTypography variant="caption" fontWeight="medium">
+                Filtrar estadísticas por:
+              </MDTypography>
+              <MDBox mt={1} display="flex" gap={1}>
+                <MDButton
+                  variant={filterPeriod === "month" ? "contained" : "outlined"}
+                  onClick={() => handleFilterChange("month")}
+                >
+                  <MDTypography variant="caption" fontWeight="medium">
+                    Último mes
+                  </MDTypography>
+                </MDButton>
+                <MDButton
+                  variant={filterPeriod === "3months" ? "contained" : "outlined"}
+                  onClick={() => handleFilterChange("3months")}
+                >
+                  <MDTypography variant="caption" fontWeight="medium">
+                    Últimos 3 meses
+                  </MDTypography>
+                </MDButton>
+                <MDButton
+                  variant={filterPeriod === "year" ? "contained" : "outlined"}
+                  onClick={() => handleFilterChange("year")}
+                >
+                  <MDTypography variant="caption" fontWeight="medium">
+                    Último año
+                  </MDTypography>
+                </MDButton>
+              </MDBox>
+            </MDBox>
+          </MDBox>
+
+          {/* Tarjetas de estadísticas */}
+          <Grid container spacing={3}>
+            {/* Transferencias analizadas */}
+            <Grid item xs={12} sm={6} lg={3}>
+              <MDBox mb={1.5}>
+                <ComplexStatisticsCard
+                  color="dark"
+                  icon="sync_alt"
+                  title="Transferencias analizadas"
+                  count={transfers || 0}
+                  percentage={
+                    filterPeriod !== "year"
+                      ? {
+                          color: transfersChange.color,
+                          amount: transfersChange.amount,
+                          label: "Desde el último mes",
+                        }
+                      : null
+                  }
+                />
+              </MDBox>
+            </Grid>
+
+            {/* Anomalías detectadas */}
+            <Grid item xs={12} sm={6} lg={3}>
+              <MDBox mb={1.5}>
+                <ComplexStatisticsCard
+                  icon="warning"
+                  title="Anomalías detectadas"
+                  count={anomaly || 0}
+                  percentage={
+                    filterPeriod !== "year"
+                      ? {
+                          color: anomalyChange.color,
+                          amount: anomalyChange.amount,
+                          label: "Desde la última revisión",
+                        }
+                      : null
+                  }
+                />
+              </MDBox>
+            </Grid>
+
+            {/* Monto total transferido */}
+            <Grid item xs={12} sm={6} lg={3}>
+              <MDBox mb={1.5}>
+                <ComplexStatisticsCard
+                  color="success"
+                  icon="euro"
+                  title="Cantidad transferida"
+                  count={`${amount.toLocaleString("es-ES") || 0}€`}
+                  percentage={
+                    filterPeriod !== "year"
+                      ? {
+                          color: amountChange.color,
+                          amount: amountChange.amount,
+                          label: amountChange.amount > 0 ? "En crecimiento" : "En decrecimiento",
+                        }
+                      : null
+                  }
+                />
+              </MDBox>
+            </Grid>
+          </Grid>
+
+          {/* Gráficos de evolución */}
+          <MDBox mt={8}>
+            <Grid container spacing={3}>
+              {/* Gráfico: Crecimiento de transferencias */}
+              <Grid item xs={12} sm={6} md={6}>
+                <MDBox mb={3}>
+                  <ReportsLineChart
+                    color="info"
+                    title="Crecimiento de transferencias"
+                    description="Cantidad de transferencias analizadas a lo largo del año"
+                    date="Actualizado automáticamente"
+                    chart={reportsGrowthChartData}
+                  />
+                </MDBox>
+              </Grid>
+
+              {/* Gráfico: Anomalías detectadas */}
+              <Grid item xs={12} sm={6} md={6}>
+                <MDBox mb={3}>
+                  <ReportsLineChart
+                    color="error"
+                    title="Anomalías detectadas"
+                    description="Cantidad de anomalías detectadas a lo largo del año"
+                    date="Actualizado automáticamente"
+                    chart={reportsAnomaliesChartData}
+                  />
+                </MDBox>
+              </Grid>
+            </Grid>
+          </MDBox>
+        </MDBox>
+      </Card>
+
+      {/* Sección: Testimonios */}
+      <Card sx={{ padding: 3, mb: 4 }}>
+        <MDBox textAlign="center" mb={4}>
+          <MDTypography variant="h4" fontWeight="bold">
+            Opiniones de Empresas
+          </MDTypography>
+        </MDBox>
+        <Grid container spacing={3}>
+          {testimonials.map((testimonial, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Card sx={{ p: 3, height: "100%" }}>
+                <MDTypography variant="body1" fontWeight="medium" mb={2}>
+                  “{testimonial.quote}”
+                </MDTypography>
+                <MDTypography variant="caption" color="textSecondary">
+                  - {testimonial.author}, {testimonial.company}
+                </MDTypography>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Card>
+
       <Footer />
     </DashboardLayout>
   );
