@@ -432,7 +432,7 @@ function GeneralDashboard() {
                 <MDTypography variant="body1" fontWeight="medium" mb={2}>
                   “{testimonial.quote}”
                 </MDTypography>
-                <MDTypography variant="caption" color="textSecondary">
+                <MDTypography variant="caption" color="secondary">
                   - {testimonial.author}, {testimonial.company}
                 </MDTypography>
               </Card>
