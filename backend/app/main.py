@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import company_routes, transfer_routes , auth_routes , notification_routes , invoice_routes
@@ -9,7 +10,7 @@ from dotenv import load_dotenv
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
 app = FastAPI()
-
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
 
 # Manejo de la conexión con MongoDB

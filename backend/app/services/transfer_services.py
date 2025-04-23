@@ -1,13 +1,17 @@
+from logging import log
+import logging
 import pandas as pd
 from app.database import db
 from app.models.transfer import Transfer, TransferResponse
 from datetime import datetime, timezone, timedelta
-from typing import Any, List
+from typing import Any, List, Optional
 from fastapi import HTTPException, Query
 from typing import Dict, Union
 from uuid import UUID
 from pymongo import ASCENDING
 from pydantic import BaseModel
+
+log = logging.getLogger(__name__)
 
 async def fetch_transfers(company_id: str) -> List[TransferResponse]:
     """
@@ -225,287 +229,6 @@ async def fetch_summary_data_per_month_for_company(company_id: str, year: int, m
 
     return summary_data
 
-BANCOS_ESP = [
-    "0049",  # Santander
-    "0075",  # Banco Popular
-    "0081",  # Banco Sabadell
-    "2100",  # CaixaBank
-    "0182",  # BBVA
-    "1465",  # ING
-    "0128",  # Bankinter
-    "2038",  # Bankia (fusionado con CaixaBank)
-]
-
-async def fetch_summary(company_id: str, start_date: datetime = None, end_date: datetime = None, bank_prefix: str = None, min_amount: float = None, max_amount: float = None) -> dict:
-    """
-    Obtiene un resumen de las transferencias para una empresa específica, aplicando filtros dinámicos.
-    """
-    query = {"company_id": company_id}
-    if start_date and end_date:
-        query["timestamp"] = {"$gte": start_date, "$lte": end_date}
-    elif start_date:
-        query["timestamp"] = {"$gte": start_date}
-    elif end_date:
-        query["timestamp"] = {"$lte": end_date}
-    if bank_prefix:
-        query["from_account"] = {"$regex": f"^.{4}{bank_prefix}"}
-    if min_amount is not None and max_amount is not None:
-        query["amount"] = {"$gte": min_amount, "$lte": max_amount}
-    elif min_amount is not None:
-        query["amount"] = {"$gte": min_amount}
-    elif max_amount is not None:
-        query["amount"] = {"$lte": max_amount}
-
-    total_transactions = await db.transfers.count_documents(query)
-    total_anomalies = await db.transfers.count_documents({**query, "is_anomalous": True})
-
-    total_amount_data = await db.transfers.aggregate([
-        {"$match": query},
-        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
-    ]).to_list(length=1)
-    total_amount = round(total_amount_data[0]["total"], 2) if total_amount_data else 0.0
-
-    # Cálculo de nuevos remitentes dentro del rango de fechas (si se proporciona)
-    if start_date and end_date:
-        current_period_senders = await db.transfers.distinct(
-            "from_account",
-            {"company_id": company_id, "timestamp": {"$gte": start_date, "$lte": end_date}}
-        )
-        new_senders = len(current_period_senders)
-    else:
-        # Si no hay rango de fechas, calcula nuevos remitentes del último mes
-        start_date_last_month = datetime.now() - timedelta(days=30)
-        current_period_senders = await db.transfers.distinct(
-            "from_account",
-            {"company_id": company_id, "timestamp": {"$gte": start_date_last_month}}
-        )
-        new_senders = len(current_period_senders)
-
-    # Devuelvo los resultados como un diccionario
-    return {
-        "totalTransactions": total_transactions,
-        "totalAnomalies": total_anomalies,
-        "totalAmount": total_amount,
-        "newSenders": new_senders,
-    }
-
-async def fetch_transfers_by_filters(
-    company_id: str,
-    start_date: datetime = None,
-    end_date: datetime = None,
-    bank_prefix: str = None,
-    min_amount: float = None,
-    max_amount: float = None
-) -> List[TransferResponse]:
-    """
-    Devuelve las transferencias que coinciden con los filtros proporcionados para una compañía específica.
-    """
-    query = {"company_id": company_id}
-    if start_date and end_date:
-        query["timestamp"] = {"$gte": start_date, "$lte": end_date}
-    elif start_date:
-        query["timestamp"] = {"$gte": start_date}
-    elif end_date:
-        query["timestamp"] = {"$lte": end_date}
-    if bank_prefix:
-        query["from_account"] = {"$regex": f"^{bank_prefix}"}
-    if min_amount is not None and max_amount is not None:
-        query["amount"] = {"$gte": min_amount, "$lte": max_amount}
-    elif min_amount is not None:
-        query["amount"] = {"$gte": min_amount}
-    elif max_amount is not None:
-        query["amount"] = {"$lte": max_amount}
-
-    transfers = await db.transfers.find(query).to_list(length=None)
-    return transfers
-
-async def fetch_volume_by_day(
-    company_id: str,
-    start_date: datetime = None,
-    end_date: datetime = None,
-    bank_prefix: str = None,
-    min_amount: float = None,
-    max_amount: float = None
-):
-    """
-    Devuelve el volumen de transferencias por día, aplicando filtros.
-    """
-    query = {"company_id": company_id}
-    if start_date and end_date:
-        query["timestamp"] = {"$gte": start_date, "$lte": end_date}
-    elif start_date:
-        query["timestamp"] = {"$gte": start_date}
-    elif end_date:
-        query["timestamp"] = {"$lte": end_date}
-    if bank_prefix:
-        query["from_account"] = {"$regex": f"^{bank_prefix}"}
-    if min_amount is not None and max_amount is not None:
-        query["amount"] = {"$gte": min_amount, "$lte": max_amount}
-    elif min_amount is not None:
-        query["amount"] = {"$gte": min_amount}
-    elif max_amount is not None:
-        query["amount"] = {"$lte": max_amount}
-
-    pipeline = [
-    {"$match": query},
-    {"$match": {"timestamp": {"$type": "date"}}},  # Filtro para asegurar que 'timestamp' sea tipo fecha
-    {
-        "$group": {
-            "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}},
-            "count": {"$sum": 1},
-        }
-    },
-    {"$sort": {"_id": 1}},
-    {"$project": {"date": "$_id", "count": 1, "_id": 0}},
-]
-    result = await db.transfers.aggregate(pipeline).to_list(length=None)
-    return [{"date": r["date"], "count": r["count"]} for r in result]
-
-async def fetch_anomalous_volume_by_day(
-    company_id: str,
-    start_date: datetime = None,
-    end_date: datetime = None,
-    bank_prefix: str = None,
-    min_amount: float = None,
-    max_amount: float = None
-):
-    """
-    Devuelve el volumen de transferencias anómalas por día, aplicando filtros.
-    """
-    query = {"company_id": company_id, "is_anomalous": True}
-    if start_date and end_date:
-        query["timestamp"] = {"$gte": start_date, "$lte": end_date}
-    elif start_date:
-        query["timestamp"] = {"$gte": start_date}
-    elif end_date:
-        query["timestamp"] = {"$lte": end_date}
-    if bank_prefix:
-        query["from_account"] = {"$regex": f"^{bank_prefix}"}
-    if min_amount is not None and max_amount is not None:
-        query["amount"] = {"$gte": min_amount, "$lte": max_amount}
-    elif min_amount is not None:
-        query["amount"] = {"$gte": min_amount}
-    elif max_amount is not None:
-        query["amount"] = {"$lte": max_amount}
-
-    pipeline = [
-        {"$match": query},
-        {"$match": {"timestamp": {"$type": "date"}}},
-        {
-            "$group": {
-                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}},
-                "count": {"$sum": 1},
-            }
-        },
-        {"$sort": {"_id": 1}},
-        {"$project": {"date": "$_id", "count": 1, "_id": 0}},
-    ]
-    result = await db.transfers.aggregate(pipeline).to_list(length=None)
-    return [{"date": r["date"], "count": r["count"]} for r in result]
-
-async def fetch_status_distribution(
-    company_id: str,
-    start_date: datetime = None,
-    end_date: datetime = None,
-    bank_prefix: str = None,
-    min_amount: float = None,
-    max_amount: float = None
-):
-    """
-    Devuelve la distribución de estados de las transferencias, aplicando filtros.
-    """
-    query = {"company_id": company_id}
-    if start_date and end_date:
-        query["timestamp"] = {"$gte": start_date, "$lte": end_date}
-    elif start_date:
-        query["timestamp"] = {"$gte": start_date}
-    elif end_date:
-        query["timestamp"] = {"$lte": end_date}
-    if bank_prefix:
-        query["from_account"] = {"$regex": f"^{bank_prefix}"}
-    if min_amount is not None and max_amount is not None:
-        query["amount"] = {"$gte": min_amount, "$lte": max_amount}
-    elif min_amount is not None:
-        query["amount"] = {"$gte": min_amount}
-    elif max_amount is not None:
-        query["amount"] = {"$lte": max_amount}
-
-    pipeline = [
-        {"$match": query},
-        {"$group": {"_id": "$status", "count": {"$sum": 1}}},
-        {"$project": {"status": "$_id", "count": 1, "_id": 0}},
-    ]
-    result = await db.transfers.aggregate(pipeline).to_list(length=None)
-    return [{"status": r["status"], "count": r["count"]} for r in result]
-
-# Necesitarás una nueva función para obtener los nuevos usuarios con filtros.
-# La definición de "nuevo" en un rango de fechas dinámico es compleja.
-# Aquí te dejo una versión básica que cuenta los remitentes únicos en el periodo.
-async def fetch_new_senders(
-    company_id: str,
-    start_date: datetime = None,
-    end_date: datetime = None,
-    bank_prefix: str = None,
-    min_amount: float = None,
-    max_amount: float = None
-) -> int:
-    """
-    Obtiene el número de remitentes únicos dentro del rango de fechas especificado.
-    """
-    query = {"company_id": company_id}
-    if start_date and end_date:
-        query["timestamp"] = {"$gte": start_date, "$lte": end_date}
-    elif start_date:
-        query["timestamp"] = {"$gte": start_date}
-    elif end_date:
-        query["timestamp"] = {"$lte": end_date}
-    if bank_prefix:
-        query["from_account"] = {"$regex": f"^{bank_prefix}"}
-    if min_amount is not None and max_amount is not None:
-        query["amount"] = {"$gte": min_amount, "$lte": max_amount}
-    elif min_amount is not None:
-        query["amount"] = {"$gte": min_amount}
-    elif max_amount is not None:
-        query["amount"] = {"$lte": max_amount}
-
-    distinct_senders = await db.transfers.distinct("from_account", query)
-    return len(distinct_senders)
-
-async def fetch_amount_by_month(
-    company_id: str,
-    year: int,
-    month: int,
-    bank_prefix: str = None,
-    min_amount: float = None,
-    max_amount: float = None
-) -> float:
-    """
-    Obtiene el monto total transferido para un mes específico, aplicando filtros adicionales.
-    """
-    start_date = datetime(year, month, 1, tzinfo=timezone.utc)
-    if month < 12:
-        end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc) - timedelta(seconds=1)
-    else:
-        end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc) - timedelta(seconds=1)
-
-    query = {"company_id": company_id, "timestamp": {"$gte": start_date, "$lte": end_date}}
-    if bank_prefix:
-        query["from_account"] = {"$regex": f"^{bank_prefix}"}
-    if min_amount is not None and max_amount is not None:
-        query["amount"] = {"$gte": min_amount, "$lte": max_amount}
-    elif min_amount is not None:
-        query["amount"] = {"$gte": min_amount}
-    elif max_amount is not None:
-        query["amount"] = {"$lte": max_amount}
-
-    total_amount_data = await db.transfers.aggregate([
-        {"$match": query},
-        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
-    ]).to_list(length=1)
-    return round(total_amount_data[0]["total"], 2) if total_amount_data else 0.0
-
-
-
 async def get_transfer_stats_by_company(company_id: str) -> Dict[str, Any]:
     """
     Obtiene estadísticas detalladas sobre las transferencias de una empresa específica.
@@ -533,4 +256,122 @@ async def get_transfer_stats_by_company(company_id: str) -> Dict[str, Any]:
         "q1": q1,
         "q3": q3,
         "recurrent_accounts": recurrent_accounts
+    }
+
+async def fetch_dashboard_data_internal(
+    company_id: str,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    bank_prefix: Optional[str] = None, # Recibe el prefijo del banco
+    min_amount: Optional[float] = None,
+    max_amount: Optional[float] = None
+) -> Dict[str, Any]:
+    """
+    Función interna para calcular todos los datos del dashboard aplicando filtros.
+    """
+    log.info(f"[DB] Fetching dashboard data for company: {company_id}")
+    log.info(f"[DB] Received filters - Start: {start_date}, End: {end_date}, Bank Prefix: '{bank_prefix}', Min Amount: {min_amount}, Max Amount: {max_amount}")
+
+    query = {"company_id": company_id} # Query base
+
+    date_query = {}
+    if start_date and end_date:
+        start_date_aware = start_date.replace(tzinfo=timezone.utc) if start_date.tzinfo is None else start_date
+        end_date_aware = end_date.replace(tzinfo=timezone.utc) if end_date.tzinfo is None else end_date
+        end_date_aware = end_date_aware.replace(hour=23, minute=59, second=59, microsecond=999999)
+        date_query = {"$gte": start_date_aware, "$lte": end_date_aware}
+        query["timestamp"] = date_query
+    elif start_date:
+        start_date_aware = start_date.replace(tzinfo=timezone.utc) if start_date.tzinfo is None else start_date
+        date_query = {"$gte": start_date_aware}
+        query["timestamp"] = date_query
+    elif end_date:
+        end_date_aware = end_date.replace(tzinfo=timezone.utc) if end_date.tzinfo is None else end_date
+        end_date_aware = end_date_aware.replace(hour=23, minute=59, second=59, microsecond=999999)
+        date_query = {"$lte": end_date_aware}
+        query["timestamp"] = date_query
+
+    if bank_prefix and bank_prefix.strip():
+        cleaned_prefix = bank_prefix.strip()
+        log.info(f"[DB] Attempting to apply bank filter with prefix: '{cleaned_prefix}'")
+
+        # Validación básica del prefijo (4 dígitos numéricos)
+        if len(cleaned_prefix) == 4 and cleaned_prefix.isdigit():
+            bank_regex = f"^.{{4}}{cleaned_prefix}"
+            query["from_account"] = {"$regex": bank_regex}
+            log.info(f"[DB] Added bank filter to query: 'from_account': {{'$regex': '{bank_regex}'}}")
+        else:
+            # Si el prefijo no parece válido, no filtramos por banco pero avisamos
+            log.warning(f"[DB] Invalid bank_prefix format received: '{bank_prefix}'. Bank filter NOT applied.")
+
+    else:
+         log.info("[DB] No valid bank_prefix provided, skipping bank filter.")
+
+    amount_query = {}
+    if min_amount is not None and max_amount is not None:
+        amount_query = {"$gte": min_amount, "$lte": max_amount}
+    elif min_amount is not None:
+        amount_query = {"$gte": min_amount}
+    elif max_amount is not None:
+        amount_query = {"$lte": max_amount}
+    if amount_query:
+         query["amount"] = amount_query
+
+    log.info(f"[DB] Final MongoDB query constructed: {query}")
+
+    try:
+        # 1. Resumen General
+        log.info("[DB] Executing summary pipeline...")
+        pipeline_summary = [{"$match": query}, {"$group": { "_id": None, "totalTransactions": {"$sum": 1}, "totalAnomalies": {"$sum": {"$cond": ["$is_anomalous", 1, 0]}}, "totalAmount": {"$sum": "$amount"} }}]
+        summary_data = await db.transfers.aggregate(pipeline_summary).to_list(length=1)
+        summary = { "totalTransactions": summary_data[0]["totalTransactions"] if summary_data else 0, "totalAnomalies": summary_data[0]["totalAnomalies"] if summary_data else 0, "totalAmount": round(summary_data[0]["totalAmount"], 2) if summary_data else 0.0 }
+        log.info(f"[DB] Summary results: {summary}")
+
+        # 2. Nuevos Remitentes (Únicos en periodo)
+        log.info("[DB] Fetching distinct senders...")
+        distinct_senders = await db.transfers.distinct("from_account", query)
+        summary["newSenders"] = len(distinct_senders)
+        log.info(f"[DB] Distinct Senders Count: {len(distinct_senders)}")
+
+        # 3. Volumen por Día (Total)
+        log.info("[DB] Executing volume by day pipeline...")
+        pipeline_volume = [ {"$match": query}, {"$match": {"timestamp": {"$type": "date"}}}, {"$group": { "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp", "timezone": "UTC"}}, "count": {"$sum": 1} }}, {"$sort": {"_id": 1}}, {"$project": {"date": "$_id", "count": 1, "_id": 0}} ]
+        volume_by_day = await db.transfers.aggregate(pipeline_volume).to_list(length=None)
+        log.info(f"[DB] Volume by Day results count: {len(volume_by_day)}")
+
+        # 4. Volumen por Día (Anomalías)
+        log.info("[DB] Executing anomalous volume by day pipeline...")
+        query_anomalous = {**query, "is_anomalous": True}
+        pipeline_anomalous_volume = [ {"$match": query_anomalous}, {"$match": {"timestamp": {"$type": "date"}}}, {"$group": { "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp", "timezone": "UTC"}}, "count": {"$sum": 1} }}, {"$sort": {"_id": 1}}, {"$project": {"date": "$_id", "count": 1, "_id": 0}} ]
+        anomalous_volume_by_day = await db.transfers.aggregate(pipeline_anomalous_volume).to_list(length=None)
+        log.info(f"[DB] Anomalous Volume by Day results count: {len(anomalous_volume_by_day)}")
+
+        # 5. Distribución de Estados
+        log.info("[DB] Executing status distribution pipeline...")
+        pipeline_status = [ {"$match": query}, {"$group": {"_id": "$status", "count": {"$sum": 1}}}, {"$project": {"status": "$_id", "count": 1, "_id": 0}} ]
+        status_distribution = await db.transfers.aggregate(pipeline_status).to_list(length=None)
+        log.info(f"[DB] Status Distribution results: {status_distribution}")
+
+        # 6. Monto Agrupado por Mes (filtrado)
+        log.info("[DB] Executing amount by month pipeline...")
+        pipeline_amount_monthly = [ {"$match": query}, {"$match": {"timestamp": {"$type": "date"}}}, {"$group": { "_id": { "year": {"$year": {"date": "$timestamp", "timezone": "UTC"}}, "month": {"$month": {"date": "$timestamp", "timezone": "UTC"}} }, "monthlyAmount": {"$sum": "$amount"} }}, {"$sort": {"_id.year": 1, "_id.month": 1}}, {"$project": { "year": "$_id.year", "month": "$_id.month", "amount": {"$round": ["$monthlyAmount", 2]}, "_id": 0 }} ]
+        amount_by_month_filtered = await db.transfers.aggregate(pipeline_amount_monthly).to_list(length=None)
+        log.info(f"[DB] Amount by Month results: {amount_by_month_filtered}")
+
+        summaryP = {"totalTransfers": 0, "totalAnomalies": 0, "totalAmount": 0.0}
+        summaryPA = {"totalTransfers": 0, "totalAnomalies": 0, "totalAmount": 0.0}
+
+    except Exception as e:
+        log.error(f"[DB] Error during MongoDB aggregation: {e}", exc_info=True) # Log completo del error
+        # Propagar el error para que el endpoint lo maneje
+        raise
+
+    return {
+        "summary": summary,
+        "summaryPreviousMonth": summaryP,
+        "summaryMonthBeforePrevious": summaryPA,
+        "volumeByDay": volume_by_day,
+        "anomalousVolumeByDay": anomalous_volume_by_day,
+        "statusDistribution": status_distribution,
+        "amountByMonth": amount_by_month_filtered
     }
