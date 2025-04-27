@@ -1,20 +1,16 @@
 import random
 import numpy as np
-from bson import Binary
 import uuid
 from app.models.transfer import Transfer
-from fastapi import FastAPI, UploadFile, File, HTTPException, APIRouter
+from fastapi import UploadFile, HTTPException
 import xml.etree.ElementTree as ET
 import pandas as pd
 import joblib
 import os
-import asyncio
-from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timezone
 from app.services.notification_services import save_notification
 from app.database import db
 from dateutil import parser
-import logging
 from bson import ObjectId
 
 # Cargar el modelo Isolation Forest
