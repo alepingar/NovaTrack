@@ -22,6 +22,9 @@ async def fetch_companies() -> List[CompanyResponse]:
             name=company["name"],
             email=company["email"],
             industry=company.get("industry"),
+            country=company.get("country"),   
+            created_at=company.get("created_at"),  
+            updated_at=company.get("updated_at"),
         )
         for company in companies
     ]
