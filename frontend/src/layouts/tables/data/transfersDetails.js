@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import MDBox from "components/MDBox";
@@ -13,21 +13,27 @@ import TableCell from "@mui/material/TableCell";
 import Footer from "examples/Footer";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
 
 function TransferDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [transfer, setTransfer] = useState(null);
   const [companyStats, setCompanyStats] = useState(null);
-  const [recurrentClients, setRecurrentClients] = useState(null); // Nuevo estado para clientes recurrentes
-  const [companyIQR, setCompanyIQR] = useState(null); // Nuevo estado para el IQR de la empresa
+  const [recurrentClients, setRecurrentClients] = useState(null);
+  const [companyIQR, setCompanyIQR] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchTransferDetails = async () => {
       try {
         const token = localStorage.getItem("token");
-        // Obtener detalles de la transferencia
         const transferResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}/transfers/${id}`,
           {
@@ -52,6 +58,40 @@ function TransferDetails() {
 
     fetchTransferDetails();
   }, [id]);
+
+  const executeMarkAsNormal = useCallback(async () => {
+    if (!transfer || !transfer.id) return;
+
+    setIsUpdating(true);
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.patch(
+        `${process.env.REACT_APP_API_URL}/transfers/mark-normal/${transfer.id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTransfer(response.data);
+      console.log("Transferencia marcada como no anómala:", response.data);
+    } catch (error) {
+      console.error("Error al marcar la transferencia como no anómala:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [transfer]);
+
+  const handleOpenConfirmDialog = () => {
+    setConfirmDialogOpen(true);
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialogOpen(false);
+  };
+
+  const handleConfirmAction = () => {
+    handleCloseConfirmDialog();
+    executeMarkAsNormal();
+  };
 
   if (loading) {
     return (
@@ -204,14 +244,60 @@ function TransferDetails() {
                 </MDTypography>
               </MDBox>
             )}
-            <MDBox mt={3} display="flex" justifyContent="flex-end">
-              <MDButton variant="outlined" color="secondary" onClick={() => navigate(-1)}>
+            <MDBox mt={4} display="flex" justifyContent="space-between" alignItems="center">
+              {transfer.is_anomalous && (
+                <MDButton
+                  variant="contained"
+                  color="success"
+                  onClick={handleOpenConfirmDialog}
+                  disabled={isUpdating}
+                >
+                  Marcar como No Anómala
+                </MDButton>
+              )}
+              {!transfer.is_anomalous && <MDBox sx={{ width: "1px" }} />}
+              <MDButton
+                variant="outlined"
+                color="secondary"
+                onClick={() => navigate(-1)}
+                sx={{ ml: "auto" }}
+              >
                 Volver
               </MDButton>
             </MDBox>
           </CardContent>
         </Card>
       </MDBox>
+
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={handleCloseConfirmDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">Confirmar Acción</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            ¿Estás seguro que quieres marcar la transferencia con ID {transfer?.id?.slice(0, 8)}{" "}
+            como no anómala? Esta acción no se puede deshacer fácilmente.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <MDButton onClick={handleCloseConfirmDialog} color="secondary">
+            Cancelar
+          </MDButton>
+          <MDButton
+            onClick={handleConfirmAction}
+            color="success"
+            variant="contained"
+            autoFocus
+            disabled={isUpdating}
+          >
+            {isUpdating ? "Confirmando..." : "Confirmar"}
+          </MDButton>
+        </DialogActions>
+      </Dialog>
+
       <Footer />
     </DashboardLayout>
   );

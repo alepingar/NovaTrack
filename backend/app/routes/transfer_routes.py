@@ -12,6 +12,7 @@ from app.services.transfer_services import (
     fetch_dashboard_data_internal,
     fetch_transfers1,
     fetch_transfers_by_filters,
+    mark_transfer_as_normal,
 )
 from app.models.transfer import TransferResponse, Transfer
 from typing import Any, List, Optional
@@ -121,6 +122,22 @@ async def get_all_transfers(current_user: dict = Depends(get_current_user)):
     """
     company_id = current_user["company_id"]
     return await fetch_transfers1(company_id=company_id)
+
+@router.patch("/mark-normal/{transfer_id}",response_model=TransferResponse )
+async def mark_as_normal(transfer_id: UUID,current_user: dict = Depends(get_current_user)):
+    """
+    Endpoint to manually mark a specific transfer as not anomalous.
+    Requires authentication and checks company ownership.
+    """
+    try:
+        company_id = current_user["company_id"]
+        updated_transfer = await mark_transfer_as_normal(transfer_id, company_id)
+
+        return updated_transfer
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error processing the request.")
 
 
 @router.get("/{transfer_id}", response_model=Transfer)

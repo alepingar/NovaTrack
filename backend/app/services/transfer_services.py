@@ -5,11 +5,10 @@ from app.database import db
 from app.models.transfer import Transfer, TransferResponse
 from datetime import datetime, timezone, timedelta
 from typing import Any, List, Optional
-from fastapi import HTTPException, Query
+from fastapi import HTTPException
 from typing import Dict, Union
 from uuid import UUID
-from pymongo import ASCENDING
-from pydantic import BaseModel
+from pymongo import ReturnDocument
 
 log = logging.getLogger(__name__)
 
@@ -20,6 +19,74 @@ async def fetch_transfers(company_id: str) -> List[TransferResponse]:
     transfers = await db.transfers.find({"company_id": company_id}).to_list()
     return transfers
 
+async def mark_transfer_as_normal(transfer_id: UUID, company_id: str) -> TransferResponse: 
+    """
+    Marks a specific transfer as not anomalous (is_anomalous = False).
+    Simplified version: First finds, then updates. USES PRINT FOR DEBUGGING.
+    """
+    transfer_id_str = str(transfer_id)
+    find_filter = {"id": transfer_id_str, "company_id": company_id}
+    transfer_doc = await db.transfers.find_one(find_filter)
+
+    if not transfer_doc:
+        print(f"--- PRINT: Mark Normal - Service --- CRITICAL: find_one FAILED for filter {find_filter}, but GET succeeded previously?")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Transfer with ID {transfer_id_str} not found for this company (inconsistency detected)."
+        )
+
+    update_filter = {"id": transfer_id_str, "company_id": company_id} 
+    update_operation = {"$set": {"is_anomalous": False}}
+
+    try:
+        update_result = await db.transfers.update_one(update_filter, update_operation)
+        
+        if update_result.matched_count == 0:
+             raise HTTPException(status_code=404, detail="Transfer found but could not be matched for update.")
+
+        if update_result.modified_count == 1 or (update_result.matched_count == 1 and update_result.modified_count == 0):
+             if update_result.modified_count == 1:
+                  # Reemplazo de log.info
+                  print(f"--- PRINT: Mark Normal - Service --- update_one SUCCEEDED. Transfer id='{transfer_id_str}' marked as normal.")
+             else:
+                  # Reemplazo de log.warning
+                  print(f"--- PRINT: Mark Normal - Service --- update_one matched but modified 0 documents for filter {update_filter}. Transfer possibly already marked normal.")
+
+             transfer_doc['is_anomalous'] = False
+             if '_id' in transfer_doc and 'id' not in transfer_doc:
+                  transfer_doc['id'] = str(transfer_doc.pop('_id'))
+             elif 'id' in transfer_doc and isinstance(transfer_doc['id'], UUID):
+                  transfer_doc['id'] = str(transfer_doc['id'])
+
+             if '_id' in transfer_doc:
+                 transfer_doc['_id'] = str(transfer_doc['_id'])
+
+             try:
+                 return TransferResponse(**transfer_doc)
+             except Exception as pydantic_error:
+                 raise HTTPException(status_code=500, detail="Failed to format response after update.")
+
+        else:
+             raise HTTPException(status_code=500, detail="Unexpected error during transfer update.")
+
+    except Exception as e:
+        if isinstance(e, HTTPException):
+             raise e 
+        else:
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while updating the transfer status."
+            )
+
+    except Exception as e:
+        log.error(f"[Mark Normal - Service] Database error during update_one for id='{transfer_id_str}': {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred while updating the transfer status."
+        )
+    
 async def fetch_number_transfers_per_period(year: int, month: int, period: str = "3months") -> int:
     end_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc) + timedelta(days=32)
     end_date = end_date.replace(day=1) - timedelta(seconds=1)

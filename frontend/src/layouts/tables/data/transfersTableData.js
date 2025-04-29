@@ -6,19 +6,18 @@ import MDBadge from "components/MDBadge";
 import axios from "axios";
 import dayjs from "dayjs";
 import { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 
 export default function useTransfersTableData() {
   const [transfers, setTransfers] = useState([]);
-  const [loading, setLoading] = useState(false); // Añadir estado de carga
-  const [error, setError] = useState(null); // Añadir estado de error
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [sortColumn, setSortColumn] = useState("timestamp");
   const [sortDirection, setSortDirection] = useState("desc");
 
   const fetchFilteredTransfers = useCallback(async (currentFilters = {}) => {
     setLoading(true);
     setError(null);
-    console.log("Fetching table data with filters:", currentFilters); // Log para depurar
 
     const token = localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
@@ -51,12 +50,11 @@ export default function useTransfersTableData() {
     } finally {
       setLoading(false);
     }
-  }, []); // useCallback para que la función no se recree innecesariamente
+  }, []);
 
-  // Efecto para cargar datos iniciales (sin filtros) al montar el componente
   useEffect(() => {
-    fetchFilteredTransfers({}); // Llama sin filtros al inicio
-  }, [fetchFilteredTransfers]); // Depende de la función memoizada
+    fetchFilteredTransfers({});
+  }, [fetchFilteredTransfers]);
 
   const handleSort = (column) => {
     if (column === sortColumn) {
@@ -162,15 +160,17 @@ export default function useTransfersTableData() {
     action:
       // Verifica que transfer.id existe antes de crear el link
       transfer.id ? (
-        <MDTypography
-          component="a"
-          href={`/transfer-details/${transfer.id}`}
-          variant="caption"
-          color="info"
-          fontWeight="medium"
-        >
-          Ver Detalles
-        </MDTypography>
+        <Link to={`/transfers/${transfer.id}`} style={{ textDecoration: "none" }}>
+          {" "}
+          <MDTypography
+            variant="caption"
+            color="info"
+            fontWeight="medium"
+            sx={{ "&:hover": { textDecoration: "underline" } }} // Estilo opcional al pasar el ratón
+          >
+            Ver Detalles
+          </MDTypography>
+        </Link>
       ) : null,
   }));
 
