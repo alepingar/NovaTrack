@@ -1,0 +1,6 @@
+projectKey=mi-tfg
+serverUrl=http://localhost:9000
+serverVersion=25.4.0.105899
+dashboardUrl=http://localhost:9000/dashboard?id=mi-tfg
+ceTaskId=51e4c292-ca38-4e83-87dd-ca737b264cb1
+ceTaskUrl=http://localhost:9000/api/ce/task?id=51e4c292-ca38-4e83-87dd-ca737b264cb1
