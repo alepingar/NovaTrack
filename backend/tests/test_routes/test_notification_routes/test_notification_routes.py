@@ -11,9 +11,6 @@ import app.routes.notification_routes as notification_routes_module
 # Cliente de prueba
 client = TestClient(app)
 
-# --- Datos y Funciones Auxiliares para Pruebas ---
-
-# Un usuario simulado que devolverá nuestra dependencia de seguridad mockeada
 fake_user_data = {"email": "test@user.com", "user_id": "user-123", "company_id": "comp-abc-987"}
 
 # Función que usaremos para sobrescribir get_current_user
@@ -33,7 +30,6 @@ def test_get_notifications_success(mocker):
     # Mockear la función del servicio fetch_notifications
     mock_fetch = AsyncMock(return_value=mock_notifications_list)
     mocker.patch.object(notification_routes_module, 'fetch_notifications', mock_fetch)
-    # Nota: Usamos patch.object porque importamos el módulo entero
 
     # Sobrescribir la dependencia de autenticación
     app.dependency_overrides[get_current_user] = override_get_current_user
@@ -83,5 +79,5 @@ def test_get_notifications_unauthenticated():
 
     # Verificar que falla con 401 Unauthorized (o el código que devuelva tu get_current_user real)
     assert response.status_code == 401
-    # assert response.json()["detail"] == "Not authenticated" o similar
+
 

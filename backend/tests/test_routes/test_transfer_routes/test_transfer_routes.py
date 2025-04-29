@@ -1,4 +1,3 @@
-# En tests/test_routes/test_transfer_routes.py
 
 import pytest
 from fastapi.testclient import TestClient
@@ -6,16 +5,13 @@ from unittest.mock import AsyncMock, patch, MagicMock, ANY
 from fastapi import HTTPException, UploadFile
 from datetime import datetime, timezone, timedelta
 from uuid import UUID, uuid4
-import io # Para simular archivos
+import io
 
-# Importa tu aplicación FastAPI principal y dependencias clave
-from app.main import app # Ajusta si es necesario
-from app.utils.security import get_current_user # Para sobrescribir auth
-from app.models.transfer import Transfer # Para el response model de detalles
+from app.main import app
+from app.utils.security import get_current_user 
+from app.models.transfer import Transfer 
 
-# Importar las funciones del servicio y otras dependencias PARA PODER PARCHEARLAS
 import app.routes.transfer_routes as transfer_routes_module
-# Necesitamos importar explícitamente la función que queremos mockear de su módulo original también
 from app.isolation_forest.upload_files import upload_camt_file
 
 # Cliente de prueba
@@ -28,7 +24,6 @@ fake_user_data = {"email": "transfer@user.com", "user_id": "user-t1", "company_i
 async def override_get_current_user():
     return fake_user_data
 
-# Ruta base para estos endpoints (ajusta si es diferente)
 TRANSFER_ROUTE_PREFIX = "/transfers"
 
 # --- Pruebas ---
@@ -83,7 +78,6 @@ async def test_get_dashboard_data_with_filters(mocker):
 
     assert response.status_code == 200
     assert response.json() == mock_dashboard_result
-    # Verificar llamada al servicio CON filtros (FastAPI convierte tipos)
     mock_fetch_internal.assert_awaited_once()
     call_args, _ = mock_fetch_internal.await_args
     assert call_args[0] == fake_user_data["company_id"]
@@ -133,8 +127,6 @@ async def test_get_transfers_per_month_success(mocker, period_param, expected_pe
     assert response.json() == mock_count
     mock_fetch_num.assert_awaited_once_with(year, month, expected_period)
 
-# (Añadir pruebas similares para /anomaly/per-month y /amount/per-month
-#  mockeando 'fetch_number_anomaly_transfers_per_period' y 'fetch_total_amount_per_month')
 
 # Test para GET /public/summary-data
 def test_get_public_summary_data_success(mocker):
@@ -169,8 +161,6 @@ async def test_upload_camt_success(mocker):
     """Prueba POST /upload-camt subida de archivo exitosa."""
     mock_upload_response = {"message": "Archivo procesado", "transfers_found": 10}
 
-    # Mockear la función de subida/procesamiento
-    # Necesitamos mockearla donde se importa en transfer_routes.py
     mock_process_file = AsyncMock(return_value=mock_upload_response)
     mocker.patch.object(transfer_routes_module, 'upload_camt_file', mock_process_file)
 
@@ -188,25 +178,19 @@ async def test_upload_camt_success(mocker):
 
     assert response.status_code == 200
     assert response.json() == mock_upload_response
-    # Verificar que se llamó al servicio con un objeto UploadFile y company_id
-    # ... (mocking, crear dummy_file, hacer request client.post) ...
 
     mock_process_file.assert_awaited_once() # Verificar que se llamó
     call_args, _ = mock_process_file.await_args
-    # --- ELIMINA O COMENTA ESTA LÍNEA ---
-    # assert isinstance(call_args[0], UploadFile)
-    # --- FIN ELIMINAR/COMENTAR ---
     assert call_args[1] == fake_user_data["company_id"] # Esta SÍ es importante
 
-    assert response.status_code == 200 # Verificar respuesta (como antes)
-    assert response.json() == mock_upload_response # Verificar respuesta (como antes)
-
+    assert response.status_code == 200
+    assert response.json() == mock_upload_response 
 # Test para GET /filtered-list (similar a /dashboard-data pero llama a otro servicio)
 @pytest.mark.asyncio
 async def test_get_filtered_transfer_list_success(mocker):
     """Prueba GET /filtered-list con éxito."""
     mock_filtered_list = [
-    { # Objeto válido según TransferResponse
+    { 
         "id": str(uuid4()), # ID como UUID string
         "amount": 50.0,
         "currency": "EUR",
@@ -214,11 +198,10 @@ async def test_get_filtered_transfer_list_success(mocker):
         "to_account": "VALID_ACC_10_CHARS_MIN_2",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "status": "completada",
-        "company_id": fake_user_data["company_id"], # Necesario si está en TransferResponse
-        "is_anomalous": False # Necesario si está en TransferResponse
-        # ... otros campos requeridos por TransferResponse ...
+        "company_id": fake_user_data["company_id"],
+        "is_anomalous": False 
+    
     },
-    # ... puedes añadir otro si quieres probar una lista ...
 ]
     start_str = "2024-01-01T00:00:00"
 
@@ -313,8 +296,6 @@ async def test_get_transfer_details_success(mocker):
     app.dependency_overrides = {}
 
     assert response.status_code == 200
-    # FastAPI serializará el objeto Transfer (o nuestro mock) a JSON
-    # La comparación exacta puede depender de la serialización de UUID y datetime
     response_data = response.json()
     assert response_data["id"] == test_uuid_str
     assert response_data["amount"] == 100.0

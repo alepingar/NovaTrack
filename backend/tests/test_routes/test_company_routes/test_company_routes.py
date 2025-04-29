@@ -1,4 +1,3 @@
-# En tests/test_routes/test_company_routes.py
 
 import pytest
 from fastapi.testclient import TestClient
@@ -9,16 +8,14 @@ from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 from freezegun import freeze_time
 
-# Importa tu aplicación FastAPI principal y dependencias clave
-from app.main import app # Ajusta si es necesario
-from app.utils.security import get_current_user # Para sobrescribir auth
-from app.models.company import ( # Importar modelos usados en request/response
+from app.main import app 
+from app.utils.security import get_current_user 
+from app.models.company import ( 
     CompanyResponse, CompanyCreate, UpdateCompanyProfile,
     EntityType, SubscriptionPlan, CompanyGDPRRequest, ConsentUpdate
 )
-# Importar las funciones/clases del servicio PARA PODER PARCHEARLAS donde se usan
+
 import app.routes.company_routes as company_routes_module
-# Importar ObjectId para usarlo en mocks y aserciones
 from bson import ObjectId
 
 
@@ -26,19 +23,18 @@ from bson import ObjectId
 client = TestClient(app)
 
 # --- Datos y Funciones Auxiliares ---
-fake_user_data = {"email": "company@user.com", "user_id": "user-c1", "company_id": "60d5ec49a5a0a2f9a4a5a6a7"} # Usar un ID válido como string
+fake_user_data = {"email": "company@user.com", "user_id": "user-c1", "company_id": "60d5ec49a5a0a2f9a4a5a6a7"} 
 fake_company_id_obj = ObjectId(fake_user_data["company_id"])
 
 async def override_get_current_user():
     return fake_user_data
 
-# Ruta base para estos endpoints (ajusta si es diferente)
 COMPANY_ROUTE_PREFIX = "/companies"
 
 # --- Pruebas ---
 
-@pytest.mark.asyncio # Añadido async si la función de servicio lo es
-async def test_get_companies_success(mocker): # Añadido self
+@pytest.mark.asyncio 
+async def test_get_companies_success(mocker): 
     mock_now = datetime.now(timezone.utc)
     # Datos base VÁLIDOS según CompanyResponse
     mock_company_data_list = [
