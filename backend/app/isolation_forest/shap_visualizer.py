@@ -5,7 +5,6 @@ import os
 import shap
 import joblib
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import recall_score, accuracy_score, precision_score, f1_score
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 import matplotlib.pyplot as plt  # Importa matplotlib
