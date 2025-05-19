@@ -232,7 +232,7 @@ async def generate_random_transfer(company_id, recurrent_clients, avg_amount, is
 async def produce_continuous_transfers():
     companies = []
     last_companies_update = datetime.now()
-    companies_update_interval = timedelta(minutes=30)  # Intervalo de actualización
+    companies_update_interval = timedelta(minutes=2)  # Intervalo de actualización
 
     try:
         companies = await get_companies()

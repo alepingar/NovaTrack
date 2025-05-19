@@ -170,7 +170,7 @@ function DataTable({
           {canSearch && (
             <MDBox width="12rem" ml="auto">
               <MDInput
-                placeholder="Search..."
+                placeholder="Buscar..."
                 value={search}
                 size="small"
                 fullWidth

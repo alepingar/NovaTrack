@@ -231,8 +231,6 @@ async def create_or_get_tfg_company(db_companies_collection: AsyncIOMotorClient)
         "gdpr_request_log": [],
         "account_deletion_requested": False,
         "data_sharing_consent": True,
-        "is_active": True,
-        "is_verified": True,
         "created_at": datetime.now(timezone.utc), 
         "updated_at": datetime.now(timezone.utc), 
     }

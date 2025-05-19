@@ -181,6 +181,11 @@ function Cover() {
           error = "La fecha de fundación no puede ser anterior a 1800.";
         }
         break;
+      case "industry":
+        if (value.trim().length > 50) {
+          error = "La industria debe de tener menos de 50 carácteres de longitud.";
+        }
+        break;
       case "confirm_password":
         if (value !== formData.password) {
           error = "Las contraseñas no coinciden.";
