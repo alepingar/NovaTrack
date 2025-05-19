@@ -146,7 +146,7 @@ async def process_message(msg):
 
         if existing_transfers_count >= 30 and company_id not in company_stats:
             print(f"🔄 Empresa {company_id} alcanzó 30 transferencias. Actualizando estadísticas...")
-            await fetch_company_stats(company_id) 
+            await fetch_company_stats_for_company(company_id) 
             company_data = company_stats.get(company_id) 
 
         amount_mean = company_data["mean"]

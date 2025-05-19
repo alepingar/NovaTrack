@@ -25,7 +25,7 @@ async def wait_for_kafka_producer(max_retries=20, delay=10):
             return producer
         except KafkaException as e:
             print(f"⏳ Kafka no disponible aún (intento {i+1}/{max_retries}): {e}. Esperando {delay}s...")
-            await asyncio.sleep(delay)  # 👈 aquí está el cambio bueno
+            await asyncio.sleep(delay) 
     raise Exception("❌ Kafka no está disponible tras varios intentos.")
 
 producer = asyncio.run(wait_for_kafka_producer())
@@ -61,7 +61,7 @@ async def get_companies():
 
 async def get_billing_account_company(company_id: str):
     try:
-        company_id_object = ObjectId(company_id)  # Convertir la cadena a ObjectId
+        company_id_object = ObjectId(company_id)
         company = await companies_collection.find_one({"_id": company_id_object}, {"_id": 1, "billing_account_number": 1})
         if company:
             billing_account = company.get("billing_account_number")

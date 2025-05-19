@@ -290,10 +290,6 @@ function Support() {
                 cualquier consulta general, dudas sobre la plataforma, o problemas técnicos.
               </Typography>
               <Typography variant="body1" paragraph>
-                - **Chat en vivo**: Si necesitas asistencia en tiempo real, ofrecemos soporte a de
-                de nuestro chat en vivo. Visita nuestra página de soporte para acceder al chat.
-              </Typography>
-              <Typography variant="body1" paragraph>
                 - **Teléfono**: También puedes llamarnos al número +1 (800) 123-4567 de lunes a
                 viernes, de 9:00 a 18:00 (hora local).
               </Typography>
@@ -312,29 +308,7 @@ function Support() {
 
             <Box mt={2}>
               <Typography variant="h6" fontWeight="medium" gutterBottom>
-                3. Recursos de Autoayuda
-              </Typography>
-              <Typography variant="body1" paragraph>
-                Antes de contactarnos, te recomendamos revisar nuestros recursos de autoayuda, que
-                podrían solucionar tu problema rápidamente:
-              </Typography>
-              <Typography variant="body1" paragraph>
-                - **Centro de Ayuda**: Consulta nuestra sección de preguntas frecuentes (FAQ) donde
-                encontrarás respuestas a las dudas más comunes. [Ir al Centro de Ayuda](#)
-              </Typography>
-              <Typography variant="body1" paragraph>
-                - **Tutoriales**: Visita nuestros tutoriales paso a paso para aprender cómo utilizar
-                la plataforma de manera efectiva. [Ver Tutoriales](#)
-              </Typography>
-              <Typography variant="body1" paragraph>
-                - **Foro de la Comunidad**: Participa en el foro para compartir soluciones y
-                problemas con otros usuarios. [Acceder al Foro](#)
-              </Typography>
-            </Box>
-
-            <Box mt={2}>
-              <Typography variant="h6" fontWeight="medium" gutterBottom>
-                4. Soporte Técnico
+                3. Soporte Técnico
               </Typography>
               <Typography variant="body1" paragraph>
                 Si experimentas problemas técnicos, como errores en la aplicación o dificultades
@@ -354,7 +328,7 @@ function Support() {
 
             <Box mt={2}>
               <Typography variant="h6" fontWeight="medium" gutterBottom>
-                5. Tiempos de Soporte
+                4. Tiempos de Soporte
               </Typography>
               <Typography variant="body1" paragraph>
                 Nuestro equipo de soporte está disponible de lunes a viernes, de 9:00 a 18:00 (hora
@@ -365,7 +339,7 @@ function Support() {
 
             <Box mt={2}>
               <Typography variant="h6" fontWeight="medium" gutterBottom>
-                6. Políticas de Soporte
+                5. Políticas de Soporte
               </Typography>
               <Typography variant="body1" paragraph>
                 Al utilizar nuestros servicios de soporte, aceptas nuestras políticas de servicio al
