@@ -1,49 +1,4 @@
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    depends_on:
-      - mongo
-      - kafka
-    env_file:
-      - ./backend/.env.production
-    networks:
-      - app_network
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    env_file:
-    - ./frontend/.env.production
-    networks:
-      - app_network
-
-  consumer:
-    build: ./backend
-    depends_on:
-      - kafka
-      - mongo
-    command: ["python", "-m", "app.kafka.consumer"]
-    env_file:
-      - ./backend/.env.production
-    networks:
-      - app_network
-
-  producer:
-    build: ./backend
-    depends_on:
-      - kafka
-      - mongo
-    command: ["python", "app/kafka/random_transfers_producer.py"]
-    env_file:
-      - ./backend/.env.production
-    networks:
-      - app_network
-
   mongo:
     image: mongo:latest
     ports:
@@ -52,6 +7,25 @@ services:
       - mongo_data:/data/db
     networks:
       - app_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s 
+
+  db-initializer: 
+    build:
+      context: ./db_initializer 
+      dockerfile: Dockerfile
+    depends_on:
+      mongo: 
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/nova_track
+    networks:
+      - app_network
+
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -63,14 +37,72 @@ services:
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
-      - zookeeper
+      - zookeeper 
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100 
     ports:
       - "9092:9092"
+    networks:
+      - app_network
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka: 
+        condition: service_started 
+      db-initializer: 
+        condition: service_completed_successfully
+    env_file:
+      - ./backend/.env.production
+    networks:
+      - app_network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend 
+    env_file:
+     - ./frontend/.env.production 
+    networks:
+      - app_network
+
+  consumer:
+    build: ./backend 
+    depends_on: 
+      kafka:
+        condition: service_started
+      mongo:
+        condition: service_healthy
+      db-initializer: 
+        condition: service_completed_successfully
+    command: ["python", "-m", "app.kafka.consumer"]
+    env_file:
+      - ./backend/.env.production
+    networks:
+      - app_network
+
+  producer:
+    build: ./backend 
+    depends_on: 
+      kafka:
+        condition: service_started
+      mongo:
+        condition: service_healthy
+      db-initializer: 
+        condition: service_completed_successfully
+    command: ["python", "app/kafka/random_transfers_producer.py"] 
+    env_file:
+      - ./backend/.env.production
     networks:
       - app_network
 
@@ -79,4 +111,4 @@ networks:
     driver: bridge
 
 volumes:
-  mongo_data:
+  mongo_data: 

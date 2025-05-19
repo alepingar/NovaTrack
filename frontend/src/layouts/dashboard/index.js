@@ -45,13 +45,18 @@ const BANCOS_ESP = [
   { code: "2038", name: "Bankia (fusionado con CaixaBank)" },
 ];
 
-// Estado inicial de los filtros
-const initialFiltersState = {
-  startDate: null,
-  endDate: null,
-  bankPrefix: "",
-  minAmount: "",
-  maxAmount: "",
+dayjs.locale("es");
+
+const getInitialFiltersState = () => {
+  const endDate = dayjs();
+  const startDate = dayjs().subtract(3, "month");
+  return {
+    startDate: startDate,
+    endDate: endDate,
+    bankPrefix: "",
+    minAmount: "",
+    maxAmount: "",
+  };
 };
 
 function Dashboard() {
@@ -65,7 +70,7 @@ function Dashboard() {
     statusDistribution: [],
     amountByMonth: [], // Datos mensuales ahora vienen filtrados
   });
-  const [filters, setFilters] = useState(initialFiltersState);
+  const [filters, setFilters] = useState(getInitialFiltersState());
   const [loading, setLoading] = useState(true); // Estado para indicar carga
   const [error, setError] = useState(null); // Estado para errores
 
@@ -77,10 +82,13 @@ function Dashboard() {
     const headers = { Authorization: `Bearer ${token}` };
     const queryParams = new URLSearchParams();
 
-    if (currentFilters.startDate)
+    if (currentFilters.startDate) {
       queryParams.append("start_date", dayjs(currentFilters.startDate).toISOString());
-    if (currentFilters.endDate)
-      queryParams.append("end_date", dayjs(currentFilters.endDate).toISOString());
+    }
+    if (currentFilters.endDate) {
+      // Asegurar que la fecha de fin se envíe como el final del día si solo se elige la fecha
+      queryParams.append("end_date", dayjs(currentFilters.endDate).endOf("day").toISOString());
+    }
     if (currentFilters.bankPrefix && currentFilters.bankPrefix.trim() !== "")
       queryParams.append("bank_prefix", currentFilters.bankPrefix.trim());
     if (currentFilters.minAmount && currentFilters.minAmount.trim() !== "")
@@ -190,12 +198,9 @@ function Dashboard() {
     }
   }, []); // useCallback para evitar recrear la función en cada render
 
-  // Carga inicial de datos globales (sin filtros)
   useEffect(() => {
-    fetchDashboardData(initialFiltersState);
-  }, [fetchDashboardData]); // Dependencia de useCallback
-
-  // --- Manejadores de Filtros ---
+    fetchDashboardData(filters);
+  }, [fetchDashboardData]);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -234,13 +239,15 @@ function Dashboard() {
 
   // Función para limpiar los campos de filtro
   const clearFilterInputs = () => {
-    setFilters(initialFiltersState);
+    const defaultFilters = getInitialFiltersState();
+    setFilters(defaultFilters);
     // No recarga datos automáticamente, solo limpia inputs.
   };
 
   // Función para restablecer a la vista global
   const restoreGlobalData = () => {
-    setFilters(initialFiltersState); // Limpia los inputs también
+    const defaultFilters = getInitialFiltersState();
+    setFilters(defaultFilters);
     fetchDashboardData(initialFiltersState); // Llama a la API sin filtros
   };
 

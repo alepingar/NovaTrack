@@ -232,45 +232,58 @@ async def fetch_dashboard_data_internal(
     company_id: str,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
-    bank_prefix: Optional[str] = None, 
+    bank_prefix: Optional[str] = None,
     min_amount: Optional[float] = None,
     max_amount: Optional[float] = None
 ) -> Dict[str, Any]:
     """
     Función interna para calcular todos los datos del dashboard aplicando filtros.
+    Si start_date y end_date no se proveen, se usan los últimos 3 meses por defecto.
     """
-
-    query = {"company_id": company_id} # Query base
-
+    query = {"company_id": company_id}
     date_query = {}
-    if start_date and end_date:
+
+    # --- INICIO: Lógica para fechas por defecto (últimos 3 meses) ---
+    # Esta lógica se aplica si el frontend NO envía start_date ni end_date.
+    if start_date is None and end_date is None:
+        log.info("[DB] No dates provided by request. Defaulting to last 3 months.")
+        now_utc = datetime.now(timezone.utc)
+        # end_date será el final del día de hoy
+        end_date_default = now_utc.replace(hour=23, minute=59, second=59, microsecond=999999)
+        # start_date será hace 90 días (aproximadamente 3 meses) al inicio de ese día
+        start_date_default = (now_utc - timedelta(days=90)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+        start_date_aware = start_date_default
+        end_date_aware = end_date_default
+        query["timestamp"] = {"$gte": start_date_aware, "$lte": end_date_aware}
+    # --- FIN: Lógica para fechas por defecto ---
+    elif start_date and end_date:
         start_date_aware = start_date.replace(tzinfo=timezone.utc) if start_date.tzinfo is None else start_date
         end_date_aware = end_date.replace(tzinfo=timezone.utc) if end_date.tzinfo is None else end_date
         end_date_aware = end_date_aware.replace(hour=23, minute=59, second=59, microsecond=999999)
-        date_query = {"$gte": start_date_aware, "$lte": end_date_aware}
-        query["timestamp"] = date_query
+        query["timestamp"] = {"$gte": start_date_aware, "$lte": end_date_aware}
     elif start_date:
         start_date_aware = start_date.replace(tzinfo=timezone.utc) if start_date.tzinfo is None else start_date
-        date_query = {"$gte": start_date_aware}
-        query["timestamp"] = date_query
+        # Si solo hay start_date, podrías querer que end_date sea "hoy"
+        # end_date_default_if_start_only = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
+        # query["timestamp"] = {"$gte": start_date_aware, "$lte": end_date_default_if_start_only}
+        query["timestamp"] = {"$gte": start_date_aware} # O como lo tenías, hasta el final
     elif end_date:
         end_date_aware = end_date.replace(tzinfo=timezone.utc) if end_date.tzinfo is None else end_date
         end_date_aware = end_date_aware.replace(hour=23, minute=59, second=59, microsecond=999999)
-        date_query = {"$lte": end_date_aware}
-        query["timestamp"] = date_query
+        # Si solo hay end_date, podrías querer que start_date sea "el inicio de los tiempos"
+        query["timestamp"] = {"$lte": end_date_aware}
 
+    # El resto de tu lógica de filtros (bank_prefix, amount) permanece igual...
     if bank_prefix and bank_prefix.strip():
         cleaned_prefix = bank_prefix.strip()
-
         if len(cleaned_prefix) == 4 and cleaned_prefix.isdigit():
             bank_regex = f"^.{{4}}{cleaned_prefix}"
             query["from_account"] = {"$regex": bank_regex}
         else:
-
             log.warning(f"[DB] Invalid bank_prefix format received: '{bank_prefix}'. Bank filter NOT applied.")
-
     else:
-         log.info("[DB] No valid bank_prefix provided, skipping bank filter.")
+        log.info("[DB] No valid bank_prefix provided, skipping bank filter.")
 
     amount_query = {}
     if min_amount is not None and max_amount is not None:
@@ -280,44 +293,35 @@ async def fetch_dashboard_data_internal(
     elif max_amount is not None:
         amount_query = {"$lte": max_amount}
     if amount_query:
-         query["amount"] = amount_query
-
+        query["amount"] = amount_query
 
     try:
-        # 1. Resumen General
+        # Tus agregaciones de MongoDB...
         pipeline_summary = [{"$match": query}, {"$group": { "_id": None, "totalTransactions": {"$sum": 1}, "totalAnomalies": {"$sum": {"$cond": ["$is_anomalous", 1, 0]}}, "totalAmount": {"$sum": "$amount"} }}]
         summary_data = await db.transfers.aggregate(pipeline_summary).to_list(length=1)
         summary = { "totalTransactions": summary_data[0]["totalTransactions"] if summary_data else 0, "totalAnomalies": summary_data[0]["totalAnomalies"] if summary_data else 0, "totalAmount": round(summary_data[0]["totalAmount"], 2) if summary_data else 0.0 }
 
-        # 2. Nuevos Remitentes (Únicos en periodo)
         distinct_senders = await db.transfers.distinct("from_account", query)
         summary["newSenders"] = len(distinct_senders)
 
-        # 3. Volumen por Día (Total)
         pipeline_volume = [ {"$match": query}, {"$match": {"timestamp": {"$type": "date"}}}, {"$group": { "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp", "timezone": "UTC"}}, "count": {"$sum": 1} }}, {"$sort": {"_id": 1}}, {"$project": {"date": "$_id", "count": 1, "_id": 0}} ]
         volume_by_day = await db.transfers.aggregate(pipeline_volume).to_list(length=None)
 
-        # 4. Volumen por Día (Anomalías)
         query_anomalous = {**query, "is_anomalous": True}
         pipeline_anomalous_volume = [ {"$match": query_anomalous}, {"$match": {"timestamp": {"$type": "date"}}}, {"$group": { "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp", "timezone": "UTC"}}, "count": {"$sum": 1} }}, {"$sort": {"_id": 1}}, {"$project": {"date": "$_id", "count": 1, "_id": 0}} ]
         anomalous_volume_by_day = await db.transfers.aggregate(pipeline_anomalous_volume).to_list(length=None)
-     
-        # 5. Distribución de Estados
-
+        
         pipeline_status = [ {"$match": query}, {"$group": {"_id": "$status", "count": {"$sum": 1}}}, {"$project": {"status": "$_id", "count": 1, "_id": 0}} ]
         status_distribution = await db.transfers.aggregate(pipeline_status).to_list(length=None)
-
-        # 6. Monto Agrupado por Mes (filtrado)
 
         pipeline_amount_monthly = [ {"$match": query}, {"$match": {"timestamp": {"$type": "date"}}}, {"$group": { "_id": { "year": {"$year": {"date": "$timestamp", "timezone": "UTC"}}, "month": {"$month": {"date": "$timestamp", "timezone": "UTC"}} }, "monthlyAmount": {"$sum": "$amount"} }}, {"$sort": {"_id.year": 1, "_id.month": 1}}, {"$project": { "year": "$_id.year", "month": "$_id.month", "amount": {"$round": ["$monthlyAmount", 2]}, "_id": 0 }} ]
         amount_by_month_filtered = await db.transfers.aggregate(pipeline_amount_monthly).to_list(length=None)
 
-        summaryP = {"totalTransfers": 0, "totalAnomalies": 0, "totalAmount": 0.0}
-        summaryPA = {"totalTransfers": 0, "totalAnomalies": 0, "totalAmount": 0.0}
+        summaryP = {"totalTransfers": 0, "totalAnomalies": 0, "totalAmount": 0.0} # Revisa si estos son necesarios
+        summaryPA = {"totalTransfers": 0, "totalAnomalies": 0, "totalAmount": 0.0} # Revisa si estos son necesarios
 
     except Exception as e:
-        log.error(f"[DB] Error during MongoDB aggregation: {e}", exc_info=True) 
-
+        log.error(f"[DB] Error during MongoDB aggregation: {e}", exc_info=True)
         raise
 
     return {

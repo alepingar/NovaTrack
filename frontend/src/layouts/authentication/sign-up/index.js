@@ -208,7 +208,7 @@ function Cover() {
         break;
       case "billing_account_number":
         if (value && !/^ES\d{2}\d{20}$/.test(value)) {
-          error = "El número de cuenta debe ser un IBAN español válido.";
+          error = "El número de cuenta debe ser un IBAN español válido, formado por 24 dígitos.";
         }
         break;
       default:
