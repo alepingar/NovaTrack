@@ -248,7 +248,7 @@ function Dashboard() {
   const restoreGlobalData = () => {
     const defaultFilters = getInitialFiltersState();
     setFilters(defaultFilters);
-    fetchDashboardData(initialFiltersState); // Llama a la API sin filtros
+    fetchDashboardData(defaultFilters); // Llama a la API sin filtros
   };
 
   const currentYear = dayjs().year();

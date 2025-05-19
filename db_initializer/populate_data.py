@@ -8,9 +8,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional 
 from passlib.context import CryptContext
-
 import numpy as np
-from backend.app.models.company import EntityType, SubscriptionPlan
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
@@ -21,11 +19,12 @@ DB_NAME = "nova_track"
 COMPANIES_COLLECTION_NAME = "companies"
 TRANSFERS_COLLECTION_NAME = "transfers"
 
-class SubscriptionPlanValues(str, Enum):
+class SubscriptionPlan(str, Enum): # Puedes renombrarlo si quieres, ej. PopulatorSubscriptionPlan
     BASICO = "BASICO"
     PRO = "PRO"
+    # Añade aquí todos los miembros de tu Enum SubscriptionPlan original
 
-class EntityTypeValues(str, Enum):
+class EntityType(str, Enum): # Puedes renombrarlo si quieres, ej. PopulatorEntityType
     SA = "Sociedad Anónima"
     SL = "Sociedad Limitada"
     SLNE = "Sociedad Limitada Nueva Empresa"
