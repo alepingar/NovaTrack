@@ -154,7 +154,7 @@ function TransferDetails() {
     // 4. Cliente Recurrente
     if (!isRecurrentClient) {
       reason.push(
-        "La transferencia proviene de un cliente que no se identifica como recurrente en el historial de la empresa."
+        "La transferencia proviene de un cliente que no se identifica como recurrente en el historial de la empresa, junto con la apartición de patrones sospechosos."
       );
     }
 

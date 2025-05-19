@@ -100,7 +100,7 @@ async def generate_reset_token(email: str):
     })
 
     # Crear enlace de recuperación
-    reset_link = f"{settings.frontend_url}/reset-password?token={reset_token}"
+    reset_link = f"http://localhost:3000/reset-password?token={reset_token}"
 
     # Enviar correo
     subject = "Recupera tu contraseña"
