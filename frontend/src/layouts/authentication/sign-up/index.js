@@ -412,7 +412,7 @@ function Cover() {
                       error={Boolean(errors[id])}
                       sx={{ marginTop: 1, marginBottom: 2 }}
                     >
-                      <InputLabel>{label}</InputLabel>
+                      <InputLabel required={required}>{label}</InputLabel>{" "}
                       <Select
                         value={formData[id]}
                         onChange={handleChange}
@@ -420,9 +420,9 @@ function Cover() {
                         name={id}
                         required={required}
                       >
-                        {entityTypes.map((type) => (
-                          <MenuItem key={type} value={type}>
-                            {type}
+                        {entityTypes.map((typeValue) => (
+                          <MenuItem key={typeValue} value={typeValue}>
+                            {typeValue}
                           </MenuItem>
                         ))}
                       </Select>

@@ -46,10 +46,10 @@ async def mark_transfer_as_normal(transfer_id: UUID, company_id: str) -> Transfe
 
         if update_result.modified_count == 1 or (update_result.matched_count == 1 and update_result.modified_count == 0):
              if update_result.modified_count == 1:
-                  # Reemplazo de log.info
+                 
                   print(f"--- PRINT: Mark Normal - Service --- update_one SUCCEEDED. Transfer id='{transfer_id_str}' marked as normal.")
              else:
-                  # Reemplazo de log.warning
+             
                   print(f"--- PRINT: Mark Normal - Service --- update_one matched but modified 0 documents for filter {update_filter}. Transfer possibly already marked normal.")
 
              transfer_doc['is_anomalous'] = False
@@ -95,7 +95,7 @@ async def fetch_number_transfers_per_period(year: int, month: int, period: str =
         start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
     elif period == "year":
         start_date = datetime(year, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    else:  # 3months
+    else: 
         start_month = month - 2 if month > 2 else (month - 2) + 12
         start_year = year if month > 2 else year - 1
         start_date = datetime(start_year, start_month, 1, 0, 0, 0, tzinfo=timezone.utc)
@@ -116,7 +116,7 @@ async def fetch_number_anomaly_transfers_per_period(year: int, month: int, perio
         start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
     elif period == "year":
         start_date = datetime(year, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    else:  # 3months
+    else: 
         start_month = month - 2 if month > 2 else (month - 2) + 12
         start_year = year if month > 2 else year - 1
         start_date = datetime(start_year, start_month, 1, 0, 0, 0, tzinfo=timezone.utc)
@@ -137,7 +137,7 @@ async def fetch_total_amount_per_month(year: int, month: int, period: str = "3mo
         start_date = datetime(year, month, 1, 0, 0, 0, tzinfo=timezone.utc)
     elif period == "year":
         start_date = datetime(year, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    else:  # 3months
+    else: 
         start_month = month - 2 if month > 2 else (month - 2) + 12
         start_year = year if month > 2 else year - 1
         start_date = datetime(start_year, start_month, 1, 0, 0, 0, tzinfo=timezone.utc)
@@ -243,20 +243,19 @@ async def fetch_dashboard_data_internal(
     query = {"company_id": company_id}
     date_query = {}
 
-    # --- INICIO: Lógica para fechas por defecto (últimos 3 meses) ---
-    # Esta lógica se aplica si el frontend NO envía start_date ni end_date.
+
     if start_date is None and end_date is None:
         log.info("[DB] No dates provided by request. Defaulting to last 3 months.")
         now_utc = datetime.now(timezone.utc)
-        # end_date será el final del día de hoy
+
         end_date_default = now_utc.replace(hour=23, minute=59, second=59, microsecond=999999)
-        # start_date será hace 90 días (aproximadamente 3 meses) al inicio de ese día
+
         start_date_default = (now_utc - timedelta(days=90)).replace(hour=0, minute=0, second=0, microsecond=0)
 
         start_date_aware = start_date_default
         end_date_aware = end_date_default
         query["timestamp"] = {"$gte": start_date_aware, "$lte": end_date_aware}
-    # --- FIN: Lógica para fechas por defecto ---
+
     elif start_date and end_date:
         start_date_aware = start_date.replace(tzinfo=timezone.utc) if start_date.tzinfo is None else start_date
         end_date_aware = end_date.replace(tzinfo=timezone.utc) if end_date.tzinfo is None else end_date
@@ -264,17 +263,12 @@ async def fetch_dashboard_data_internal(
         query["timestamp"] = {"$gte": start_date_aware, "$lte": end_date_aware}
     elif start_date:
         start_date_aware = start_date.replace(tzinfo=timezone.utc) if start_date.tzinfo is None else start_date
-        # Si solo hay start_date, podrías querer que end_date sea "hoy"
-        # end_date_default_if_start_only = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999)
-        # query["timestamp"] = {"$gte": start_date_aware, "$lte": end_date_default_if_start_only}
-        query["timestamp"] = {"$gte": start_date_aware} # O como lo tenías, hasta el final
+        query["timestamp"] = {"$gte": start_date_aware} 
     elif end_date:
         end_date_aware = end_date.replace(tzinfo=timezone.utc) if end_date.tzinfo is None else end_date
         end_date_aware = end_date_aware.replace(hour=23, minute=59, second=59, microsecond=999999)
-        # Si solo hay end_date, podrías querer que start_date sea "el inicio de los tiempos"
         query["timestamp"] = {"$lte": end_date_aware}
 
-    # El resto de tu lógica de filtros (bank_prefix, amount) permanece igual...
     if bank_prefix and bank_prefix.strip():
         cleaned_prefix = bank_prefix.strip()
         if len(cleaned_prefix) == 4 and cleaned_prefix.isdigit():
@@ -296,7 +290,6 @@ async def fetch_dashboard_data_internal(
         query["amount"] = amount_query
 
     try:
-        # Tus agregaciones de MongoDB...
         pipeline_summary = [{"$match": query}, {"$group": { "_id": None, "totalTransactions": {"$sum": 1}, "totalAnomalies": {"$sum": {"$cond": ["$is_anomalous", 1, 0]}}, "totalAmount": {"$sum": "$amount"} }}]
         summary_data = await db.transfers.aggregate(pipeline_summary).to_list(length=1)
         summary = { "totalTransactions": summary_data[0]["totalTransactions"] if summary_data else 0, "totalAnomalies": summary_data[0]["totalAnomalies"] if summary_data else 0, "totalAmount": round(summary_data[0]["totalAmount"], 2) if summary_data else 0.0 }
@@ -334,7 +327,46 @@ async def fetch_dashboard_data_internal(
         "amountByMonth": amount_by_month_filtered
     }
 
+async def fetch_total_amount_last_month(company_id: str) -> Dict[str, float]:
+    """
+    Calcula el monto total de transferencias para la compañía dada
+    correspondientes al último mes natural completo.
+    Por ejemplo, si hoy es 19 de Mayo, calculará el total de Abril.
+    Si hoy es 5 de Abril, calculará el total de Marzo.
+    """
+    today = datetime.now(timezone.utc)
+    
+    first_day_of_current_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    end_date_last_month = first_day_of_current_month - timedelta(seconds=1)
 
+    start_date_last_month = end_date_last_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    query = {
+        "company_id": company_id,
+        "timestamp": {
+            "$gte": start_date_last_month,
+            "$lte": end_date_last_month
+        }
+    }
+
+    pipeline_summary = [
+        {"$match": query},
+        {
+            "$group": {
+                "_id": None,
+                "totalAmount": {"$sum": "$amount"}
+            }
+        }
+    ]
+    
+    summary_data = await db.transfers.aggregate(pipeline_summary).to_list(length=1)
+    
+    total_amount = 0.0
+    if summary_data and "totalAmount" in summary_data[0]:
+        total_amount = round(summary_data[0]["totalAmount"], 2)
+        
+    return {"totalAmountLastMonth": total_amount}
 
 async def fetch_transfers_by_filters(
     company_id: str,

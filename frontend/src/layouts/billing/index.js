@@ -32,13 +32,9 @@ import React, { useEffect, useState } from "react";
 
 function Billing() {
   const [company, setCompany] = useState(null);
-  const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth() + 1);
-  const [summaryP, setSummaryP] = useState({
-    totalTransfers: 0,
-    totalAnomalies: 0,
-    totalAmount: 0,
+
+  const [lastMonthSummary, setLastMonthSummary] = useState({
+    totalAmountLastMonth: 0,
   });
 
   useEffect(() => {
@@ -52,15 +48,15 @@ function Billing() {
         });
         setCompany(response.data);
 
-        const summaryPRes = await axios.get(
-          `${process.env.REACT_APP_API_URL}/transfers/summary/per-month/${year}/${month}`,
+        const lastMonthSummaryRes = await axios.get(
+          `${process.env.REACT_APP_API_URL}/transfers/summary/last-month-amount`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setSummaryP(summaryPRes.data);
+        setLastMonthSummary(lastMonthSummaryRes.data);
       } catch (error) {
         console.error("Error al obtener los datos de la empresa:", error);
       }
@@ -88,7 +84,7 @@ function Billing() {
                     icon="account_balance"
                     title="Ingresos"
                     description="De los últimos 30 días"
-                    value={`${summaryP.totalAmount}€`}
+                    value={`${lastMonthSummary.totalAmountLastMonth}€`}
                   />
                 </Grid>
                 <Grid item xs={12} md={6} xl={3}>

@@ -3,6 +3,7 @@ from logging import log
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from app.utils.security import get_current_user
 from app.services.transfer_services import (
+    fetch_total_amount_last_month,
     fetch_transfer_details,
     fetch_public_summary_data,
     fetch_total_amount_per_month,
@@ -45,6 +46,24 @@ async def get_dashboard_data(
         log.error(f"API Error fetching dashboard data: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error processing dashboard data.")
 
+@router.get("/summary/last-month-amount", response_model=Dict[str, float])
+async def get_summary_last_month_total_amount(current_user: dict = Depends(get_current_user)):
+    """
+    Obtiene el monto total de transferencias del último mes natural completo
+    para la empresa autenticada.
+    """
+    company_id = current_user.get("company_id")
+    if not company_id:
+        raise HTTPException(status_code=403, detail="Company ID no encontrado en el token.")
+    
+    try:
+        summary = await fetch_total_amount_last_month(company_id)
+        return summary
+    except Exception as e:
+        # Considera loguear el error 'e' aquí para depuración
+        # log.error(f"API Error fetching last month amount summary: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error al calcular el resumen del último mes.")
+    
 @router.get("/stats", response_model=Dict[str, Any])
 async def get_company_stats(current_user: dict = Depends(get_current_user)):
     company_id = current_user["company_id"]
