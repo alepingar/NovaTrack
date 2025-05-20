@@ -61,7 +61,7 @@ services:
       db-initializer: 
         condition: service_completed_successfully
     env_file:
-      - ./backend/.env.production
+      - ./backend/.env
     networks:
       - app_network
 
@@ -72,7 +72,7 @@ services:
     depends_on:
       - backend 
     env_file:
-     - ./frontend/.env.production 
+     - ./frontend/.env
     networks:
       - app_network
 
@@ -87,7 +87,7 @@ services:
         condition: service_completed_successfully
     command: ["python", "-m", "app.kafka.consumer"]
     env_file:
-      - ./backend/.env.production
+      - ./backend/.env
     networks:
       - app_network
 
@@ -102,7 +102,7 @@ services:
         condition: service_completed_successfully
     command: ["python", "app/kafka/random_transfers_producer.py"] 
     env_file:
-      - ./backend/.env.production
+      - ./backend/.env
     networks:
       - app_network
 
