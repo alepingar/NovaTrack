@@ -145,7 +145,15 @@ function CompanyProfile() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox mb={2}>
+      <MDBox
+        mb={2}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          minHeight: "calc(100vh - 64px)",
+        }}
+      >
         {/* Header */}
         <Card
           sx={{
