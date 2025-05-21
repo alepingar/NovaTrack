@@ -115,7 +115,16 @@ function Tables() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
+      <MDBox
+        pt={6}
+        pb={3}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          minHeight: "calc(100vh - 64px)",
+        }}
+      >
         <Grid container spacing={6}>
           <Grid item xs={12}>
             <Card>
